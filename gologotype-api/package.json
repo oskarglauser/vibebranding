@@ -1,0 +1,20 @@
+{
+  "name": "gologotype-api",
+  "version": "1.0.0",
+  "description": "Font-to-vector conversion API for GoLogotype",
+  "main": "api/font-to-path.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "node api/font-to-path.js"
+  },
+  "dependencies": {
+    "opentype.js": "^1.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
