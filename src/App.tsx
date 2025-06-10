@@ -500,6 +500,16 @@ Letter Spacing: ${letterSpacing}px
 Case: ${textCase === 'uppercase' ? 'Uppercase' : 'Standard Case'}
 Primary Color: ${logoColor.toUpperCase()}
 RGB: rgb(${parseInt(logoColor.slice(1, 3), 16)}, ${parseInt(logoColor.slice(3, 5), 16)}, ${parseInt(logoColor.slice(5, 7), 16)})
+CMYK: ${(() => {
+        const r = parseInt(logoColor.slice(1, 3), 16) / 255
+        const g = parseInt(logoColor.slice(3, 5), 16) / 255
+        const b = parseInt(logoColor.slice(5, 7), 16) / 255
+        const k = 1 - Math.max(r, g, b)
+        const c = k === 1 ? 0 : (1 - r - k) / (1 - k)
+        const m = k === 1 ? 0 : (1 - g - k) / (1 - k)
+        const y = k === 1 ? 0 : (1 - b - k) / (1 - k)
+        return `C${Math.round(c * 100)} M${Math.round(m * 100)} Y${Math.round(y * 100)} K${Math.round(k * 100)}`
+      })()}
 
 USAGE GUIDELINES:
 ✓ Use dark logos on light backgrounds
