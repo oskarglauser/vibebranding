@@ -65,7 +65,12 @@ export default async function handler(req, res) {
     }
 
     // Validate font family against whitelist
-    const allowedFonts = ['Inter', 'Roboto', 'Playfair Display', 'Poppins', 'Open Sans', 'Lato', 'Montserrat', 'Source Sans Pro', 'Oswald', 'Raleway'];
+    const allowedFonts = [
+      'Inter', 'Playfair Display', 'Roboto', 'Montserrat', 'Lato', 'Open Sans', 
+      'Poppins', 'Source Sans Pro', 'Merriweather', 'Oswald', 'Outfit', 'Work Sans', 
+      'DM Sans', 'DM Serif Text', 'Nunito Sans', 'Quicksand', 'Lexend Deca', 'Questrial',
+      'Funnel Sans', 'Funnel Display', 'Onest', 'Gabarito', 'Figtree', 'Tomorrow', 'Sniglet'
+    ];
     if (!allowedFonts.some(font => fontFamily.toLowerCase().includes(font.toLowerCase()))) {
       return res.status(400).json({
         success: false,

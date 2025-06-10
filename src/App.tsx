@@ -26,7 +26,14 @@ const fonts = [
   'Nunito Sans',
   'Quicksand',
   'Lexend Deca',
-  'Questrial'
+  'Questrial',
+  'Funnel Sans',
+  'Funnel Display',
+  'Onest',
+  'Gabarito',
+  'Figtree',
+  'Tomorrow',
+  'Sniglet'
 ]
 
 const fontWeightsByFamily: { [key: string]: { value: string; label: string }[] } = {
@@ -145,6 +152,55 @@ const fontWeightsByFamily: { [key: string]: { value: string; label: string }[] }
   ],
   'Questrial': [
     { value: '400', label: 'Regular' }
+  ],
+  'Funnel Sans': [
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' }
+  ],
+  'Funnel Display': [
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' }
+  ],
+  'Onest': [
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' }
+  ],
+  'Gabarito': [
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' }
+  ],
+  'Figtree': [
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' }
+  ],
+  'Tomorrow': [
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
+  ],
+  'Sniglet': [
+    { value: '400', label: 'Regular' },
+    { value: '800', label: 'Extra Bold' }
   ]
 }
 
@@ -203,7 +259,14 @@ function App() {
       'Nunito Sans': 'font-nunitosans',
       'Quicksand': 'font-quicksand',
       'Lexend Deca': 'font-lexenddeca',
-      'Questrial': 'font-questrial'
+      'Questrial': 'font-questrial',
+      'Funnel Sans': 'font-funnelsans',
+      'Funnel Display': 'font-funneldisplay',
+      'Onest': 'font-onest',
+      'Gabarito': 'font-gabarito',
+      'Figtree': 'font-figtree',
+      'Tomorrow': 'font-tomorrow',
+      'Sniglet': 'font-sniglet'
     }
     return fontMap[font] || 'font-inter'
   }
@@ -288,33 +351,51 @@ function App() {
         try {
           console.log('Using vector API for font-to-path conversion:', selectedFont, fontWeight)
           
-          // Use environment-based API URL
-          const apiUrl = window.location.hostname === 'gologotype.com' || window.location.hostname === 'www.gologotype.com'
-            ? 'https://vector-api.gologotype.com/api/convert'  // Production custom domain
-            : 'https://vector-keepsi22s-oskarglausers-projects.vercel.app/api/convert'; // Staging/dev
+          // Use the dedicated vector-api endpoint 
+          const apiUrl = 'https://vector-cpxtftl6a-oskarglausers-projects.vercel.app/api/convert';
+          
+          const requestBody = {
+            text: fullText,
+            fontFamily: currentFont,
+            fontWeight: currentWeight,
+            fontSize: 120,
+            letterSpacing: currentLetterSpacing,
+            color: color
+          }
+          
+          console.log('API Request Details:', {
+            url: apiUrl,
+            body: requestBody
+          })
           
           const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-              text: fullText,
-              fontFamily: currentFont,
-              fontWeight: currentWeight,
-              fontSize: 120,
-              letterSpacing: currentLetterSpacing,
-              color: color
-            })
+            body: JSON.stringify(requestBody)
           })
 
           if (!response.ok) {
-            throw new Error(`API request failed: ${response.status}`)
+            const errorText = await response.text()
+            console.error('API Error Response:', errorText)
+            let errorMessage = `API request failed: ${response.status}`
+            try {
+              const errorJson = JSON.parse(errorText)
+              if (errorJson.message) {
+                errorMessage = errorJson.message
+              }
+            } catch (e) {
+              // errorText is not JSON, use as-is
+              if (errorText) errorMessage = errorText
+            }
+            throw new Error(errorMessage)
           }
 
           const result = await response.json()
           
           if (!result.success) {
+            console.error('Vector conversion failed:', result)
             throw new Error(result.message || 'Vector conversion failed')
           }
 
@@ -566,7 +647,13 @@ Generated with GoLogotype: https://gologotype.com
     <div className="min-h-screen bg-white p-4 sm:p-6">
       <div className="mx-auto max-w-6xl">
         <header className="text-center mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2" style={{ letterSpacing: '-0.02em' }}>GoLogotype</h1>
+          <div className="flex justify-center mb-2">
+            <img 
+              src="/gologotype-dark.svg" 
+              alt="GoLogotype" 
+              className="h-8 sm:h-10"
+            />
+          </div>
           <p className="text-sm sm:text-base text-gray-600">Professional logo generator with true vector SVG output</p>
         </header>
 

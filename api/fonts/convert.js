@@ -67,7 +67,12 @@ export default async function handler(req, res) {
     }
 
     // Validate font family against whitelist
-    const allowedFonts = ['Inter', 'Roboto', 'Playfair Display', 'Poppins', 'Open Sans', 'Lato', 'Montserrat', 'Source Sans Pro', 'Oswald', 'Raleway'];
+    const allowedFonts = [
+      'Inter', 'Playfair Display', 'Roboto', 'Montserrat', 'Lato', 'Open Sans', 
+      'Poppins', 'Source Sans Pro', 'Merriweather', 'Oswald', 'Outfit', 'Work Sans', 
+      'DM Sans', 'DM Serif Text', 'Nunito Sans', 'Quicksand', 'Lexend Deca', 'Questrial',
+      'Funnel Sans', 'Funnel Display', 'Onest', 'Gabarito', 'Figtree', 'Tomorrow', 'Sniglet'
+    ];
     if (!allowedFonts.some(font => fontFamily.toLowerCase().includes(font.toLowerCase()))) {
       return res.status(400).json({
         success: false,
@@ -102,10 +107,17 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Font conversion error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      fontFamily,
+      fontWeight,
+      textLength: text ? text.length : 0
+    });
     res.status(500).json({
       success: false,
       error: 'INTERNAL_ERROR',
-      message: 'An error occurred processing your request'
+      message: `Font conversion failed: ${error.message}`
     });
   }
 }
@@ -127,9 +139,10 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
 
     const cssText = await cssResponse.text();
     console.log('Font CSS fetched successfully');
+    console.log('CSS preview:', cssText.substring(0, 200));
 
-    // Extract font file URL from CSS
-    const fontMatch = cssText.match(/url\\(([^)]+\\.(woff2|woff|ttf))\\)/);
+    // Extract font file URL from CSS  
+    const fontMatch = cssText.match(/url\(([^)]+\.(woff2|woff|ttf))\)/);
     if (!fontMatch) {
       throw new Error('Font file URL not found in CSS');
     }
@@ -147,8 +160,9 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
     console.log(`Font file downloaded: ${fontBuffer.byteLength} bytes`);
 
     // Parse font with opentype.js
+    console.log('Parsing font with opentype.js...');
     const font = opentype.parse(fontBuffer);
-    console.log(`Font parsed: ${font.names.fontFamily?.en || 'Unknown'}`);
+    console.log(`Font parsed successfully: ${font.names.fontFamily?.en || 'Unknown'}`);
 
     // Convert text to vector paths
     const path = font.getPath(text, 0, 0, fontSize, {
@@ -203,7 +217,13 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
 
   } catch (error) {
     console.error('Vector conversion failed:', error);
-    throw error;
+    console.error('Vector error details:', {
+      fontFamily,
+      fontWeight,
+      message: error.message,
+      stack: error.stack
+    });
+    throw new Error(`Vector conversion failed for ${fontFamily}: ${error.message}`);
   }
 }
 

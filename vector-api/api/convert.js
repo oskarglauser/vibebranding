@@ -64,7 +64,8 @@ export default async function handler(req, res) {
     const allowedFonts = [
       'Inter', 'Playfair Display', 'Roboto', 'Montserrat', 'Lato', 'Open Sans', 
       'Poppins', 'Source Sans Pro', 'Merriweather', 'Oswald', 'Outfit', 'Work Sans', 
-      'DM Sans', 'DM Serif Text', 'Nunito Sans', 'Quicksand', 'Lexend Deca', 'Questrial'
+      'DM Sans', 'DM Serif Text', 'Nunito Sans', 'Quicksand', 'Lexend Deca', 'Questrial',
+      'Funnel Sans', 'Funnel Display', 'Onest', 'Gabarito', 'Figtree', 'Tomorrow', 'Sniglet'
     ]
     if (!allowedFonts.some(font => fontFamily.toLowerCase().includes(font.toLowerCase()))) {
       return res.status(400).json({
@@ -75,6 +76,7 @@ export default async function handler(req, res) {
     }
 
     console.log(`Converting "${text}" using ${fontFamily} ${fontWeight} to vector paths`)
+    console.log(`Font URL will be: https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@${fontWeight}&display=swap`)
 
     // Convert font to vector paths
     const vectorResult = await convertFontToVectorPaths({
@@ -93,10 +95,12 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Font-to-path conversion error:', error)
+    console.error('Error stack:', error.stack)
+    console.error('Font details:', { fontFamily, fontWeight, text: text.substring(0, 20) })
     res.status(500).json({
       success: false,
       error: 'INTERNAL_ERROR',
-      message: 'An error occurred processing your request'
+      message: `Font conversion failed: ${error.message}`
     })
   }
 }
@@ -119,6 +123,7 @@ async function convertFontToVectorPaths({ text, fontFamily, fontWeight, fontSize
 
     const cssText = await cssResponse.text()
     console.log('Font CSS fetched successfully')
+    console.log('CSS content preview:', cssText.substring(0, 200))
 
     // Extract font file URLs from CSS and prioritize supported formats
     const fontUrls = []
@@ -238,6 +243,12 @@ async function convertFontToVectorPaths({ text, fontFamily, fontWeight, fontSize
 
   } catch (error) {
     console.error('Vector conversion failed:', error)
-    throw error
+    console.error('Vector conversion error details:', {
+      fontFamily,
+      fontWeight, 
+      message: error.message,
+      stack: error.stack
+    })
+    throw new Error(`Vector conversion failed for ${fontFamily} ${fontWeight}: ${error.message}`)
   }
 }
