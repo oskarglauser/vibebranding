@@ -5,8 +5,15 @@ import { Label } from './components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import { RadioGroup, RadioGroupItem } from './components/ui/radio-group'
 import { Slider } from './components/ui/slider'
-import { Download } from 'lucide-react'
+import { Download, Share2 } from 'lucide-react'
 import JSZip from 'jszip'
+
+// Declare gtag for TypeScript
+declare global {
+  interface Window {
+    gtag: (...args: any[]) => void;
+  }
+}
 
 const fonts = [
   'Inter',
@@ -205,16 +212,19 @@ const fontWeightsByFamily: { [key: string]: { value: string; label: string }[] }
 }
 
 function App() {
-  const [brandName, setBrandName] = useState('Your Brand')
+  const [brandName, setBrandName] = useState('')
   const [selectedFont, setSelectedFont] = useState('Inter')
-  const [fontWeight, setFontWeight] = useState('400')
-  const [letterSpacing, setLetterSpacing] = useState(0)
+  const [fontWeight, setFontWeight] = useState('600')
+  const [letterSpacing, setLetterSpacing] = useState(-3)
   const [textCase, setTextCase] = useState('normal')
   const [logoColor, setLogoColor] = useState('#111827')
+  const [colorInputValue, setColorInputValue] = useState('111827')
   const [trademarkSymbol, setTrademarkSymbol] = useState('none')
   const [previewFontSize, setPreviewFontSize] = useState('4rem')
   const logoRef = useRef<HTMLDivElement>(null)
+  const mobileLogoRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const mobileContainerRef = useRef<HTMLDivElement>(null)
 
   const getLetterSpacingValue = (spacing: number) => {
     if (spacing === 0) return 'normal'
@@ -234,8 +244,41 @@ function App() {
     }
   }
 
+  const handleColorInputChange = (value: string) => {
+    // Remove any non-hex characters and limit to 6 characters
+    const cleanValue = value.replace(/[^a-fA-F0-9]/g, '').slice(0, 6)
+    setColorInputValue(cleanValue)
+    
+    // Convert to full hex color
+    let fullHexColor = ''
+    
+    if (cleanValue.length === 3) {
+      // Convert 3-digit hex to 6-digit (e.g., "f0a" → "ff00aa")
+      fullHexColor = cleanValue.split('').map(char => char + char).join('')
+    } else if (cleanValue.length === 6) {
+      // Use as-is for 6-digit hex
+      fullHexColor = cleanValue
+    } else if (cleanValue.length > 0) {
+      // For incomplete hex codes, pad with current color's digits or zeros
+      const currentHex = logoColor.slice(1) // Remove # from current color
+      fullHexColor = (cleanValue + currentHex + '000000').slice(0, 6)
+    }
+    
+    // Update the actual color if we have a valid hex
+    if (fullHexColor.length === 6) {
+      setLogoColor(`#${fullHexColor}`)
+    }
+  }
+
+  const handleColorPickerChange = (value: string) => {
+    setLogoColor(value)
+    // Update the input field to show just the hex code without #
+    setColorInputValue(value.slice(1))
+  }
+
   const getFullLogoText = () => {
-    const displayText = textCase === 'uppercase' ? brandName.toUpperCase() : brandName
+    const displayName = brandName || 'Your Brand'
+    const displayText = textCase === 'uppercase' ? displayName.toUpperCase() : displayName
     const symbol = getTrademarkSymbol(trademarkSymbol)
     return displayText + symbol
   }
@@ -272,9 +315,13 @@ function App() {
   }
 
   const calculateOptimalFontSize = () => {
-    if (!containerRef.current || !logoRef.current) return
+    // Use mobile container if it's visible, otherwise desktop
+    const activeContainer = mobileContainerRef.current?.offsetParent ? mobileContainerRef.current : containerRef.current
+    const activeLogo = mobileContainerRef.current?.offsetParent ? mobileLogoRef.current : logoRef.current
+    
+    if (!activeContainer || !activeLogo) return
 
-    const containerWidth = containerRef.current.offsetWidth - 64 // Account for padding
+    const containerWidth = activeContainer.offsetWidth - 64 // Account for padding
     const displayText = getFullLogoText()
     
     // Create a temporary canvas to measure text width
@@ -331,6 +378,21 @@ function App() {
     }
 
     try {
+      // Track download event in Google Analytics
+      if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+        window.gtag('event', 'download_brand_package', {
+          event_category: 'Brand Package',
+          event_label: selectedFont,
+          font_family: selectedFont,
+          font_weight: fontWeight,
+          brand_name_length: brandName.length,
+          letter_spacing: letterSpacing,
+          text_case: textCase,
+          trademark_symbol: trademarkSymbol,
+          logo_color: logoColor
+        })
+      }
+
       console.log('Starting brand package generation...')
       const displayText = textCase === 'uppercase' ? brandName.toUpperCase() : brandName
       const fullText = displayText + (getTrademarkSymbol(trademarkSymbol) || '')
@@ -630,6 +692,15 @@ Generated with GoLogotype: https://gologotype.com
       link.click()
       document.body.removeChild(link)  // Clean up
       
+      // Track successful download completion
+      if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+        window.gtag('event', 'download_completed', {
+          event_category: 'Brand Package',
+          event_label: `${selectedFont} - ${fontWeight}`,
+          value: 1
+        })
+      }
+      
       console.log('Brand package downloaded successfully!')
       
     } catch (error) {
@@ -640,6 +711,36 @@ Generated with GoLogotype: https://gologotype.com
         name: (error as any).name
       })
       alert(`Failed to generate brand package: ${(error as any).message}. Check console for details.`)
+    }
+  }
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'GoLogotype - Professional Logo Generator',
+      text: 'Create professional logos instantly with true vector SVG output. Perfect for startups and developers!',
+      url: window.location.href
+    }
+
+    // Track share event
+    if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+      window.gtag('event', 'share', {
+        event_category: 'Social',
+        event_label: 'Share Button',
+        method: typeof navigator.share === 'function' ? 'native_share' : 'clipboard'
+      })
+    }
+
+    try {
+      if (typeof navigator.share === 'function') {
+        await navigator.share(shareData)
+      } else {
+        // Fallback: copy URL to clipboard
+        await navigator.clipboard.writeText(shareData.url)
+        alert('Link copied to clipboard!')
+      }
+    } catch (error) {
+      // Final fallback: show URL in prompt
+      prompt('Copy this link to share:', shareData.url)
     }
   }
 
@@ -654,10 +755,48 @@ Generated with GoLogotype: https://gologotype.com
               className="h-8 sm:h-10"
             />
           </div>
-          <p className="text-sm sm:text-base text-gray-600">Professional logo generator with true vector SVG output</p>
+          <p className="text-sm sm:text-base text-gray-600">Logo generator with true vector SVG output</p>
         </header>
 
         <main className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
+          {/* Mobile: Preview on top, compact */}
+          <section ref={mobileContainerRef} className="lg:hidden bg-gray-50 rounded-lg p-4 flex items-center justify-center min-h-[200px]" aria-label="Logo preview">
+            <h2 className="sr-only">Logo Preview</h2>
+            <div className="text-center w-full">
+              <div
+                ref={mobileLogoRef}
+                className={`select-none ${getFontClass(selectedFont)}`}
+                style={{
+                  fontSize: previewFontSize,
+                  fontWeight: fontWeight,
+                  letterSpacing: getLetterSpacingValue(letterSpacing),
+                  textTransform: getTextTransform(textCase) as any,
+                  color: logoColor,
+                  lineHeight: 1.2,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                }}
+              >
+                {textCase === 'uppercase' ? (brandName || 'Your Brand').toUpperCase() : (brandName || 'Your Brand')}
+                {trademarkSymbol !== 'none' && (
+                  <span
+                    style={{
+                      fontSize: `calc(${previewFontSize} * 0.35)`,
+                      verticalAlign: 'baseline',
+                      marginLeft: '0.02em',
+                      lineHeight: 1,
+                      position: 'relative',
+                      top: `calc(${previewFontSize} * -0.5)`,
+                      display: 'inline-block',
+                    }}
+                  >
+                    {getTrademarkSymbol(trademarkSymbol)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </section>
+
           <section className="bg-white p-4 sm:p-6 font-inter" aria-label="Logo customization controls">
             <h2 className="sr-only">Logo Customization Options</h2>
             <div className="space-y-4">
@@ -668,7 +807,7 @@ Generated with GoLogotype: https://gologotype.com
                 <Input
                   id="brand-name"
                   value={brandName}
-                  onChange={(e) => setBrandName(e.target.value || 'Your Brand')}
+                  onChange={(e) => setBrandName(e.target.value)}
                   placeholder="Enter your brand name"
                   className="text-base border-gray-300 focus:border-gray-900 h-10 sm:h-9"
                 />
@@ -676,7 +815,7 @@ Generated with GoLogotype: https://gologotype.com
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Font Family</Label>
+                  <Label className="text-sm font-medium text-gray-700">Font</Label>
                   <Select value={selectedFont} onValueChange={(font) => {
                     setSelectedFont(font)
                     const availableWeights = fontWeightsByFamily[font] || []
@@ -767,40 +906,53 @@ Generated with GoLogotype: https://gologotype.com
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">Logo Color</Label>
                 <div className="flex gap-2">
-                  <div className="flex-1">
+                  <div className="flex-1 relative">
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
+                      #
+                    </div>
                     <Input
-                      value={logoColor}
-                      onChange={(e) => setLogoColor(e.target.value)}
-                      placeholder="#000000"
-                      className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8"
+                      value={colorInputValue}
+                      onChange={(e) => handleColorInputChange(e.target.value)}
+                      placeholder="f00 or ff0000"
+                      className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
+                      maxLength={6}
                     />
                   </div>
                   <input
                     type="color"
                     value={logoColor}
-                    onChange={(e) => setLogoColor(e.target.value)}
+                    onChange={(e) => handleColorPickerChange(e.target.value)}
                     className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
                   />
                 </div>
+                <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
               </div>
 
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-200 space-y-3">
                 <Button onClick={generateBrandPackage} className="w-full gap-2 bg-gray-900 hover:bg-gray-800 h-12">
                   <Download className="w-4 h-4" />
                   Download Brand Package
                 </Button>
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  Includes PNG, SVG files + comprehensive brand guidelines
+                <p className="text-xs text-gray-500 text-center">
+                  Includes PNG, SVG files + basic brand guidelines
                 </p>
+                <Button 
+                  onClick={handleShare} 
+                  variant="outline" 
+                  className="w-full gap-2 border-gray-300 text-gray-700 hover:bg-gray-50 h-10"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Share GoLogotype
+                </Button>
               </div>
             </div>
           </section>
 
-          <section ref={containerRef} className="bg-gray-50 rounded-lg p-4 sm:p-8 flex items-center justify-center min-h-[400px] sm:min-h-[500px]" aria-label="Logo preview">
+          {/* Desktop: Preview on right side */}
+          <section ref={containerRef} className="hidden lg:flex bg-gray-50 rounded-lg p-4 sm:p-8 items-center justify-center min-h-[400px] sm:min-h-[500px]" aria-label="Logo preview">
             <h2 className="sr-only">Logo Preview</h2>
             <div className="text-center w-full">
               <div
-                ref={logoRef}
                 className={`select-none ${getFontClass(selectedFont)}`}
                 style={{
                   fontSize: previewFontSize,
@@ -813,7 +965,7 @@ Generated with GoLogotype: https://gologotype.com
                   overflow: 'hidden',
                 }}
               >
-                {textCase === 'uppercase' ? brandName.toUpperCase() : brandName}
+                {textCase === 'uppercase' ? (brandName || 'Your Brand').toUpperCase() : (brandName || 'Your Brand')}
                 {trademarkSymbol !== 'none' && (
                   <span
                     style={{
