@@ -1005,7 +1005,7 @@ Generated with GoLogotype: https://gologotype.com
                   <h3 className="font-semibold text-gray-900 mb-2">True Vector Output</h3>
                   <p className="text-sm">
                     Export genuine vector SVG files with outlined font paths - not embedded text. 
-                    Perfect for print, web, and scalable brand applications.
+                    Perfect for print, web, scalable brand applications, and importing into Figma for design workflows.
                   </p>
                 </div>
                 
@@ -1018,10 +1018,10 @@ Generated with GoLogotype: https://gologotype.com
                 </div>
                 
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Perfect for Developers</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">Perfect for Vibecoders</h3>
                   <p className="text-sm">
                     Ideal for creating logos for your next coding project, startup launch, 
-                    or client work. Generate brand-ready assets in seconds.
+                    or client work. Perfect for vibecoders who need professional branding fast.
                   </p>
                 </div>
                 
@@ -1030,7 +1030,15 @@ Generated with GoLogotype: https://gologotype.com
                   <p className="text-sm">
                     <strong>™</strong> - Unregistered trademark for any brand name<br/>
                     <strong>®</strong> - Registered trademark (requires official registration)<br/>
-                    <strong>©</strong> - Copyright symbol for creative works
+                    <strong>©</strong> - Copyright symbol for creative works<br/>
+                    <a 
+                      href="https://en.wikipedia.org/wiki/Trademark" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-gray-700 hover:text-gray-900 hover:underline text-xs mt-1 inline-block"
+                    >
+                      Learn more about trademarks →
+                    </a>
                   </p>
                 </div>
               </div>
