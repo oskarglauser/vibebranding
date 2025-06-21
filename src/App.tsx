@@ -671,9 +671,9 @@ function App() {
                 taglineWidth = tagW
               }
               
-              // Use tighter width calculation - take 90% of API width to reduce excess space
-              logoWidth = logoWidth * 0.9
-              taglineWidth = taglineWidth * 0.9
+              // Use tighter width calculation - take 95% of API width to reduce excess space while maintaining balance
+              logoWidth = logoWidth * 0.95
+              taglineWidth = taglineWidth * 0.95
               
               // Calculate layout dimensions with proper spacing to match preview
               // Use consistent spacing calculation with preview
@@ -1529,19 +1529,19 @@ Generated with GoLogotype: https://gologotype.com
 
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700">
-                          Distance from Logo ({taglineDistance}%)
+                          Distance from Logo ({taglineDistance}%) {taglineDistance < 0 ? '(Overlapping)' : ''}
                         </Label>
                         <div className="px-1">
                           <Slider
                             value={[taglineDistance]}
                             onValueChange={(value) => setTaglineDistance(value[0])}
-                            min={0}
+                            min={-10}
                             max={40}
                             step={2}
                             className="w-full"
                           />
                           <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Very Close</span>
+                            <span>Overlap</span>
                             <span>Normal</span>
                             <span>Far</span>
                           </div>
