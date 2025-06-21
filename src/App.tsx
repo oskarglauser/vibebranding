@@ -20,11 +20,11 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
   const [isOpen, setIsOpen] = useState(false)
   
   return (
-    <div className="border border-gray-200 rounded-lg">
+    <div className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full p-4 text-left text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+        className="flex items-center justify-between w-full p-4 text-left text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
         <span>{question}</span>
         <ChevronDown 
@@ -32,7 +32,7 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
         />
       </button>
       {isOpen && (
-        <div className="px-4 pb-4 text-sm text-gray-600 text-left">
+        <div className="px-4 pb-4 text-sm text-gray-700 dark:text-gray-300 text-left">
           {answer}
         </div>
       )}
@@ -264,6 +264,15 @@ function App() {
   const mobileLogoRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const mobileContainerRef = useRef<HTMLDivElement>(null)
+  const taglineInputRef = useRef<HTMLInputElement>(null)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('darkMode')
+      if (saved !== null) return JSON.parse(saved)
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+    }
+    return false
+  })
 
   const getLetterSpacingValue = (spacing: number) => {
     if (spacing === 0) return 'normal'
@@ -375,11 +384,23 @@ function App() {
   }
 
   const handleTaglineSectionToggle = () => {
-    if (!showTaglineSection && showLogoSection) {
+    const isOpening = !showTaglineSection
+    
+    if (isOpening && showLogoSection) {
       // If opening tagline section and logo is open, close logo
       setShowLogoSection(false)
     }
-    setShowTaglineSection(!showTaglineSection)
+    setShowTaglineSection(isOpening)
+    
+    // On mobile, scroll to tagline input when opening the section
+    if (isOpening && window.innerWidth < 1024) { // lg breakpoint is 1024px
+      setTimeout(() => {
+        taglineInputRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        })
+      }, 100) // Small delay to allow section to expand
+    }
   }
 
   const getFontClass = (font: string) => {
@@ -494,6 +515,15 @@ function App() {
   useEffect(() => {
     calculateOptimalFontSize()
   }, [brandName, selectedFont, fontWeight, letterSpacing, textCase, trademarkSymbol, taglineText, taglineFont, taglineFontWeight, taglineLetterSpacing, taglineSize, taglineDistance])
+  
+  useEffect(() => {
+    localStorage.setItem('darkMode', JSON.stringify(isDarkMode))
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [isDarkMode])
 
   useEffect(() => {
     const handleResize = () => calculateOptimalFontSize()
@@ -1216,17 +1246,32 @@ Generated with GoLogotype: https://gologotype.com
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 sm:p-6">
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-4 sm:p-6 transition-colors">
       <div className="mx-auto max-w-6xl">
-        <header className="text-center mb-6 sm:mb-8">
+        <header className="text-center mb-6 sm:mb-8 relative">
           <div className="flex justify-center mb-2">
             <img 
-              src="/gologotype-dark.svg" 
+              src="/gologotype-dark.svg"
               alt="GoLogotype" 
               className="h-8 sm:h-10"
             />
           </div>
-          <p className="text-sm sm:text-base text-gray-600">Logo generator with true vector SVG output</p>
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="absolute top-0 right-0 p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+              </svg>
+            )}
+          </button>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Logo generator with true vector SVG output</p>
         </header>
 
         <main className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
@@ -1286,7 +1331,7 @@ Generated with GoLogotype: https://gologotype.com
             </div>
           </section>
 
-          <section className="bg-white p-4 sm:p-6 font-inter" aria-label="Logo customization controls">
+          <section className="bg-white dark:bg-gray-800 p-4 sm:p-6 font-inter rounded-lg transition-colors" aria-label="Logo customization controls">
             <h2 className="sr-only">Logo Customization Options</h2>
             <div className="space-y-4">
               {/* Logo Section */}
@@ -1294,7 +1339,7 @@ Generated with GoLogotype: https://gologotype.com
                 <button
                   type="button"
                   onClick={handleLogoSectionToggle}
-                  className="flex items-center justify-between w-full text-base font-bold text-gray-700 hover:text-gray-900 transition-colors"
+                  className="flex items-center justify-between w-full text-base font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
                   <span>Logo Settings</span>
                   <ChevronDown 
@@ -1305,7 +1350,7 @@ Generated with GoLogotype: https://gologotype.com
                 {showLogoSection && (
                   <div className="space-y-4 mt-4">
                     <div className="space-y-2">
-                      <Label htmlFor="brand-name" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="brand-name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Brand Name
                       </Label>
                       <Input
@@ -1313,13 +1358,13 @@ Generated with GoLogotype: https://gologotype.com
                         value={brandName}
                         onChange={(e) => setBrandName(e.target.value)}
                         placeholder="Enter your brand name"
-                        className="text-base border-gray-300 focus:border-gray-900 h-10 sm:h-9"
+                        className="text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-gray-900 dark:focus:border-gray-400 h-10 sm:h-9"
                       />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Font</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Font</Label>
                         <Select value={selectedFont} onValueChange={(font) => {
                           setSelectedFont(font)
                           const availableWeights = fontWeightsByFamily[font] || []
@@ -1341,7 +1386,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
                       
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Weight</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Weight</Label>
                         <Select value={fontWeight} onValueChange={setFontWeight}>
                           <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
                             <SelectValue />
@@ -1359,7 +1404,7 @@ Generated with GoLogotype: https://gologotype.com
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Letter Spacing</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Letter Spacing</Label>
                         <div className="px-1">
                           <Slider
                             value={[letterSpacing]}
@@ -1378,7 +1423,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
                       
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Case</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Case</Label>
                         <RadioGroup value={textCase} onValueChange={setTextCase} className="flex gap-4">
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="normal" id="case-normal" className="h-4 w-4" />
@@ -1393,7 +1438,7 @@ Generated with GoLogotype: https://gologotype.com
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Trademark</Label>
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Trademark</Label>
                       <Select value={trademarkSymbol} onValueChange={setTrademarkSymbol}>
                         <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm">
                           <SelectValue />
@@ -1408,7 +1453,7 @@ Generated with GoLogotype: https://gologotype.com
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Logo Color</Label>
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Logo Color</Label>
                       <div className="flex gap-2">
                         <div className="flex-1 relative">
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
@@ -1440,7 +1485,7 @@ Generated with GoLogotype: https://gologotype.com
                 <button
                   type="button"
                   onClick={handleTaglineSectionToggle}
-                  className="flex items-center justify-between w-full text-base font-bold text-gray-700 hover:text-gray-900 transition-colors"
+                  className="flex items-center justify-between w-full text-base font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
                   <span>Add Tagline (Optional)</span>
                   <ChevronDown 
@@ -1451,21 +1496,22 @@ Generated with GoLogotype: https://gologotype.com
                 {showTaglineSection && (
                   <div className="space-y-4 mt-4">
                     <div className="space-y-2">
-                      <Label htmlFor="tagline-text" className="text-sm font-medium text-gray-700">
+                      <Label htmlFor="tagline-text" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Tagline Text
                       </Label>
                       <Input
+                        ref={taglineInputRef}
                         id="tagline-text"
                         value={taglineText}
                         onChange={(e) => setTaglineText(e.target.value)}
                         placeholder="Enter your tagline"
-                        className="text-base border-gray-300 focus:border-gray-900 h-10 sm:h-9"
+                        className="text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-gray-900 dark:focus:border-gray-400 h-10 sm:h-9"
                       />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Tagline Font</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Font</Label>
                         <Select value={taglineFont} onValueChange={(font) => {
                           setTaglineFont(font)
                           const availableWeights = fontWeightsByFamily[font] || []
@@ -1487,7 +1533,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
                       
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Tagline Weight</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Weight</Label>
                         <Select value={taglineFontWeight} onValueChange={setTaglineFontWeight}>
                           <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
                             <SelectValue />
@@ -1505,7 +1551,7 @@ Generated with GoLogotype: https://gologotype.com
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Tagline Letter Spacing</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Letter Spacing</Label>
                         <div className="px-1">
                           <Slider
                             value={[taglineLetterSpacing]}
@@ -1524,7 +1570,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
                       
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Tagline Case</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Case</Label>
                         <RadioGroup value={taglineTextCase} onValueChange={setTaglineTextCase} className="flex gap-4">
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="normal" id="tagline-case-normal" className="h-4 w-4" />
@@ -1538,7 +1584,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           Tagline Size ({taglineSize}% of logo)
                         </Label>
                         <div className="px-1">
@@ -1559,7 +1605,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           Distance from Logo ({taglineDistance}%) {taglineDistance < 0 ? '(Overlapping)' : ''}
                         </Label>
                         <div className="px-1">
@@ -1580,7 +1626,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Tagline Color</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Color</Label>
                         <div className="flex gap-2">
                           <div className="flex-1 relative">
                             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
