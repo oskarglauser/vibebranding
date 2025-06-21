@@ -421,9 +421,11 @@ function App() {
     if (!activeContainer || !activeLogo) return
 
     const containerWidth = activeContainer.offsetWidth - 64 // Account for padding
-    const displayText = getFullLogoText()
+    const containerHeight = activeContainer.offsetHeight - 64 // Account for padding
+    const logoText = getFullLogoText()
+    const taglineText = getFullTaglineText()
     
-    // Create a temporary canvas to measure text width
+    // Create a temporary canvas to measure text dimensions
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     if (!ctx) return
@@ -433,23 +435,52 @@ function App() {
     const minFontSize = 16
 
     while (fontSize >= minFontSize) {
+      // Measure logo width
       ctx.font = `${fontWeight} ${fontSize}px "${selectedFont}", sans-serif`
-      
-      // Calculate text width including letter spacing
-      let textWidth = 0
+      let logoWidth = 0
       if (letterSpacing !== 0) {
         const spacingValue = letterSpacing * 1.2
-        for (let i = 0; i < displayText.length; i++) {
-          const char = displayText[i]
+        for (let i = 0; i < logoText.length; i++) {
+          const char = logoText[i]
           const charWidth = ctx.measureText(char).width
-          textWidth += charWidth
-          if (i < displayText.length - 1) textWidth += spacingValue
+          logoWidth += charWidth
+          if (i < logoText.length - 1) logoWidth += spacingValue
         }
       } else {
-        textWidth = ctx.measureText(displayText).width
+        logoWidth = ctx.measureText(logoText).width
       }
 
-      if (textWidth <= containerWidth) {
+      let maxWidth = logoWidth
+      let totalHeight = fontSize * 1.2 // Logo height with line height
+
+      // If tagline exists, measure its dimensions too
+      if (taglineText) {
+        const taglineFontSize = fontSize * (taglineSize / 100)
+        ctx.font = `${taglineFontWeight} ${taglineFontSize}px "${taglineFont}", sans-serif`
+        
+        let taglineWidth = 0
+        if (taglineLetterSpacing !== 0) {
+          const taglineSpacingValue = taglineLetterSpacing * 1.2
+          for (let i = 0; i < taglineText.length; i++) {
+            const char = taglineText[i]
+            const charWidth = ctx.measureText(char).width
+            taglineWidth += charWidth
+            if (i < taglineText.length - 1) taglineWidth += taglineSpacingValue
+          }
+        } else {
+          taglineWidth = ctx.measureText(taglineText).width
+        }
+
+        // Calculate spacing between logo and tagline
+        const spacing = fontSize * (Math.max(0, taglineDistance) / 100) // Handle negative spacing
+        const taglineHeight = taglineFontSize * 1.3 // Tagline height with line height
+        
+        maxWidth = Math.max(logoWidth, taglineWidth)
+        totalHeight += spacing + taglineHeight
+      }
+
+      // Check if both width and height fit in container
+      if (maxWidth <= containerWidth && totalHeight <= containerHeight) {
         setPreviewFontSize(`${fontSize}px`)
         return
       }
@@ -462,13 +493,13 @@ function App() {
 
   useEffect(() => {
     calculateOptimalFontSize()
-  }, [brandName, selectedFont, fontWeight, letterSpacing, textCase, trademarkSymbol])
+  }, [brandName, selectedFont, fontWeight, letterSpacing, textCase, trademarkSymbol, taglineText, taglineFont, taglineFontWeight, taglineLetterSpacing, taglineSize, taglineDistance])
 
   useEffect(() => {
     const handleResize = () => calculateOptimalFontSize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [brandName, selectedFont, fontWeight, letterSpacing, textCase, trademarkSymbol])
+  }, [brandName, selectedFont, fontWeight, letterSpacing, textCase, trademarkSymbol, taglineText, taglineFont, taglineFontWeight, taglineLetterSpacing, taglineSize, taglineDistance])
 
   const generateBrandPackage = async () => {
     if (!brandName.trim()) {
