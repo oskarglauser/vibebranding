@@ -5,7 +5,7 @@ import { Label } from './components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import { RadioGroup, RadioGroupItem } from './components/ui/radio-group'
 import { Slider } from './components/ui/slider'
-import { Download, Share2 } from 'lucide-react'
+import { Download, Share2, ChevronDown } from 'lucide-react'
 import JSZip from 'jszip'
 
 // Declare gtag for TypeScript
@@ -13,6 +13,31 @@ declare global {
   interface Window {
     gtag: (...args: any[]) => void;
   }
+}
+
+// FAQ Component
+const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
+  const [isOpen, setIsOpen] = useState(false)
+  
+  return (
+    <div className="border border-gray-200 rounded-lg">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full p-4 text-left text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+      >
+        <span>{question}</span>
+        <ChevronDown 
+          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+        />
+      </button>
+      {isOpen && (
+        <div className="px-4 pb-4 text-sm text-gray-600 text-left">
+          {answer}
+        </div>
+      )}
+    </div>
+  )
 }
 
 const fonts = [
@@ -221,6 +246,20 @@ function App() {
   const [colorInputValue, setColorInputValue] = useState('111827')
   const [trademarkSymbol, setTrademarkSymbol] = useState('none')
   const [previewFontSize, setPreviewFontSize] = useState('4rem')
+  
+  // Tagline states
+  const [taglineText, setTaglineText] = useState('')
+  const [taglineFont, setTaglineFont] = useState('Inter')
+  const [taglineFontWeight, setTaglineFontWeight] = useState('400')
+  const [taglineLetterSpacing, setTaglineLetterSpacing] = useState(0)
+  const [taglineTextCase, setTaglineTextCase] = useState('normal')
+  const [taglineSize, setTaglineSize] = useState(30) // Percentage of logo size
+  const [taglineDistance, setTaglineDistance] = useState(20) // Distance between logo and tagline as percentage
+  const [taglineColor, setTaglineColor] = useState('#111827') // Default to same as logo
+  const [taglineColorInputValue, setTaglineColorInputValue] = useState('111827')
+  const [showTaglineSection, setShowTaglineSection] = useState(false)
+  const [showLogoSection, setShowLogoSection] = useState(true)
+  
   const logoRef = useRef<HTMLDivElement>(null)
   const mobileLogoRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -267,6 +306,9 @@ function App() {
     // Update the actual color if we have a valid hex
     if (fullHexColor.length === 6) {
       setLogoColor(`#${fullHexColor}`)
+      // Update tagline color to match logo color by default
+      setTaglineColor(`#${fullHexColor}`)
+      setTaglineColorInputValue(fullHexColor)
     }
   }
 
@@ -274,6 +316,41 @@ function App() {
     setLogoColor(value)
     // Update the input field to show just the hex code without #
     setColorInputValue(value.slice(1))
+    // Update tagline color to match logo color by default
+    setTaglineColor(value)
+    setTaglineColorInputValue(value.slice(1))
+  }
+
+  const handleTaglineColorInputChange = (value: string) => {
+    // Remove any non-hex characters and limit to 6 characters
+    const cleanValue = value.replace(/[^a-fA-F0-9]/g, '').slice(0, 6)
+    setTaglineColorInputValue(cleanValue)
+    
+    // Convert to full hex color
+    let fullHexColor = ''
+    
+    if (cleanValue.length === 3) {
+      // Convert 3-digit hex to 6-digit (e.g., "f0a" → "ff00aa")
+      fullHexColor = cleanValue.split('').map(char => char + char).join('')
+    } else if (cleanValue.length === 6) {
+      // Use as-is for 6-digit hex
+      fullHexColor = cleanValue
+    } else if (cleanValue.length > 0) {
+      // For incomplete hex codes, pad with current color's digits or zeros
+      const currentHex = taglineColor.slice(1) // Remove # from current color
+      fullHexColor = (cleanValue + currentHex + '000000').slice(0, 6)
+    }
+    
+    // Update the actual color if we have a valid hex
+    if (fullHexColor.length === 6) {
+      setTaglineColor(`#${fullHexColor}`)
+    }
+  }
+
+  const handleTaglineColorPickerChange = (value: string) => {
+    setTaglineColor(value)
+    // Update the input field to show just the hex code without #
+    setTaglineColorInputValue(value.slice(1))
   }
 
   const getFullLogoText = () => {
@@ -281,6 +358,28 @@ function App() {
     const displayText = textCase === 'uppercase' ? displayName.toUpperCase() : displayName
     const symbol = getTrademarkSymbol(trademarkSymbol)
     return displayText + symbol
+  }
+
+  const getFullTaglineText = () => {
+    if (!taglineText.trim()) return ''
+    const displayText = taglineTextCase === 'uppercase' ? taglineText.toUpperCase() : taglineText
+    return displayText
+  }
+
+  const handleLogoSectionToggle = () => {
+    if (!showLogoSection && showTaglineSection) {
+      // If opening logo section and tagline is open, close tagline
+      setShowTaglineSection(false)
+    }
+    setShowLogoSection(!showLogoSection)
+  }
+
+  const handleTaglineSectionToggle = () => {
+    if (!showTaglineSection && showLogoSection) {
+      // If opening tagline section and logo is open, close logo
+      setShowLogoSection(false)
+    }
+    setShowTaglineSection(!showTaglineSection)
   }
 
   const getFontClass = (font: string) => {
@@ -389,7 +488,14 @@ function App() {
           letter_spacing: letterSpacing,
           text_case: textCase,
           trademark_symbol: trademarkSymbol,
-          logo_color: logoColor
+          logo_color: logoColor,
+          has_tagline: !!getFullTaglineText(),
+          tagline_font: getFullTaglineText() ? taglineFont : null,
+          tagline_weight: getFullTaglineText() ? taglineFontWeight : null,
+          tagline_size: getFullTaglineText() ? taglineSize : null,
+          tagline_case: getFullTaglineText() ? taglineTextCase : null,
+          tagline_distance: getFullTaglineText() ? taglineDistance : null,
+          tagline_color: getFullTaglineText() ? taglineColor : null
         })
       }
 
@@ -447,7 +553,7 @@ function App() {
               if (errorJson.message) {
                 errorMessage = errorJson.message
               }
-            } catch (e) {
+            } catch {
               // errorText is not JSON, use as-is
               if (errorText) errorMessage = errorText
             }
@@ -473,6 +579,151 @@ function App() {
             response: (error as any).response
           })
           throw error
+        }
+      }
+
+      // Helper function to create vector SVG with tagline
+      const createClientVectorSVGWithTagline = async (logoColorParam: string, taglineColorParam?: string): Promise<string> => {
+        try {
+          console.log('Creating vector SVG with tagline using API')
+          const apiUrl = 'https://vector-cpxtftl6a-oskarglausers-projects.vercel.app/api/convert'
+          
+          // Use provided tagline color or default to user's tagline color
+          const actualTaglineColor = taglineColorParam || taglineColor
+          
+          // Create logo SVG
+          const logoRequestBody = {
+            text: fullText,
+            fontFamily: currentFont,
+            fontWeight: currentWeight,
+            fontSize: 120,
+            letterSpacing: currentLetterSpacing,
+            color: logoColorParam
+          }
+          
+          const logoResponse = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(logoRequestBody)
+          })
+
+          if (!logoResponse.ok) {
+            throw new Error(`Logo API request failed: ${logoResponse.status}`)
+          }
+
+          const logoResult = await logoResponse.json()
+          if (!logoResult.success) {
+            throw new Error(logoResult.message || 'Logo vector conversion failed')
+          }
+
+          // Create tagline SVG if tagline exists
+          if (getFullTaglineText()) {
+            const taglineRequestBody = {
+              text: getFullTaglineText(),
+              fontFamily: taglineFont,
+              fontWeight: taglineFontWeight,
+              fontSize: 120 * (taglineSize / 100),
+              letterSpacing: taglineLetterSpacing,
+              color: actualTaglineColor
+            }
+            
+            const taglineResponse = await fetch(apiUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(taglineRequestBody)
+            })
+
+            if (!taglineResponse.ok) {
+              throw new Error(`Tagline API request failed: ${taglineResponse.status}`)
+            }
+
+            const taglineResult = await taglineResponse.json()
+            if (!taglineResult.success) {
+              throw new Error(taglineResult.message || 'Tagline vector conversion failed')
+            }
+
+            // Combine logo and tagline SVGs
+            const logoSvg = logoResult.data.svg
+            const taglineSvg = taglineResult.data.svg
+            
+            // Extract paths from both SVGs
+            const logoPathMatch = logoSvg.match(/<path[^>]*d="([^"]*)"[^>]*>/g)
+            const taglinePathMatch = taglineSvg.match(/<path[^>]*d="([^"]*)"[^>]*>/g)
+            
+            if (logoPathMatch && taglinePathMatch) {
+              // Extract viewBox dimensions from original SVGs to calculate proper layout
+              const logoViewBoxMatch = logoSvg.match(/viewBox="([^"]*)"/)
+              const taglineViewBoxMatch = taglineSvg.match(/viewBox="([^"]*)"/)
+              
+              let logoWidth = 400, logoHeight = 120, taglineWidth = 400, taglineHeight = 120 * (taglineSize / 100)
+              
+              if (logoViewBoxMatch) {
+                const [, , logoW, logoH] = logoViewBoxMatch[1].split(' ').map(Number)
+                logoWidth = logoW
+                logoHeight = logoH
+              }
+              
+              if (taglineViewBoxMatch) {
+                const [, , tagW, tagH] = taglineViewBoxMatch[1].split(' ').map(Number)
+                taglineWidth = tagW
+                taglineHeight = tagH
+              }
+              
+              // Use tighter width calculation - take 90% of API width to reduce excess space
+              logoWidth = logoWidth * 0.9
+              taglineWidth = taglineWidth * 0.9
+              
+              // Calculate layout dimensions with proper spacing to match preview
+              // Use consistent spacing calculation with preview
+              const spacing = 120 * (taglineDistance / 100) // Base font size for consistent spacing
+              const padding = 40 // Consistent padding on all sides
+              const maxWidth = Math.max(logoWidth, taglineWidth)
+              
+              // Use font size for more accurate height calculation
+              const logoFontHeight = 120 // Base logo font size
+              const taglineFontHeight = 120 * (taglineSize / 100)
+              
+              // Calculate actual content dimensions
+              const logoYPos = logoFontHeight * 0.8 // Logo baseline position
+              const taglineYPos = logoYPos + logoFontHeight * 0.4 + spacing + taglineFontHeight * 0.8 // Tagline baseline position
+              const contentHeight = taglineYPos + taglineFontHeight * 0.2 // Content height including tagline descent
+              
+              // Add equal padding to all sides
+              const viewBoxWidth = maxWidth + (padding * 2)
+              const viewBoxHeight = contentHeight + (padding * 2)
+              
+              // Calculate perfect centering offsets
+              const logoXOffset = padding + (maxWidth - logoWidth) / 2
+              const taglineXOffset = padding + (maxWidth - taglineWidth) / 2
+              
+              // Position elements with equal padding from edges
+              const logoYOffset = padding + logoYPos
+              const taglineYOffset = padding + taglineYPos
+              
+              const combinedSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewBoxWidth} ${viewBoxHeight}">
+                <g transform="translate(${logoXOffset}, ${logoYOffset})">
+                  ${logoPathMatch.join('')}
+                </g>
+                <g transform="translate(${taglineXOffset}, ${taglineYOffset})">
+                  ${taglinePathMatch.join('')}
+                </g>
+              </svg>`
+              
+              return combinedSvg
+            }
+          }
+          
+          // Fallback to logo-only SVG
+          return logoResult.data.svg
+
+        } catch (error) {
+          console.error('Vector SVG with tagline creation failed:', error)
+          // Fallback to logo-only vector SVG
+          return createClientVectorSVG(color)
         }
       }
       
@@ -581,6 +832,144 @@ function App() {
         }
       }
 
+      // Helper function to create logo with tagline assets
+      const createLogoWithTaglineAssets = async (logoColorParam: string, taglineColorParam?: string) => {
+        if (!getFullTaglineText()) {
+          return createLogoAssets(logoColorParam) // Fallback to logo-only if no tagline
+        }
+
+        // Use provided tagline color or default to logo color
+        const actualTaglineColor = taglineColorParam || taglineColor
+
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          throw new Error('Canvas context not available')
+        }
+
+        const logoFontSize = 120
+        const taglineFontSize = logoFontSize * (taglineSize / 100)
+        
+        // Set up fonts for measurements
+        ctx.font = `${currentWeight} ${logoFontSize}px "${currentFont}", Arial, sans-serif`
+        
+        // Apply letter spacing for accurate measurements
+        if (currentLetterSpacing !== 0) {
+          ctx.letterSpacing = `${currentLetterSpacing / 100}em`
+        }
+        
+        // Measure logo text width (simplified measurement with letter spacing applied)
+        const logoTextWithoutTrademark = fullText.replace(/[™®©]/g, '')
+        const logoTextWidth = ctx.measureText(logoTextWithoutTrademark).width
+        
+        // Add trademark symbol width if present
+        const logoTrademarkMatch = fullText.match(/[™®©]/)
+        const tmExtraWidth = logoTrademarkMatch ? (logoFontSize * 0.35 * 0.5) : 0 // Approximate trademark width
+        const totalLogoWidth = logoTextWidth + tmExtraWidth
+        
+        // Measure tagline text width
+        const taglineDisplayText = getFullTaglineText()
+        ctx.font = `${taglineFontWeight} ${taglineFontSize}px "${taglineFont}", Arial, sans-serif`
+        
+        // Apply tagline letter spacing for measurement
+        if (taglineLetterSpacing !== 0) {
+          ctx.letterSpacing = `${taglineLetterSpacing / 100}em`
+        } else {
+          ctx.letterSpacing = '0'
+        }
+        
+        const taglineTextWidth = ctx.measureText(taglineDisplayText).width
+
+        // Calculate canvas dimensions with proper spacing to match preview
+        const padding = 60 // Increased padding for better spacing around content
+        const lineSpacing = logoFontSize * (taglineDistance / 100)
+        const maxWidth = Math.max(totalLogoWidth, taglineTextWidth)
+        const canvasWidth = maxWidth + (padding * 2)
+        
+        // Use more accurate height calculation with proper bottom margin
+        const logoHeightEstimate = logoFontSize // More accurate font height estimate
+        const taglineHeightEstimate = taglineFontSize
+        const canvasHeight = logoHeightEstimate + taglineHeightEstimate + lineSpacing + (padding * 2)
+        
+        // Set up high-resolution canvas
+        const scale = 2
+        canvas.width = canvasWidth * scale
+        canvas.height = canvasHeight * scale
+        ctx.scale(scale, scale)
+        
+        // Draw logo text
+        ctx.font = `${currentWeight} ${logoFontSize}px "${currentFont}", Arial, sans-serif`
+        ctx.fillStyle = logoColorParam
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'alphabetic'
+        
+        // Apply letter spacing for accurate rendering
+        if (currentLetterSpacing !== 0) {
+          ctx.letterSpacing = `${currentLetterSpacing / 100}em`
+        }
+        
+        // Center the logo text with consistent positioning to match preview
+        const logoY = padding + logoFontSize * 0.8 // Use font baseline positioning similar to SVG
+        const logoX = canvasWidth / 2
+        
+        // For simplicity and better centering, draw the logo text as a single unit
+        // Handle trademark symbols with proper scaling
+        
+        // Draw main text
+        ctx.fillText(logoTextWithoutTrademark, logoX, logoY)
+        
+        // Draw trademark symbol if present
+        if (logoTrademarkMatch) {
+          const tmSymbol = logoTrademarkMatch[0]
+          const tmFontSize = logoFontSize * 0.35
+          const mainTextWidth = ctx.measureText(logoTextWithoutTrademark).width
+          
+          ctx.font = `${currentWeight} ${tmFontSize}px "${currentFont}", Arial, sans-serif`
+          const tmX = logoX + (mainTextWidth / 2) + (tmFontSize / 2)
+          const tmY = logoY - (logoFontSize * 0.5)
+          ctx.fillText(tmSymbol, tmX, tmY)
+          
+          // Reset font for tagline
+          ctx.font = `${currentWeight} ${logoFontSize}px "${currentFont}", Arial, sans-serif`
+        }
+        
+        // Draw tagline text
+        ctx.font = `${taglineFontWeight} ${taglineFontSize}px "${taglineFont}", Arial, sans-serif`
+        ctx.fillStyle = actualTaglineColor
+        ctx.textAlign = 'center'
+        
+        // Apply tagline letter spacing
+        if (taglineLetterSpacing !== 0) {
+          ctx.letterSpacing = `${taglineLetterSpacing / 100}em`
+        } else {
+          ctx.letterSpacing = '0'
+        }
+        
+        const taglineY = logoY + logoFontSize * 0.4 + lineSpacing + taglineFontSize * 0.8 // Add logo descent + spacing + tagline ascent
+        const taglineX = canvasWidth / 2
+        
+        // Draw tagline as a single centered text
+        ctx.fillText(taglineDisplayText, taglineX, taglineY)
+
+        // Convert canvas to blob for PNG
+        const pngBlob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob(blob => {
+            if (blob) resolve(blob)
+            else reject(new Error('Failed to create PNG'))
+          }, 'image/png', 1.0)
+        })
+
+        // Create vector SVG for logo with tagline
+        const svgFromVector = await createClientVectorSVGWithTagline(logoColorParam, taglineColorParam)
+
+        return {
+          png: pngBlob,
+          svg: svgFromVector,
+          width: Math.ceil(canvasWidth),
+          height: Math.ceil(canvasHeight)
+        }
+      }
+
       // Helper function to add background to SVG
       const addBackgroundToSVG = (svgString: string, backgroundColor: string) => {
         return svgString.replace(
@@ -614,33 +1003,83 @@ function App() {
       const lightSVGDarkBG = addBackgroundToSVG(lightAssets.svg, '#000000')
       const lightPNG = lightAssets.png
 
+      // Generate tagline variants if tagline exists
+      let darkTaglineAssets, lightTaglineAssets
+      const hasTagline = !!getFullTaglineText()
+      
+      if (hasTagline) {
+        console.log('Generating dark variants with tagline...')
+        darkTaglineAssets = await createLogoWithTaglineAssets(logoColor)
+        console.log('Dark tagline assets generated')
+        
+        console.log('Generating light variants with tagline...')
+        lightTaglineAssets = await createLogoWithTaglineAssets('#ffffff', '#ffffff')
+        console.log('Light tagline assets generated')
+      }
+
       // Add PNG files (using canvas-generated PNGs with correct fonts)
-      pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-dark.png`, darkPNG)
-      pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-light.png`, lightPNG)
+      pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-dark.png`, darkPNG)
+      pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light.png`, lightPNG)
 
       // Add SVG files
-      svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-dark.svg`, darkSVG)
-      svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-light.svg`, lightSVG)
-      svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-dark-white-bg.svg`, darkSVGWhiteBG)
-      svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-light-dark-bg.svg`, lightSVGDarkBG)
+      svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-dark.svg`, darkSVG)
+      svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light.svg`, lightSVG)
+      svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-dark-white-bg.svg`, darkSVGWhiteBG)
+      svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light-dark-bg.svg`, lightSVGDarkBG)
+
+      // Add tagline versions if tagline exists
+      if (hasTagline && darkTaglineAssets && lightTaglineAssets) {
+        // PNG files with tagline
+        pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark.png`, darkTaglineAssets.png)
+        pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light.png`, lightTaglineAssets.png)
+
+        // SVG files with tagline
+        const darkTaglineSVGWhiteBG = addBackgroundToSVG(darkTaglineAssets.svg, '#ffffff')
+        const lightTaglineSVGDarkBG = addBackgroundToSVG(lightTaglineAssets.svg, '#000000')
+        
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark.svg`, darkTaglineAssets.svg)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light.svg`, lightTaglineAssets.svg)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark-white-bg.svg`, darkTaglineSVGWhiteBG)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light-dark-bg.svg`, lightTaglineSVGDarkBG)
+      }
 
 
       // Create simple brand info text file
       const brandInfo = `${brandName} Brand Package
 
 FILES INCLUDED:
-- ${brandName.replace(/\s+/g, '-').toLowerCase()}-dark.png (for light backgrounds)
-- ${brandName.replace(/\s+/g, '-').toLowerCase()}-light.png (for dark backgrounds)  
-- ${brandName.replace(/\s+/g, '-').toLowerCase()}-dark.svg (vector, light backgrounds)
-- ${brandName.replace(/\s+/g, '-').toLowerCase()}-light.svg (vector, dark backgrounds)
-- ${brandName.replace(/\s+/g, '-').toLowerCase()}-dark-white-bg.svg (with white background)
-- ${brandName.replace(/\s+/g, '-').toLowerCase()}-light-dark-bg.svg (with dark background)
+LOGO FILES:
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-dark.png (for light backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light.png (for dark backgrounds)  
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-dark.svg (vector, light backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light.svg (vector, dark backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-dark-white-bg.svg (with white background)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light-dark-bg.svg (with dark background)${hasTagline ? `
+
+LOGO WITH TAGLINE FILES:
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark.png (for light backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light.png (for dark backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark.svg (vector, light backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light.svg (vector, dark backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark-white-bg.svg (with white background)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light-dark-bg.svg (with dark background)` : ''}
 
 BRAND SPECIFICATIONS:
+LOGO:
 Font: ${selectedFont}
 Weight: ${fontWeight}
 Letter Spacing: ${letterSpacing}px
-Case: ${textCase === 'uppercase' ? 'Uppercase' : 'Standard Case'}
+Case: ${textCase === 'uppercase' ? 'Uppercase' : 'Standard Case'}${hasTagline ? `
+
+TAGLINE: "${getFullTaglineText()}"
+Font: ${taglineFont}
+Weight: ${taglineFontWeight}
+Letter Spacing: ${taglineLetterSpacing}px
+Case: ${taglineTextCase === 'uppercase' ? 'Uppercase' : 'Standard Case'}
+Size: ${taglineSize}% of logo size
+Distance from Logo: ${taglineDistance}%
+Color: ${taglineColor.toUpperCase()}` : ''}
+
 Primary Color: ${logoColor.toUpperCase()}
 RGB: rgb(${parseInt(logoColor.slice(1, 3), 16)}, ${parseInt(logoColor.slice(3, 5), 16)}, ${parseInt(logoColor.slice(5, 7), 16)})
 CMYK: ${(() => {
@@ -660,11 +1099,14 @@ USAGE GUIDELINES:
 ✓ Use SVG files for websites and scalable applications
 ✓ Use PNG files for documents and presentations
 ✓ Maintain clear space around logo
-✓ Scale proportionally - don't stretch or distort
+✓ Scale proportionally - don't stretch or distort${hasTagline ? `
+✓ Use logo-only files when space is limited
+✓ Use logo with tagline files when more context is needed` : ''}
 
 ✗ Don't change colors, fonts, or spacing
 ✗ Don't add effects or modify the logo
-✗ Don't use on busy backgrounds
+✗ Don't use on busy backgrounds${hasTagline ? `
+✗ Don't separate logo and tagline in different layouts` : ''}
 
 PROFESSIONAL QUALITY:
 All files contain true vector font outlines for professional reproduction at any size. No additional fonts required.
@@ -765,7 +1207,7 @@ Generated with GoLogotype: https://gologotype.com
             <div className="text-center w-full">
               <div
                 ref={mobileLogoRef}
-                className={`select-none ${getFontClass(selectedFont)}`}
+                className={`select-none ${getFontClass(selectedFont)} inline-block`}
                 style={{
                   fontSize: previewFontSize,
                   fontWeight: fontWeight,
@@ -794,138 +1236,347 @@ Generated with GoLogotype: https://gologotype.com
                   </span>
                 )}
               </div>
+              {getFullTaglineText() && (
+                <div
+                  className={`select-none ${getFontClass(taglineFont)}`}
+                  style={{
+                    fontSize: `calc(${previewFontSize} * ${taglineSize / 100})`,
+                    fontWeight: taglineFontWeight,
+                    letterSpacing: getLetterSpacingValue(taglineLetterSpacing),
+                    textTransform: getTextTransform(taglineTextCase) as any,
+                    color: taglineColor,
+                    lineHeight: 1.3,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    marginTop: `calc(${previewFontSize} * ${taglineDistance / 100})`,
+                  }}
+                >
+                  {getFullTaglineText()}
+                </div>
+              )}
             </div>
           </section>
 
           <section className="bg-white p-4 sm:p-6 font-inter" aria-label="Logo customization controls">
             <h2 className="sr-only">Logo Customization Options</h2>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="brand-name" className="text-sm font-medium text-gray-700">
-                  Brand Name
-                </Label>
-                <Input
-                  id="brand-name"
-                  value={brandName}
-                  onChange={(e) => setBrandName(e.target.value)}
-                  placeholder="Enter your brand name"
-                  className="text-base border-gray-300 focus:border-gray-900 h-10 sm:h-9"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Font</Label>
-                  <Select value={selectedFont} onValueChange={(font) => {
-                    setSelectedFont(font)
-                    const availableWeights = fontWeightsByFamily[font] || []
-                    if (availableWeights.length > 0 && !availableWeights.find(w => w.value === fontWeight)) {
-                      setFontWeight(availableWeights[0].value)
-                    }
-                  }}>
-                    <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {fonts.map((font) => (
-                        <SelectItem key={font} value={font} style={{ fontFamily: font }}>
-                          {font}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Weight</Label>
-                  <Select value={fontWeight} onValueChange={setFontWeight}>
-                    <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(fontWeightsByFamily[selectedFont] || []).map((weight) => (
-                        <SelectItem key={weight.value} value={weight.value}>
-                          {weight.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Letter Spacing</Label>
-                  <div className="px-1">
-                    <Slider
-                      value={[letterSpacing]}
-                      onValueChange={(value) => setLetterSpacing(value[0])}
-                      min={-10}
-                      max={20}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>Tight</span>
-                      <span>Normal</span>
-                      <span>Wide</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700">Case</Label>
-                  <RadioGroup value={textCase} onValueChange={setTextCase} className="flex gap-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="normal" id="case-normal" className="h-4 w-4" />
-                      <Label htmlFor="case-normal" className="text-sm cursor-pointer text-gray-600">Normal (Aa)</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="uppercase" id="uppercase" className="h-4 w-4" />
-                      <Label htmlFor="uppercase" className="text-sm cursor-pointer text-gray-600">Upper (AA)</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Trademark</Label>
-                <Select value={trademarkSymbol} onValueChange={setTrademarkSymbol}>
-                  <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="r">® (Registered)</SelectItem>
-                    <SelectItem value="c">© (Copyright)</SelectItem>
-                    <SelectItem value="tm">™ (Trademark)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Logo Color</Label>
-                <div className="flex gap-2">
-                  <div className="flex-1 relative">
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
-                      #
-                    </div>
-                    <Input
-                      value={colorInputValue}
-                      onChange={(e) => handleColorInputChange(e.target.value)}
-                      placeholder="f00 or ff0000"
-                      className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
-                      maxLength={6}
-                    />
-                  </div>
-                  <input
-                    type="color"
-                    value={logoColor}
-                    onChange={(e) => handleColorPickerChange(e.target.value)}
-                    className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
+              {/* Logo Section */}
+              <div>
+                <button
+                  type="button"
+                  onClick={handleLogoSectionToggle}
+                  className="flex items-center justify-between w-full text-base font-bold text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  <span>Logo Settings</span>
+                  <ChevronDown 
+                    className={`w-4 h-4 transition-transform ${showLogoSection ? 'rotate-180' : ''}`} 
                   />
-                </div>
-                <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
+                </button>
+                
+                {showLogoSection && (
+                  <div className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="brand-name" className="text-sm font-medium text-gray-700">
+                        Brand Name
+                      </Label>
+                      <Input
+                        id="brand-name"
+                        value={brandName}
+                        onChange={(e) => setBrandName(e.target.value)}
+                        placeholder="Enter your brand name"
+                        className="text-base border-gray-300 focus:border-gray-900 h-10 sm:h-9"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Font</Label>
+                        <Select value={selectedFont} onValueChange={(font) => {
+                          setSelectedFont(font)
+                          const availableWeights = fontWeightsByFamily[font] || []
+                          if (availableWeights.length > 0 && !availableWeights.find(w => w.value === fontWeight)) {
+                            setFontWeight(availableWeights[0].value)
+                          }
+                        }}>
+                          <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fonts.map((font) => (
+                              <SelectItem key={font} value={font} style={{ fontFamily: font }}>
+                                {font}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Weight</Label>
+                        <Select value={fontWeight} onValueChange={setFontWeight}>
+                          <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(fontWeightsByFamily[selectedFont] || []).map((weight) => (
+                              <SelectItem key={weight.value} value={weight.value}>
+                                {weight.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Letter Spacing</Label>
+                        <div className="px-1">
+                          <Slider
+                            value={[letterSpacing]}
+                            onValueChange={(value) => setLetterSpacing(value[0])}
+                            min={-10}
+                            max={20}
+                            step={1}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Tight</span>
+                            <span>Normal</span>
+                            <span>Wide</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Case</Label>
+                        <RadioGroup value={textCase} onValueChange={setTextCase} className="flex gap-4">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="normal" id="case-normal" className="h-4 w-4" />
+                            <Label htmlFor="case-normal" className="text-sm cursor-pointer text-gray-600">Normal (Aa)</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="uppercase" id="uppercase" className="h-4 w-4" />
+                            <Label htmlFor="uppercase" className="text-sm cursor-pointer text-gray-600">Upper (AA)</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Trademark</Label>
+                      <Select value={trademarkSymbol} onValueChange={setTrademarkSymbol}>
+                        <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="r">® (Registered)</SelectItem>
+                          <SelectItem value="c">© (Copyright)</SelectItem>
+                          <SelectItem value="tm">™ (Trademark)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700">Logo Color</Label>
+                      <div className="flex gap-2">
+                        <div className="flex-1 relative">
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
+                            #
+                          </div>
+                          <Input
+                            value={colorInputValue}
+                            onChange={(e) => handleColorInputChange(e.target.value)}
+                            placeholder="f00 or ff0000"
+                            className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
+                            maxLength={6}
+                          />
+                        </div>
+                        <input
+                          type="color"
+                          value={logoColor}
+                          onChange={(e) => handleColorPickerChange(e.target.value)}
+                          className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Tagline Section */}
+              <div className="border-t border-gray-200 pt-4">
+                <button
+                  type="button"
+                  onClick={handleTaglineSectionToggle}
+                  className="flex items-center justify-between w-full text-base font-bold text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  <span>Add Tagline (Optional)</span>
+                  <ChevronDown 
+                    className={`w-4 h-4 transition-transform ${showTaglineSection ? 'rotate-180' : ''}`} 
+                  />
+                </button>
+                
+                {showTaglineSection && (
+                  <div className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="tagline-text" className="text-sm font-medium text-gray-700">
+                        Tagline Text
+                      </Label>
+                      <Input
+                        id="tagline-text"
+                        value={taglineText}
+                        onChange={(e) => setTaglineText(e.target.value)}
+                        placeholder="Enter your tagline"
+                        className="text-base border-gray-300 focus:border-gray-900 h-10 sm:h-9"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Tagline Font</Label>
+                        <Select value={taglineFont} onValueChange={(font) => {
+                          setTaglineFont(font)
+                          const availableWeights = fontWeightsByFamily[font] || []
+                          if (availableWeights.length > 0 && !availableWeights.find(w => w.value === taglineFontWeight)) {
+                            setTaglineFontWeight(availableWeights[0].value)
+                          }
+                        }}>
+                          <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fonts.map((font) => (
+                              <SelectItem key={font} value={font} style={{ fontFamily: font }}>
+                                {font}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Tagline Weight</Label>
+                        <Select value={taglineFontWeight} onValueChange={setTaglineFontWeight}>
+                          <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(fontWeightsByFamily[taglineFont] || []).map((weight) => (
+                              <SelectItem key={weight.value} value={weight.value}>
+                                {weight.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Tagline Letter Spacing</Label>
+                        <div className="px-1">
+                          <Slider
+                            value={[taglineLetterSpacing]}
+                            onValueChange={(value) => setTaglineLetterSpacing(value[0])}
+                            min={-10}
+                            max={20}
+                            step={1}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Tight</span>
+                            <span>Normal</span>
+                            <span>Wide</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Tagline Case</Label>
+                        <RadioGroup value={taglineTextCase} onValueChange={setTaglineTextCase} className="flex gap-4">
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="normal" id="tagline-case-normal" className="h-4 w-4" />
+                            <Label htmlFor="tagline-case-normal" className="text-sm cursor-pointer text-gray-600">Normal (Aa)</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="uppercase" id="tagline-uppercase" className="h-4 w-4" />
+                            <Label htmlFor="tagline-uppercase" className="text-sm cursor-pointer text-gray-600">Upper (AA)</Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Tagline Size ({taglineSize}% of logo)
+                        </Label>
+                        <div className="px-1">
+                          <Slider
+                            value={[taglineSize]}
+                            onValueChange={(value) => setTaglineSize(value[0])}
+                            min={15}
+                            max={80}
+                            step={5}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Small</span>
+                            <span>Medium</span>
+                            <span>Large</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Distance from Logo ({taglineDistance}%)
+                        </Label>
+                        <div className="px-1">
+                          <Slider
+                            value={[taglineDistance]}
+                            onValueChange={(value) => setTaglineDistance(value[0])}
+                            min={0}
+                            max={40}
+                            step={2}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Very Close</span>
+                            <span>Normal</span>
+                            <span>Far</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Tagline Color</Label>
+                        <div className="flex gap-2">
+                          <div className="flex-1 relative">
+                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
+                              #
+                            </div>
+                            <Input
+                              value={taglineColorInputValue}
+                              onChange={(e) => handleTaglineColorInputChange(e.target.value)}
+                              placeholder="f00 or ff0000"
+                              className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
+                              maxLength={6}
+                            />
+                          </div>
+                          <input
+                            type="color"
+                            value={taglineColor}
+                            onChange={(e) => handleTaglineColorPickerChange(e.target.value)}
+                            className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="pt-4 border-t border-gray-200 space-y-3">
@@ -953,7 +1604,7 @@ Generated with GoLogotype: https://gologotype.com
             <h2 className="sr-only">Logo Preview</h2>
             <div className="text-center w-full">
               <div
-                className={`select-none ${getFontClass(selectedFont)}`}
+                className={`select-none ${getFontClass(selectedFont)} inline-block`}
                 style={{
                   fontSize: previewFontSize,
                   fontWeight: fontWeight,
@@ -982,6 +1633,24 @@ Generated with GoLogotype: https://gologotype.com
                   </span>
                 )}
               </div>
+              {getFullTaglineText() && (
+                <div
+                  className={`select-none ${getFontClass(taglineFont)}`}
+                  style={{
+                    fontSize: `calc(${previewFontSize} * ${taglineSize / 100})`,
+                    fontWeight: taglineFontWeight,
+                    letterSpacing: getLetterSpacingValue(taglineLetterSpacing),
+                    textTransform: getTextTransform(taglineTextCase) as any,
+                    color: taglineColor,
+                    lineHeight: 1.3,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    marginTop: `calc(${previewFontSize} * ${taglineDistance / 100})`,
+                  }}
+                >
+                  {getFullTaglineText()}
+                </div>
+              )}
             </div>
           </section>
         </main>
@@ -1048,6 +1717,53 @@ Generated with GoLogotype: https://gologotype.com
                 or developing an innovative app, our logo generator provides the professional 
                 branding assets you need. Perfect for creating the logo for your next vibe coded project.
               </p>
+            </div>
+            
+            {/* FAQ Section */}
+            <div className="pt-6 border-t border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center">Frequently Asked Questions</h2>
+              <div className="space-y-3 max-w-3xl mx-auto">
+                <FAQItem 
+                  question="What file formats do I get when I download my logo?"
+                  answer="You get a complete brand package including SVG (vector), PNG (transparent background), and versions with white/dark backgrounds. All files are professionally optimized for web, print, and any other use case."
+                />
+                <FAQItem 
+                  question="Are the logos truly vector-based?"
+                  answer="Yes! Our SVG files contain true vector font outlines, not embedded text. This means your logo will scale perfectly at any size without losing quality, and you don't need to install any fonts."
+                />
+                <FAQItem 
+                  question="Can I use these logos commercially?"
+                  answer="Absolutely! All logos generated are free to use for any purpose including commercial projects, startups, businesses, and personal use. No attribution required."
+                />
+                <FAQItem 
+                  question="Do I need to create an account to download logos?"
+                  answer="No account needed! Simply customize your logo and download immediately. We believe in keeping the process simple and fast."
+                />
+                <FAQItem 
+                  question="What's the difference between the tagline versions?"
+                  answer="You get both logo-only files and logo-with-tagline files. Use logo-only when space is limited, and logo-with-tagline when you need more context or brand messaging."
+                />
+                <FAQItem 
+                  question="Can I edit the colors after downloading?"
+                  answer="Yes! The SVG files can be easily edited in any design software like Figma, Adobe Illustrator, or even code editors. You can change colors, modify spacing, or make other adjustments as needed."
+                />
+                <FAQItem 
+                  question="How do I create a professional logo for my business?"
+                  answer="Creating a professional logo is simple with our generator. Choose a font that reflects your brand personality, enter your business name, select appropriate colors, and optionally add a tagline. Our tool generates clean, scalable logos perfect for any business."
+                />
+                <FAQItem 
+                  question="What makes a good logo design?"
+                  answer="A good logo is simple, memorable, and scalable. It should work in both color and black/white, be readable at small sizes, and reflect your brand's personality. Our generator focuses on typography-based logos that meet all these criteria."
+                />
+                <FAQItem 
+                  question="How to make a logo for free?"
+                  answer="Our logo generator is completely free! Simply enter your brand name, customize the font, weight, spacing, and colors, then download your professional logo package. No subscriptions, watermarks, or hidden fees."
+                />
+                <FAQItem 
+                  question="What's the best font for a logo?"
+                  answer="The best font depends on your brand. Sans-serif fonts like Inter and Montserrat work well for modern, tech companies. Serif fonts like Playfair Display suit luxury or traditional brands. Our curated font collection includes the most versatile options for logo design."
+                />
+              </div>
             </div>
             
             <div className="pt-6 border-t border-gray-200">
