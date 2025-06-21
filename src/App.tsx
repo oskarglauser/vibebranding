@@ -659,18 +659,16 @@ function App() {
               const logoViewBoxMatch = logoSvg.match(/viewBox="([^"]*)"/)
               const taglineViewBoxMatch = taglineSvg.match(/viewBox="([^"]*)"/)
               
-              let logoWidth = 400, logoHeight = 120, taglineWidth = 400, taglineHeight = 120 * (taglineSize / 100)
+              let logoWidth = 400, taglineWidth = 400
               
               if (logoViewBoxMatch) {
-                const [, , logoW, logoH] = logoViewBoxMatch[1].split(' ').map(Number)
+                const [, , logoW] = logoViewBoxMatch[1].split(' ').map(Number)
                 logoWidth = logoW
-                logoHeight = logoH
               }
               
               if (taglineViewBoxMatch) {
-                const [, , tagW, tagH] = taglineViewBoxMatch[1].split(' ').map(Number)
+                const [, , tagW] = taglineViewBoxMatch[1].split(' ').map(Number)
                 taglineWidth = tagW
-                taglineHeight = tagH
               }
               
               // Use tighter width calculation - take 90% of API width to reduce excess space
@@ -723,7 +721,7 @@ function App() {
         } catch (error) {
           console.error('Vector SVG with tagline creation failed:', error)
           // Fallback to logo-only vector SVG
-          return createClientVectorSVG(color)
+          return createClientVectorSVG(logoColorParam)
         }
       }
       
