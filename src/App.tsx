@@ -1231,7 +1231,7 @@ Generated with GoLogotype: https://gologotype.com
 
         <main className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
           {/* Mobile: Preview on top, compact */}
-          <section ref={mobileContainerRef} className="lg:hidden bg-gray-50 rounded-lg p-4 flex items-center justify-center min-h-[200px]" aria-label="Logo preview">
+          <section ref={mobileContainerRef} className="lg:hidden bg-gray-50 rounded-lg p-4 flex items-center justify-center min-h-[200px] sticky top-4 z-10" aria-label="Logo preview">
             <h2 className="sr-only">Logo Preview</h2>
             <div className="text-center w-full">
               <div
