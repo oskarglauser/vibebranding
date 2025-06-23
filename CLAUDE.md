@@ -27,6 +27,7 @@ GoLogotype is a professional logo generator that converts text to true vector SV
 npm run dev          # Start development server
 npm run build        # Build for production
 npm run preview      # Preview production build
+npm run lint         # Run ESLint code quality checks
 ```
 
 ### Server Development
@@ -34,7 +35,9 @@ npm run preview      # Preview production build
 cd server
 npm run dev          # Start Express server with nodemon
 npm start            # Start production server
-npm test             # Run tests
+npm test             # Run all tests (unit + integration)
+npm run test:unit    # Run unit tests only
+npm run test:integration  # Run integration tests only
 ```
 
 ### Vector API Development
