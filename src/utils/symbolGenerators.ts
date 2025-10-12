@@ -3,7 +3,7 @@
  */
 
 import type { SymbolSVGResult } from '../types/symbol';
-import { createSeededRandom, randomInt, randomFloat, randomChoice } from './seedUtils';
+import { createSeededRandom, randomInt } from './seedUtils';
 
 const VIEWBOX_SIZE = 100;
 
@@ -408,7 +408,6 @@ export function generateShapeSymbol(seed: string, color: string): SymbolSVGResul
       break;
 
     case 19: // Rounded triangles arrangement
-      const tri1Rot = randomInt(random, 0, 360);
       shapes = `
         <circle cx="50" cy="30" r="12" fill="${color}" opacity="0.7"/>
         <circle cx="35" cy="55" r="12" fill="${color}" opacity="0.7"/>
