@@ -63,7 +63,7 @@ function App() {
   const [symbolMode, setSymbolMode] = useState<SymbolMode>('none')
   const [symbolFont, setSymbolFont] = useState('Inter')
   const [symbolPlacement, setSymbolPlacement] = useState<SymbolPlacement>('above')
-  const [symbolSize, setSymbolSize] = useState(85) // Percentage
+  const [symbolSize, setSymbolSize] = useState(80) // Percentage
   const [symbolDistance, setSymbolDistance] = useState(20) // Percentage
   const [symbolColor, setSymbolColor] = useState('#111827')
   const [symbolColorInputValue, setSymbolColorInputValue] = useState('111827')
@@ -1101,7 +1101,8 @@ function App() {
           canvasWidth = symbolSizePixels + symbolDistancePixels + logoWidth + (padding * 2)
           canvasHeight = Math.max(symbolSizePixels, logoHeight) + (padding * 2)
           symbolX = padding
-          symbolY = padding + (canvasHeight - padding * 2 - symbolSizePixels) / 2
+          // Align symbol center with logo center for better visual balance
+          symbolY = padding + (logoHeight - symbolSizePixels) / 2
           logoX = padding + symbolSizePixels + symbolDistancePixels
           logoY = padding
         } else { // separate
@@ -1966,8 +1967,8 @@ Generated with GoLogotype: https://gologotype.com
                             <Slider
                               value={[symbolSize]}
                               onValueChange={(value) => setSymbolSize(value[0])}
-                              min={30}
-                              max={100}
+                              min={80}
+                              max={150}
                               step={5}
                               className="w-full"
                             />

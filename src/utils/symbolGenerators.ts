@@ -1153,9 +1153,10 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
       const baseRingRadius = randomSize(random, 28, 0.15);
       const ringSpacing = randomSize(random, 15, 0.2);
       const ringLetterSize = randomSize(random, 14, 0.2);
+      const baseLetterCount = randomCount(random, 8, 12);
       for (let ring = 0; ring < ringLetterCount; ring++) {
         const radius = baseRingRadius - ring * ringSpacing;
-        const lettersInRing = Math.max(4, Math.floor(radialLetterCount - ring * 2));
+        const lettersInRing = Math.max(4, Math.floor(baseLetterCount - ring * 2));
         for (let i = 0; i < lettersInRing; i++) {
           const angle = (i * 360 / lettersInRing) * Math.PI / 180;
           const x = 50 + radius * Math.cos(angle);
