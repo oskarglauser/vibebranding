@@ -5,7 +5,7 @@ import { Label } from './components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import { RadioGroup, RadioGroupItem } from './components/ui/radio-group'
 import { Slider } from './components/ui/slider'
-import { Download, Share2, ChevronDown, Copy, Check } from 'lucide-react'
+import { Download, Share2, ChevronDown } from 'lucide-react'
 import JSZip from 'jszip'
 
 // Import shared constants and utilities
@@ -54,7 +54,6 @@ function App() {
   const [taglineColorInputValue, setTaglineColorInputValue] = useState('111827')
   const [showTaglineSection, setShowTaglineSection] = useState(false)
   const [showLogoSection, setShowLogoSection] = useState(true)
-  const [copySVGFeedback, setCopySVGFeedback] = useState(false)
 
   const logoRef = useRef<HTMLDivElement>(null)
   const mobileLogoRef = useRef<HTMLDivElement>(null)
@@ -999,70 +998,6 @@ Generated with GoLogotype: https://gologotype.com
     }
   }
 
-  const handleCopySVG = async () => {
-    if (!brandName.trim()) {
-      alert('Please enter a brand name first!')
-      return
-    }
-
-    try {
-      // Track copy SVG event
-      if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
-        window.gtag('event', 'copy_svg', {
-          event_category: 'Logo',
-          event_label: selectedFont,
-          font_family: selectedFont,
-          font_weight: fontWeight
-        })
-      }
-
-      const displayText = textCase === 'uppercase' ? brandName.toUpperCase() : brandName
-      const fullText = displayText + (getTrademarkSymbol(trademarkSymbol) || '')
-
-      // Use the configured vector API endpoint
-      const apiUrl = API_CONFIG.vectorApiUrl
-
-      const requestBody = {
-        text: fullText,
-        fontFamily: selectedFont,
-        fontWeight: fontWeight,
-        fontSize: 120,
-        letterSpacing: letterSpacing,
-        color: logoColor
-      }
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
-      })
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`)
-      }
-
-      const result = await response.json()
-
-      if (!result.success) {
-        throw new Error(result.message || 'Vector conversion failed')
-      }
-
-      // Copy SVG to clipboard
-      await navigator.clipboard.writeText(result.data.svg)
-
-      // Show success feedback
-      setCopySVGFeedback(true)
-      setTimeout(() => setCopySVGFeedback(false), 2000)
-
-    } catch (error) {
-      console.error('Copy SVG failed:', error)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      alert(`Failed to copy SVG: ${errorMessage}`)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 px-4 py-3 sm:p-6 transition-colors">
       <div className="mx-auto max-w-6xl">
@@ -1096,19 +1031,6 @@ Generated with GoLogotype: https://gologotype.com
           {/* Mobile: Preview on top, compact */}
           <section ref={mobileContainerRef} className="lg:hidden bg-gray-50 -mx-4 rounded-none sm:mx-0 sm:rounded-lg p-4 flex items-center justify-center min-h-[200px] sticky top-4 z-10 relative overflow-visible" aria-label="Logo preview">
             <h2 className="sr-only">Logo Preview</h2>
-            {/* Copy SVG Button */}
-            <button
-              onClick={handleCopySVG}
-              className="absolute top-2 right-2 p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all shadow-sm hover:shadow-md"
-              aria-label="Copy SVG to clipboard"
-              title={copySVGFeedback ? 'Copied!' : 'Copy SVG'}
-            >
-              {copySVGFeedback ? (
-                <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
-              ) : (
-                <Copy className="w-4 h-4" />
-              )}
-            </button>
             <div className="text-center w-full">
               <div
                 ref={mobileLogoRef}
@@ -1508,19 +1430,6 @@ Generated with GoLogotype: https://gologotype.com
           {/* Desktop: Preview on right side */}
           <section ref={containerRef} className="hidden lg:flex bg-gray-50 rounded-lg p-4 sm:p-8 items-center justify-center min-h-[400px] sm:min-h-[500px] relative overflow-visible" aria-label="Logo preview">
             <h2 className="sr-only">Logo Preview</h2>
-            {/* Copy SVG Button */}
-            <button
-              onClick={handleCopySVG}
-              className="absolute top-4 right-4 p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all shadow-sm hover:shadow-md"
-              aria-label="Copy SVG to clipboard"
-              title={copySVGFeedback ? 'Copied!' : 'Copy SVG'}
-            >
-              {copySVGFeedback ? (
-                <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
-              ) : (
-                <Copy className="w-4 h-4" />
-              )}
-            </button>
             <div className="text-center w-full">
               <div
                 className={`select-none ${getFontClass(selectedFont)} inline-block`}
@@ -1619,11 +1528,11 @@ Generated with GoLogotype: https://gologotype.com
                     <strong>™</strong> - Unregistered trademark for any brand name<br/>
                     <strong>®</strong> - Registered trademark (requires official registration)<br/>
                     <strong>©</strong> - Copyright symbol for creative works<br/>
-                    <a 
-                      href="https://en.wikipedia.org/wiki/Trademark" 
-                      target="_blank" 
+                    <a
+                      href="https://en.wikipedia.org/wiki/Trademark"
+                      target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-700 hover:text-gray-900 hover:underline text-xs mt-1 inline-block"
+                      className="text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-200 underline text-xs mt-1 inline-block"
                     >
                       Learn more about trademarks →
                     </a>
@@ -1693,7 +1602,7 @@ Generated with GoLogotype: https://gologotype.com
                     href="https://glauser.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gray-900 hover:underline font-medium"
+                    className="text-gray-900 dark:text-white hover:underline font-medium"
                   >
                     Glauser Creative
                   </a>
@@ -1704,7 +1613,7 @@ Generated with GoLogotype: https://gologotype.com
                     Have suggestions for improving this tool? Email{' '}
                     <a
                       href="mailto:oskar@glauser.com"
-                      className="text-gray-600 hover:text-gray-900 hover:underline"
+                      className="text-gray-600 dark:text-white hover:text-gray-900 dark:hover:text-gray-200 underline"
                     >
                       oskar@glauser.com
                     </a>
