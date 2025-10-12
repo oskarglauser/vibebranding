@@ -1728,7 +1728,7 @@ Generated with GoLogotype: https://gologotype.com
                 </button>
                 
                 {showLogoSection && (
-                  <div className="space-y-4 mt-4">
+                  <div className="space-y-3 mt-4">
                     <div className="space-y-2">
                       <Label htmlFor="brand-name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Brand Name
@@ -1764,7 +1764,7 @@ Generated with GoLogotype: https://gologotype.com
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Weight</Label>
                         <Select value={fontWeight} onValueChange={setFontWeight}>
@@ -1782,7 +1782,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Letter Spacing</Label>
@@ -1804,7 +1804,7 @@ Generated with GoLogotype: https://gologotype.com
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Case</Label>
                         <RadioGroup value={textCase} onValueChange={setTextCase as (value: string) => void} className="flex gap-4">
@@ -1818,21 +1818,6 @@ Generated with GoLogotype: https://gologotype.com
                           </div>
                         </RadioGroup>
                       </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Trademark</Label>
-                      <Select value={trademarkSymbol} onValueChange={setTrademarkSymbol as (value: string) => void}>
-                        <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectItem value="r">® (Registered)</SelectItem>
-                          <SelectItem value="c">© (Copyright)</SelectItem>
-                          <SelectItem value="tm">™ (Trademark)</SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
 
                     <div className="space-y-2">
@@ -1858,6 +1843,21 @@ Generated with GoLogotype: https://gologotype.com
                         />
                       </div>
                       <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Trademark</Label>
+                      <Select value={trademarkSymbol} onValueChange={setTrademarkSymbol as (value: string) => void}>
+                        <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="r">® (Registered)</SelectItem>
+                          <SelectItem value="c">© (Copyright)</SelectItem>
+                          <SelectItem value="tm">™ (Trademark)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 )}
