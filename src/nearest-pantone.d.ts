@@ -1,10 +1,9 @@
 declare module 'nearest-pantone' {
   export interface PantoneResult {
+    pantone: string
     name: string
     hex: string
-    distance: number
   }
 
-  function nearestPantone(hex: string): PantoneResult
-  export default nearestPantone
+  export function getClosestColor(hex: string): PantoneResult
 }

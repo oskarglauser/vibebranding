@@ -1,12 +1,12 @@
 /**
  * Pantone color conversion utilities
  */
-import nearestPantone from 'nearest-pantone'
+import { getClosestColor } from 'nearest-pantone'
 
 export interface PantoneMatch {
+  pantone: string
   name: string
   hex: string
-  distance: number
 }
 
 /**
@@ -17,18 +17,18 @@ export function hexToPantone(hex: string): PantoneMatch {
   const cleanHex = hex.replace('#', '')
 
   try {
-    const result = nearestPantone(cleanHex)
+    const result = getClosestColor(cleanHex)
     return {
+      pantone: result.pantone || 'Unknown',
       name: result.name || 'Unknown',
-      hex: result.hex || cleanHex,
-      distance: result.distance || 0
+      hex: result.hex || `#${cleanHex}`
     }
   } catch (error) {
     console.error('Pantone conversion error:', error)
     return {
+      pantone: 'Unknown',
       name: 'Unknown',
-      hex: cleanHex,
-      distance: Infinity
+      hex: `#${cleanHex}`
     }
   }
 }
@@ -37,5 +37,5 @@ export function hexToPantone(hex: string): PantoneMatch {
  * Format Pantone color for display
  */
 export function formatPantone(pantone: PantoneMatch): string {
-  return `${pantone.name} (${pantone.hex.toUpperCase()})`
+  return `${pantone.pantone} ${pantone.name}`
 }
