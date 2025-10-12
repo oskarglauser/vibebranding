@@ -1001,7 +1001,7 @@ Generated with GoLogotype: https://gologotype.com
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 px-4 py-3 sm:p-6 transition-colors">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-3 sm:mb-4 relative flex items-center justify-between pl-3.5 sm:pl-5.5">
+        <header className="mb-3 sm:mb-4 relative flex items-center justify-between sm:pl-4">
           <div className="flex items-center gap-3">
             <img
               src="/gologotype-dark.svg"
