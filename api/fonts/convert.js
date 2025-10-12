@@ -136,7 +136,8 @@ export default async function handler(req, res) {
 async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterSpacing, color, textAlign }) {
   try {
     // Download Google Font CSS to get font file URL (WOFF2 supported by fontkit)
-    const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@${fontWeight}&display=swap`;
+    // Add &text parameter to ensure all needed glyphs are included in the font file
+    const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@${fontWeight}&text=${encodeURIComponent(text)}&display=swap`;
 
     const cssResponse = await fetch(fontUrl, {
       headers: {
@@ -174,6 +175,18 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
     console.log('Parsing font with fontkit...');
     const font = fontkit.create(Buffer.from(fontBuffer));
     console.log(`Font parsed successfully: ${font.familyName || 'Unknown'}`);
+    console.log(`Font has ${font.numGlyphs} glyphs total`);
+    console.log(`Font characterSet size: ${font.characterSet ? font.characterSet.length : 'N/A'}`);
+
+    // Debug: Check glyph mapping for each character
+    console.log('Character to glyph mapping:');
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const codePoint = char.charCodeAt(0);
+      const glyphId = font.glyphForCodePoint(codePoint);
+      const glyphName = font.getGlyph(glyphId)?.name || 'unknown';
+      console.log(`  '${char}' (U+${codePoint.toString(16).toUpperCase().padStart(4, '0')}) -> glyph ID ${glyphId} (${glyphName})`);
+    }
 
     // Layout text with fontkit to get positioned glyphs
     const run = font.layout(text);
@@ -210,29 +223,45 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
 
       if (glyph.path && glyph.path.commands && glyph.path.commands.length > 0) {
         console.log(`Building from ${glyph.path.commands.length} commands`);
+
+        // Debug: Log first command structure
+        if (glyph.path.commands[0]) {
+          console.log('First command structure:', JSON.stringify(glyph.path.commands[0]));
+        }
+
         const commands = [];
 
         for (const cmd of glyph.path.commands) {
           switch (cmd.type) {
             case 'M':
-              commands.push(`M${cmd.x},${cmd.y}`);
+              if (cmd.x !== undefined && cmd.y !== undefined) {
+                commands.push(`M${cmd.x},${cmd.y}`);
+              }
               break;
             case 'L':
-              commands.push(`L${cmd.x},${cmd.y}`);
+              if (cmd.x !== undefined && cmd.y !== undefined) {
+                commands.push(`L${cmd.x},${cmd.y}`);
+              }
               break;
             case 'C':
-              commands.push(`C${cmd.x1},${cmd.y1} ${cmd.x2},${cmd.y2} ${cmd.x},${cmd.y}`);
+              if (cmd.x1 !== undefined && cmd.y1 !== undefined && cmd.x2 !== undefined && cmd.y2 !== undefined && cmd.x !== undefined && cmd.y !== undefined) {
+                commands.push(`C${cmd.x1},${cmd.y1} ${cmd.x2},${cmd.y2} ${cmd.x},${cmd.y}`);
+              }
               break;
             case 'Q':
-              commands.push(`Q${cmd.x1},${cmd.y1} ${cmd.x},${cmd.y}`);
+              if (cmd.x1 !== undefined && cmd.y1 !== undefined && cmd.x !== undefined && cmd.y !== undefined) {
+                commands.push(`Q${cmd.x1},${cmd.y1} ${cmd.x},${cmd.y}`);
+              }
               break;
             case 'Z':
               commands.push('Z');
               break;
+            default:
+              console.warn(`Unknown command type: ${cmd.type}`);
           }
         }
         pathData = commands.join(' ');
-        console.log(`Built path (first 50 chars): ${pathData.substring(0, 50)}...`);
+        console.log(`Built path length: ${pathData.length}, first 100 chars: ${pathData.substring(0, 100)}...`);
       } else {
         console.warn(`No commands found for glyph ${i} (${text[i]})`);
       }
