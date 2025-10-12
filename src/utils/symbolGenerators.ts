@@ -45,9 +45,9 @@ function constrainCircleRadius(cx: number, cy: number, radius: number, strokeWid
 /**
  * Constrain polygon radius to fit within bounds (accounts for rotation)
  */
-function constrainPolygonRadius(radius: number): number {
-  // For rotated polygons, use conservative constraint
-  return Math.min(radius, (VIEWBOX_SIZE / 2) - SAFE_MARGIN - 2);
+function constrainPolygonRadius(radius: number, strokeWidth: number = 0): number {
+  // For rotated polygons, use conservative constraint including stroke
+  return Math.min(radius, (VIEWBOX_SIZE / 2) - SAFE_MARGIN - (strokeWidth / 2) - 2);
 }
 
 /**
@@ -184,7 +184,7 @@ export function generateLetterSymbol(
       const polyRadius = randomSize(random, 40, 0.12);
       const polyStroke = randomSize(random, 4, 0.3);
       const polyRotation = randomAngle(random);
-      const constrainedPolyRadius = constrainPolygonRadius(polyRadius);
+      const constrainedPolyRadius = constrainPolygonRadius(polyRadius, polyStroke);
       const hexPoints = [];
       for (let i = 0; i < polyCount; i++) {
         const angle = (i * 360 / polyCount) * Math.PI / 180;

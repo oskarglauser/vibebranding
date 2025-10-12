@@ -1,5 +1,5 @@
 // Vercel Serverless Function for font conversion
-import fontkit from 'fontkit';
+import * as fontkit from 'fontkit';
 
 export default async function handler(req, res) {
   // Dynamic CORS headers - allow gologotype.com and vercel deployments
