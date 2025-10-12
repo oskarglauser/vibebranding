@@ -184,7 +184,7 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
     console.log(`Scale factor: ${scale} (fontSize: ${fontSize}, unitsPerEm: ${font.unitsPerEm})`);
 
     // Build combined SVG path and calculate bounding box
-    const pathParts = [];
+    const pathCommands = [];
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     let currentX = 0;
 
@@ -192,41 +192,75 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
       const glyph = run.glyphs[i];
       const position = run.positions[i];
 
-      // Get glyph path and transform it
-      const glyphPath = glyph.path.toSVG();
-
       // Calculate glyph position with letter spacing
       const xOffset = currentX + (position.xOffset || 0) * scale;
       const yOffset = (position.yOffset || 0) * scale;
 
-      // Transform the path data to include positioning
-      if (glyphPath) {
-        // Wrap path in a group with transform
-        pathParts.push(`<g transform="translate(${xOffset.toFixed(2)},${yOffset.toFixed(2)}) scale(${scale.toFixed(6)})"><path d="${glyphPath}"/></g>`);
-      }
+      // Get glyph path and manually transform commands
+      const glyphPath = glyph.path;
 
-      // Update bounding box
-      if (glyph.bbox) {
-        const bboxMinX = xOffset + glyph.bbox.minX * scale;
-        const bboxMinY = yOffset + glyph.bbox.minY * scale;
-        const bboxMaxX = xOffset + glyph.bbox.maxX * scale;
-        const bboxMaxY = yOffset + glyph.bbox.maxY * scale;
-
-        minX = Math.min(minX, bboxMinX);
-        minY = Math.min(minY, bboxMinY);
-        maxX = Math.max(maxX, bboxMaxX);
-        maxY = Math.max(maxY, bboxMaxY);
+      if (glyphPath && glyphPath.commands && glyphPath.commands.length > 0) {
+        // Transform each path command
+        for (const cmd of glyphPath.commands) {
+          switch (cmd.type) {
+            case 'M': // MoveTo
+              const mx = xOffset + cmd.x * scale;
+              const my = yOffset + cmd.y * scale;
+              pathCommands.push(`M${mx.toFixed(2)},${my.toFixed(2)}`);
+              minX = Math.min(minX, mx);
+              minY = Math.min(minY, my);
+              maxX = Math.max(maxX, mx);
+              maxY = Math.max(maxY, my);
+              break;
+            case 'L': // LineTo
+              const lx = xOffset + cmd.x * scale;
+              const ly = yOffset + cmd.y * scale;
+              pathCommands.push(`L${lx.toFixed(2)},${ly.toFixed(2)}`);
+              minX = Math.min(minX, lx);
+              minY = Math.min(minY, ly);
+              maxX = Math.max(maxX, lx);
+              maxY = Math.max(maxY, ly);
+              break;
+            case 'C': // CubicBezier
+              const c1x = xOffset + cmd.x1 * scale;
+              const c1y = yOffset + cmd.y1 * scale;
+              const c2x = xOffset + cmd.x2 * scale;
+              const c2y = yOffset + cmd.y2 * scale;
+              const cx = xOffset + cmd.x * scale;
+              const cy = yOffset + cmd.y * scale;
+              pathCommands.push(`C${c1x.toFixed(2)},${c1y.toFixed(2)} ${c2x.toFixed(2)},${c2y.toFixed(2)} ${cx.toFixed(2)},${cy.toFixed(2)}`);
+              minX = Math.min(minX, c1x, c2x, cx);
+              minY = Math.min(minY, c1y, c2y, cy);
+              maxX = Math.max(maxX, c1x, c2x, cx);
+              maxY = Math.max(maxY, c1y, c2y, cy);
+              break;
+            case 'Q': // QuadraticBezier
+              const q1x = xOffset + cmd.x1 * scale;
+              const q1y = yOffset + cmd.y1 * scale;
+              const qx = xOffset + cmd.x * scale;
+              const qy = yOffset + cmd.y * scale;
+              pathCommands.push(`Q${q1x.toFixed(2)},${q1y.toFixed(2)} ${qx.toFixed(2)},${qy.toFixed(2)}`);
+              minX = Math.min(minX, q1x, qx);
+              minY = Math.min(minY, q1y, qy);
+              maxX = Math.max(maxX, q1x, qx);
+              maxY = Math.max(maxY, q1y, qy);
+              break;
+            case 'Z': // ClosePath
+              pathCommands.push('Z');
+              break;
+          }
+        }
       }
 
       // Advance position
       currentX += (position.xAdvance || 0) * scale + letterSpacing;
     }
 
-    if (pathParts.length === 0) {
+    if (pathCommands.length === 0) {
       throw new Error('No vector paths generated from text');
     }
 
-    console.log(`Vector paths generated: ${pathParts.length} glyphs`);
+    console.log(`Vector paths generated: ${pathCommands.length} commands`);
     console.log(`Bounding box: minX=${minX}, minY=${minY}, maxX=${maxX}, maxY=${maxY}`);
 
     // Add padding
@@ -245,16 +279,19 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
       offsetX = width - padding - maxX;
     }
 
+    // Combine all path commands into single path
+    const pathData = pathCommands.join(' ');
+
     // Generate clean vector SVG
     const svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-  <g transform="translate(${offsetX.toFixed(2)}, ${offsetY.toFixed(2)})" fill="${color}">
-    ${pathParts.join('\n    ')}
+  <g transform="translate(${offsetX.toFixed(2)}, ${offsetY.toFixed(2)})">
+    <path d="${pathData}" fill="${color}"/>
   </g>
 </svg>`;
 
     return {
       svg,
-      pathData: svg, // For compatibility
+      pathData,
       width,
       height,
       isVector: true,

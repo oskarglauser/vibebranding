@@ -64,7 +64,7 @@ function App() {
   const [symbolFont, setSymbolFont] = useState('Inter')
   const [symbolPlacement, setSymbolPlacement] = useState<SymbolPlacement>('above')
   const [symbolSize, setSymbolSize] = useState(100) // Percentage (100% = same size as text)
-  const [symbolDistance, setSymbolDistance] = useState(20) // Percentage
+  const [symbolDistance, setSymbolDistance] = useState(5) // Percentage - closer default for above placement
   const [symbolColor, setSymbolColor] = useState('#111827')
   const [symbolColorInputValue, setSymbolColorInputValue] = useState('111827')
   const [symbolSeed, setSymbolSeed] = useState(() => generateSeed())
@@ -1967,15 +1967,15 @@ Generated with GoLogotype: https://gologotype.com
                             <Slider
                               value={[symbolSize]}
                               onValueChange={(value) => setSymbolSize(value[0])}
-                              min={50}
-                              max={150}
+                              min={80}
+                              max={200}
                               step={5}
                               className="w-full"
                             />
                             <div className="flex justify-between text-xs text-gray-500 mt-1">
-                              <span>50%</span>
+                              <span>80%</span>
                               <span>100%</span>
-                              <span>150%</span>
+                              <span>200%</span>
                             </div>
                           </div>
                         </div>

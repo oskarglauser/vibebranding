@@ -36,7 +36,6 @@ export const FONTS = [
   'Special Gothic Condensed One',
   'Special Gothic Expanded One',
   'Tomorrow',
-  'Vend Sans',
   'Work Sans'
 ] as const;
 
@@ -49,63 +48,85 @@ export interface FontWeight {
 
 export const FONT_WEIGHTS_BY_FAMILY: Record<string, FontWeight[]> = {
   'Inter': [
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Playfair Display': [
-    { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Roboto': [
+    { value: '100', label: 'Thin' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Montserrat': [
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Lato': [
+    { value: '100', label: 'Thin' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Open Sans': [
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' }
   ],
   'Poppins': [
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Source Sans Pro': [
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Merriweather': [
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Oswald': [
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
@@ -113,39 +134,50 @@ export const FONT_WEIGHTS_BY_FAMILY: Record<string, FontWeight[]> = {
     { value: '700', label: 'Bold' }
   ],
   'Outfit': [
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Work Sans': [
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'DM Sans': [
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'DM Serif Text': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '400', label: 'Regular' }
   ],
   'Nunito Sans': [
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Quicksand': [
     { value: '300', label: 'Light' },
@@ -155,11 +187,15 @@ export const FONT_WEIGHTS_BY_FAMILY: Record<string, FontWeight[]> = {
     { value: '700', label: 'Bold' }
   ],
   'Lexend Deca': [
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Questrial': [
     { value: '400', label: 'Regular' }
@@ -169,34 +205,44 @@ export const FONT_WEIGHTS_BY_FAMILY: Record<string, FontWeight[]> = {
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' }
   ],
   'Funnel Display': [
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' }
   ],
   'Onest': [
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Gabarito': [
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Figtree': [
     { value: '300', label: 'Light' },
     { value: '400', label: 'Regular' },
     { value: '500', label: 'Medium' },
     { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
   ],
   'Tomorrow': [
     { value: '100', label: 'Thin' },
@@ -274,13 +320,6 @@ export const FONT_WEIGHTS_BY_FAMILY: Record<string, FontWeight[]> = {
     { value: '700', label: 'Bold' },
     { value: '800', label: 'Extra Bold' },
     { value: '900', label: 'Black' }
-  ],
-  'Vend Sans': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
   ],
   'Asimovian': [
     { value: '400', label: 'Regular' }
