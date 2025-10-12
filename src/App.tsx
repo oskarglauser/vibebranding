@@ -2353,14 +2353,14 @@ Generated with GoLogotype: https://gologotype.com
         <footer className="mt-4 bg-gray-50 dark:bg-gray-800 -mx-4 rounded-none sm:mt-10 sm:mx-0 sm:rounded-lg p-8">
           <article className="max-w-4xl mx-auto text-center space-y-6">
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              Professional Logo Generator for Modern Brands
+              Professional Logo Generator for Startups
             </h2>
             
             <div className="prose prose-gray mx-auto text-gray-600 dark:text-gray-400 leading-relaxed">
               <p className="text-lg mb-4">
-                Create stunning, professional logos in seconds with our advanced logotype maker.
-                Perfect for startups, agencies, and creative professionals who need high-quality
-                brand assets quickly and efficiently.
+                Create stunning, professional logos in seconds with the advanced logotype maker.
+                Perfect for startups, small businesses and creative professionals who need high-quality
+                brand assets quickly.
               </p>
 
               <section className="grid md:grid-cols-2 gap-6 text-left">
@@ -2407,7 +2407,7 @@ Generated with GoLogotype: https://gologotype.com
               </section>
               
               <p className="text-center mt-6 text-gray-500 text-sm">
-                Whether you're building the next big SaaS platform, launching a creative agency, 
+                Whether you're building the next big SaaS platform, launching an ecommerce brand, 
                 or developing an innovative app, our logo generator provides the professional 
                 branding assets you need. Perfect for creating the logo for your next vibe coded project.
               </p>
