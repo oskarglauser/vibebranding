@@ -1,29 +1,43 @@
 export const FONTS = [
-  'Inter',
-  'Playfair Display',
-  'Roboto',
-  'Montserrat',
-  'Lato',
-  'Open Sans',
-  'Poppins',
-  'Source Sans Pro',
-  'Merriweather',
-  'Oswald',
-  'Outfit',
-  'Work Sans',
+  'Alan Sans',
+  'Archivo Black',
+  'Asimovian',
+  'Bebas Neue',
+  'Cal Sans',
   'DM Sans',
   'DM Serif Text',
-  'Nunito Sans',
-  'Quicksand',
-  'Lexend Deca',
-  'Questrial',
-  'Funnel Sans',
-  'Funnel Display',
-  'Onest',
-  'Gabarito',
   'Figtree',
+  'Fjalla One',
+  'Funnel Display',
+  'Funnel Sans',
+  'Gabarito',
+  'Geist',
+  'Inter',
+  'Lato',
+  'Lexend Deca',
+  'Manrope',
+  'Merriweather',
+  'Montserrat',
+  'National Park',
+  'Nunito Sans',
+  'Onest',
+  'Open Sans',
+  'Oswald',
+  'Outfit',
+  'Playfair Display',
+  'Poppins',
+  'Questrial',
+  'Quicksand',
+  'Roboto',
+  'Sansation',
+  'Sniglet',
+  'Source Sans Pro',
+  'Special Gothic',
+  'Special Gothic Condensed One',
+  'Special Gothic Expanded One',
   'Tomorrow',
-  'Sniglet'
+  'Vend Sans',
+  'Work Sans'
 ] as const;
 
 export type FontFamily = typeof FONTS[number];
@@ -198,5 +212,82 @@ export const FONT_WEIGHTS_BY_FAMILY: Record<string, FontWeight[]> = {
   'Sniglet': [
     { value: '400', label: 'Regular' },
     { value: '800', label: 'Extra Bold' }
+  ],
+  'Manrope': [
+    { value: '200', label: 'Extra Light' },
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' }
+  ],
+  'Archivo Black': [
+    { value: '400', label: 'Regular' }
+  ],
+  'Bebas Neue': [
+    { value: '400', label: 'Regular' }
+  ],
+  'Fjalla One': [
+    { value: '400', label: 'Regular' }
+  ],
+  'Geist': [
+    { value: '100', label: 'Thin' },
+    { value: '200', label: 'Extra Light' },
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
+  ],
+  'Special Gothic Expanded One': [
+    { value: '400', label: 'Regular' }
+  ],
+  'Special Gothic Condensed One': [
+    { value: '400', label: 'Regular' }
+  ],
+  'Special Gothic': [
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' }
+  ],
+  'National Park': [
+    { value: '200', label: 'Extra Light' },
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' }
+  ],
+  'Cal Sans': [
+    { value: '600', label: 'Semi Bold' }
+  ],
+  'Alan Sans': [
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' },
+    { value: '800', label: 'Extra Bold' },
+    { value: '900', label: 'Black' }
+  ],
+  'Vend Sans': [
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '500', label: 'Medium' },
+    { value: '600', label: 'Semi Bold' },
+    { value: '700', label: 'Bold' }
+  ],
+  'Asimovian': [
+    { value: '400', label: 'Regular' }
+  ],
+  'Sansation': [
+    { value: '300', label: 'Light' },
+    { value: '400', label: 'Regular' },
+    { value: '700', label: 'Bold' }
   ]
 };

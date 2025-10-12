@@ -1157,7 +1157,10 @@ Generated with GoLogotype: https://gologotype.com
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Letter Spacing</Label>
+                        <div className="flex justify-between items-center">
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Letter Spacing</Label>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{letterSpacing}</span>
+                        </div>
                         <div className="px-1">
                           <Slider
                             value={[letterSpacing]}
