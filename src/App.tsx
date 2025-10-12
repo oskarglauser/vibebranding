@@ -1730,7 +1730,7 @@ Generated with GoLogotype: https://gologotype.com
                 {showLogoSection && (
                   <div className="space-y-3 mt-4">
                     <div className="space-y-2">
-                      <Label htmlFor="brand-name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <Label htmlFor="brand-name" className="text-xs font-medium text-gray-700 dark:text-gray-300">
                         Brand Name
                       </Label>
                       <Input
@@ -1744,7 +1744,7 @@ Generated with GoLogotype: https://gologotype.com
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Font</Label>
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Font</Label>
                         <Select value={selectedFont} onValueChange={(font) => {
                           setSelectedFont(font)
                           const availableWeights = FONT_WEIGHTS_BY_FAMILY[font] || []
@@ -1766,7 +1766,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Weight</Label>
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Weight</Label>
                         <Select value={fontWeight} onValueChange={setFontWeight}>
                           <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
                             <SelectValue />
@@ -1785,8 +1785,8 @@ Generated with GoLogotype: https://gologotype.com
                     <div className="space-y-3">
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Letter Spacing</Label>
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{letterSpacing}</span>
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Letter Spacing</Label>
+                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{letterSpacing}</span>
                         </div>
                         <div className="px-1">
                           <Slider
@@ -1806,22 +1806,22 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Case</Label>
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Case</Label>
                         <RadioGroup value={textCase} onValueChange={setTextCase as (value: string) => void} className="flex gap-4">
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="normal" id="case-normal" className="h-4 w-4" />
-                            <Label htmlFor="case-normal" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Normal (Aa)</Label>
+                            <Label htmlFor="case-normal" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Normal (Aa)</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="uppercase" id="uppercase" className="h-4 w-4" />
-                            <Label htmlFor="uppercase" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Upper (AA)</Label>
+                            <Label htmlFor="uppercase" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Upper (AA)</Label>
                           </div>
                         </RadioGroup>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Logo Color</Label>
+                      <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Logo Color</Label>
                       <div className="flex gap-2">
                         <div className="flex-1 relative">
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
@@ -1846,7 +1846,7 @@ Generated with GoLogotype: https://gologotype.com
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Trademark</Label>
+                      <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Trademark</Label>
                       <Select value={trademarkSymbol} onValueChange={setTrademarkSymbol as (value: string) => void}>
                         <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm">
                           <SelectValue />
@@ -1880,7 +1880,7 @@ Generated with GoLogotype: https://gologotype.com
                   <div className="space-y-4 mt-4">
                     {/* Mode Selector */}
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Symbol Mode</Label>
+                      <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Symbol Mode</Label>
                       <div className="grid grid-cols-4 gap-2">
                         <Button
                           type="button"
@@ -1922,7 +1922,7 @@ Generated with GoLogotype: https://gologotype.com
                         {/* Letter Mode: Font Selector */}
                         {symbolMode === 'letter' && (
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Letter Font</Label>
+                            <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Letter Font</Label>
                             <Select value={symbolFont} onValueChange={setSymbolFont}>
                               <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
                                 <SelectValue />
@@ -1941,26 +1941,26 @@ Generated with GoLogotype: https://gologotype.com
 
                         {/* Placement Selector */}
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Placement</Label>
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Placement</Label>
                           <RadioGroup value={symbolPlacement} onValueChange={setSymbolPlacement as (value: string) => void} className="flex gap-4">
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="above" id="placement-above" className="h-4 w-4" />
-                              <Label htmlFor="placement-above" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Above</Label>
+                              <Label htmlFor="placement-above" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Above</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="left" id="placement-left" className="h-4 w-4" />
-                              <Label htmlFor="placement-left" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">To the left</Label>
+                              <Label htmlFor="placement-left" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">To the left</Label>
                             </div>
                             <div className="flex items-center space-x-2">
                               <RadioGroupItem value="separate" id="placement-separate" className="h-4 w-4" />
-                              <Label htmlFor="placement-separate" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Separate</Label>
+                              <Label htmlFor="placement-separate" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Separate</Label>
                             </div>
                           </RadioGroup>
                         </div>
 
                         {/* Size Slider */}
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                             Symbol Size ({symbolSize}%)
                           </Label>
                           <div className="px-1">
@@ -1983,7 +1983,7 @@ Generated with GoLogotype: https://gologotype.com
                         {/* Distance Slider (only for above/left placement) */}
                         {(symbolPlacement === 'above' || symbolPlacement === 'left') && (
                           <div className="space-y-2">
-                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                               Distance from Logo ({symbolDistance}%)
                             </Label>
                             <div className="px-1">
@@ -2006,7 +2006,7 @@ Generated with GoLogotype: https://gologotype.com
 
                         {/* Symbol Color */}
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Symbol Color</Label>
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Symbol Color</Label>
                           <div className="flex gap-2">
                             <div className="flex-1 relative">
                               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
@@ -2032,7 +2032,7 @@ Generated with GoLogotype: https://gologotype.com
 
                         {/* Regenerate Button with Seed */}
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Variation</Label>
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Variation</Label>
                           <div className="flex gap-2">
                             <Input
                               value={symbolSeed}
@@ -2074,7 +2074,7 @@ Generated with GoLogotype: https://gologotype.com
                 {showTaglineSection && (
                   <div className="space-y-4 mt-4">
                     <div className="space-y-2">
-                      <Label htmlFor="tagline-text" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <Label htmlFor="tagline-text" className="text-xs font-medium text-gray-700 dark:text-gray-300">
                         Tagline Text
                       </Label>
                       <Input
@@ -2089,7 +2089,7 @@ Generated with GoLogotype: https://gologotype.com
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Font</Label>
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Font</Label>
                         <Select value={taglineFont} onValueChange={(font) => {
                           setTaglineFont(font)
                           const availableWeights = FONT_WEIGHTS_BY_FAMILY[font] || []
@@ -2111,7 +2111,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
                       
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Weight</Label>
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Weight</Label>
                         <Select value={taglineFontWeight} onValueChange={setTaglineFontWeight}>
                           <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
                             <SelectValue />
@@ -2129,7 +2129,7 @@ Generated with GoLogotype: https://gologotype.com
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Letter Spacing</Label>
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Letter Spacing</Label>
                         <div className="px-1">
                           <Slider
                             value={[taglineLetterSpacing]}
@@ -2148,21 +2148,21 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
                       
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Case</Label>
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Case</Label>
                         <RadioGroup value={taglineTextCase} onValueChange={setTaglineTextCase as (value: string) => void} className="flex gap-4">
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="normal" id="tagline-case-normal" className="h-4 w-4" />
-                            <Label htmlFor="tagline-case-normal" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Normal (Aa)</Label>
+                            <Label htmlFor="tagline-case-normal" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Normal (Aa)</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="uppercase" id="tagline-uppercase" className="h-4 w-4" />
-                            <Label htmlFor="tagline-uppercase" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Upper (AA)</Label>
+                            <Label htmlFor="tagline-uppercase" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Upper (AA)</Label>
                           </div>
                         </RadioGroup>
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                           Tagline Size ({taglineSize}% of logo)
                         </Label>
                         <div className="px-1">
@@ -2183,7 +2183,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                           Distance from Logo ({taglineDistance}%) {taglineDistance < 0 ? '(Overlapping)' : ''}
                         </Label>
                         <div className="px-1">
@@ -2204,7 +2204,7 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Color</Label>
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Color</Label>
                         <div className="flex gap-2">
                           <div className="flex-1 relative">
                             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">

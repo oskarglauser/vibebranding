@@ -196,12 +196,59 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
       const xOffset = currentX + (position.xOffset || 0) * scale;
       const yOffset = (position.yOffset || 0) * scale;
 
-      // Get glyph SVG path
-      const glyphSvgPath = glyph.path.toSVG();
+      // Debug: Check what we have
+      console.log(`Glyph ${i} (${text[i]}):`, {
+        hasPath: !!glyph.path,
+        pathType: typeof glyph.path,
+        hasToSVG: glyph.path && typeof glyph.path.toSVG === 'function',
+        hasCommands: glyph.path && !!glyph.path.commands,
+        hasCbox: !!glyph.cbox,
+        hasBbox: !!glyph.bbox
+      });
 
-      if (glyphSvgPath) {
+      // Try to get path data
+      let pathData = '';
+
+      if (glyph.path) {
+        // Try toSVG() first
+        if (typeof glyph.path.toSVG === 'function') {
+          pathData = glyph.path.toSVG();
+          console.log(`toSVG() returned: ${pathData ? pathData.substring(0, 50) + '...' : 'EMPTY'}`);
+        }
+
+        // If toSVG() is empty, try building from commands
+        if (!pathData && glyph.path.commands && glyph.path.commands.length > 0) {
+          console.log(`Building from ${glyph.path.commands.length} commands`);
+          const commands = [];
+          for (const cmd of glyph.path.commands) {
+            switch (cmd.type) {
+              case 'M':
+                commands.push(`M${cmd.x},${cmd.y}`);
+                break;
+              case 'L':
+                commands.push(`L${cmd.x},${cmd.y}`);
+                break;
+              case 'C':
+                commands.push(`C${cmd.x1},${cmd.y1} ${cmd.x2},${cmd.y2} ${cmd.x},${cmd.y}`);
+                break;
+              case 'Q':
+                commands.push(`Q${cmd.x1},${cmd.y1} ${cmd.x},${cmd.y}`);
+                break;
+              case 'Z':
+                commands.push('Z');
+                break;
+            }
+          }
+          pathData = commands.join(' ');
+          console.log(`Built path: ${pathData.substring(0, 50)}...`);
+        }
+      }
+
+      if (pathData) {
         // Add glyph as a path with transform
-        pathParts.push(`<path transform="translate(${xOffset.toFixed(2)},${yOffset.toFixed(2)}) scale(${scale.toFixed(6)})" d="${glyphSvgPath}"/>`);
+        pathParts.push(`<path transform="translate(${xOffset.toFixed(2)},${yOffset.toFixed(2)}) scale(${scale.toFixed(6)})" d="${pathData}"/>`);
+      } else {
+        console.warn(`No path data for glyph ${i} (${text[i]})`);
       }
 
       // Update bounding box using glyph bbox
