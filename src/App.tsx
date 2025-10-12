@@ -5,7 +5,7 @@ import { Label } from './components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import { RadioGroup, RadioGroupItem } from './components/ui/radio-group'
 import { Slider } from './components/ui/slider'
-import { Download, Share2, ChevronDown } from 'lucide-react'
+import { Download, Share2, ChevronDown, RefreshCw } from 'lucide-react'
 import JSZip from 'jszip'
 
 // Import shared constants and utilities
@@ -21,6 +21,9 @@ import {
 import { getFontClass } from './utils/fontUtils'
 import { hexToPantone, formatPantone } from './utils/pantoneUtils'
 import { FAQItem } from './components/FAQItem'
+import { generateSymbol } from './utils/symbolGenerators'
+import { generateSeed } from './utils/seedUtils'
+import type { SymbolMode, SymbolPlacement } from './types/symbol'
 
 // Declare gtag for TypeScript
 declare global {
@@ -54,6 +57,18 @@ function App() {
   const [taglineColorInputValue, setTaglineColorInputValue] = useState('111827')
   const [showTaglineSection, setShowTaglineSection] = useState(false)
   const [showLogoSection, setShowLogoSection] = useState(true)
+
+  // Symbol states
+  const [showSymbolSection, setShowSymbolSection] = useState(false)
+  const [symbolMode, setSymbolMode] = useState<SymbolMode>('none')
+  const [symbolFont, setSymbolFont] = useState('Inter')
+  const [symbolPlacement, setSymbolPlacement] = useState<SymbolPlacement>('above')
+  const [symbolSize, setSymbolSize] = useState(75) // Percentage
+  const [symbolDistance, setSymbolDistance] = useState(20) // Percentage
+  const [symbolColor, setSymbolColor] = useState('#111827')
+  const [symbolColorInputValue, setSymbolColorInputValue] = useState('111827')
+  const [symbolSeed, setSymbolSeed] = useState(() => generateSeed())
+  const [symbolSvg, setSymbolSvg] = useState('')
 
   const logoRef = useRef<HTMLDivElement>(null)
   const mobileLogoRef = useRef<HTMLDivElement>(null)
@@ -139,6 +154,38 @@ function App() {
     setTaglineColorInputValue(value.slice(1))
   }
 
+  const handleSymbolColorInputChange = (value: string) => {
+    // Remove any non-hex characters and limit to 6 characters
+    const cleanValue = value.replace(/[^a-fA-F0-9]/g, '').slice(0, 6)
+    setSymbolColorInputValue(cleanValue)
+
+    // Convert to full hex color
+    let fullHexColor = ''
+
+    if (cleanValue.length === 3) {
+      // Convert 3-digit hex to 6-digit (e.g., "f0a" → "ff00aa")
+      fullHexColor = cleanValue.split('').map(char => char + char).join('')
+    } else if (cleanValue.length === 6) {
+      // Use as-is for 6-digit hex
+      fullHexColor = cleanValue
+    } else if (cleanValue.length > 0) {
+      // For incomplete hex codes, pad with current color's digits or zeros
+      const currentHex = symbolColor.slice(1) // Remove # from current color
+      fullHexColor = (cleanValue + currentHex + '000000').slice(0, 6)
+    }
+
+    // Update the actual color if we have a valid hex
+    if (fullHexColor.length === 6) {
+      setSymbolColor(`#${fullHexColor}`)
+    }
+  }
+
+  const handleSymbolColorPickerChange = (value: string) => {
+    setSymbolColor(value)
+    // Update the input field to show just the hex code without #
+    setSymbolColorInputValue(value.slice(1))
+  }
+
   const getFullLogoText = () => {
     const displayName = brandName || 'Your Brand'
     const displayText = textCase === 'uppercase' ? displayName.toUpperCase() : displayName
@@ -162,13 +209,17 @@ function App() {
 
   const handleTaglineSectionToggle = () => {
     const isOpening = !showTaglineSection
-    
+
     if (isOpening && showLogoSection) {
       // If opening tagline section and logo is open, close logo
       setShowLogoSection(false)
     }
+    if (isOpening && showSymbolSection) {
+      // If opening tagline section and symbol is open, close symbol
+      setShowSymbolSection(false)
+    }
     setShowTaglineSection(isOpening)
-    
+
     // On mobile, scroll to tagline input when opening the section
     if (isOpening && window.innerWidth < 1024) { // lg breakpoint is 1024px
       setTimeout(() => {
@@ -178,6 +229,24 @@ function App() {
         })
       }, 100) // Small delay to allow section to expand
     }
+  }
+
+  const handleSymbolSectionToggle = () => {
+    const isOpening = !showSymbolSection
+
+    if (isOpening && showLogoSection) {
+      // If opening symbol section and logo is open, close logo
+      setShowLogoSection(false)
+    }
+    if (isOpening && showTaglineSection) {
+      // If opening symbol section and tagline is open, close tagline
+      setShowTaglineSection(false)
+    }
+    setShowSymbolSection(isOpening)
+  }
+
+  const handleRegenerateSymbol = () => {
+    setSymbolSeed(generateSeed())
   }
 
   const calculateOptimalFontSize = () => {
@@ -229,7 +298,7 @@ function App() {
       if (taglineText) {
         const taglineFontSize = fontSize * (taglineSize / 100)
         ctx.font = `${taglineFontWeight} ${taglineFontSize}px "${taglineFont}", sans-serif`
-        
+
         let taglineWidth = 0
         if (taglineLetterSpacing !== 0) {
           const taglineSpacingValue = taglineLetterSpacing * 1.2
@@ -246,9 +315,27 @@ function App() {
         // Calculate spacing between logo and tagline
         const spacing = fontSize * (Math.max(0, taglineDistance) / 100) // Handle negative spacing
         const taglineHeight = taglineFontSize * 1.3 // Tagline height with line height
-        
+
         maxWidth = Math.max(logoWidth, taglineWidth)
         totalHeight += spacing + taglineHeight
+      }
+
+      // If symbol exists, account for its dimensions
+      if (symbolMode !== 'none' && symbolSvg) {
+        const symbolSizePixels = fontSize * (symbolSize / 100)
+        const symbolDistancePixels = fontSize * (symbolDistance / 100)
+
+        if (symbolPlacement === 'above') {
+          // Symbol adds height above the logo
+          totalHeight += symbolSizePixels + symbolDistancePixels
+        } else if (symbolPlacement === 'left') {
+          // Symbol adds width to the left of the logo
+          const logoAndTaglineWidth = maxWidth
+          maxWidth = symbolSizePixels + symbolDistancePixels + logoAndTaglineWidth
+        } else if (symbolPlacement === 'separate') {
+          // Symbol adds height with separator
+          totalHeight += symbolSizePixels + (fontSize * 0.3) + 10 // separator space
+        }
       }
 
       // Check if both width and height fit in container
@@ -265,8 +352,8 @@ function App() {
 
   useEffect(() => {
     calculateOptimalFontSize()
-  }, [brandName, selectedFont, fontWeight, letterSpacing, textCase, trademarkSymbol, taglineText, taglineFont, taglineFontWeight, taglineLetterSpacing, taglineSize, taglineDistance])
-  
+  }, [brandName, selectedFont, fontWeight, letterSpacing, textCase, trademarkSymbol, taglineText, taglineFont, taglineFontWeight, taglineLetterSpacing, taglineSize, taglineDistance, symbolMode, symbolSvg, symbolSize, symbolDistance, symbolPlacement])
+
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode))
     if (isDarkMode) {
@@ -280,7 +367,32 @@ function App() {
     const handleResize = () => calculateOptimalFontSize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [brandName, selectedFont, fontWeight, letterSpacing, textCase, trademarkSymbol, taglineText, taglineFont, taglineFontWeight, taglineLetterSpacing, taglineSize, taglineDistance])
+  }, [brandName, selectedFont, fontWeight, letterSpacing, textCase, trademarkSymbol, taglineText, taglineFont, taglineFontWeight, taglineLetterSpacing, taglineSize, taglineDistance, symbolMode, symbolSvg, symbolSize, symbolDistance, symbolPlacement])
+
+  // Generate symbol SVG when relevant state changes
+  useEffect(() => {
+    if (symbolMode === 'none') {
+      setSymbolSvg('')
+      return
+    }
+
+    try {
+      const firstLetter = (brandName || 'Y').charAt(0)
+      const result = generateSymbol(
+        symbolMode,
+        symbolSeed,
+        symbolColor,
+        {
+          letter: firstLetter,
+          font: symbolFont
+        }
+      )
+      setSymbolSvg(result.svg)
+    } catch (error) {
+      console.error('Failed to generate symbol:', error)
+      setSymbolSvg('')
+    }
+  }, [symbolMode, symbolSeed, symbolColor, symbolFont, brandName])
 
   const generateBrandPackage = async () => {
     if (!brandName.trim()) {
@@ -788,6 +900,333 @@ function App() {
         )
       }
 
+      // Helper function to calculate if a color is light or dark
+      const getContrastColor = (hexColor: string): string => {
+        // Remove # if present
+        const hex = hexColor.replace('#', '')
+        // Convert to RGB
+        const r = parseInt(hex.substring(0, 2), 16)
+        const g = parseInt(hex.substring(2, 4), 16)
+        const b = parseInt(hex.substring(4, 6), 16)
+        // Calculate relative luminance
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+        // Return black for light backgrounds, white for dark backgrounds
+        return luminance > 0.5 ? '#000000' : '#ffffff'
+      }
+
+      // Helper function to create symbol-only assets
+      const createSymbolAssets = async (color: string) => {
+        // Create a colored version of the symbol SVG by replacing fill and stroke colors
+        // Use more precise regex to handle colors properly
+        let coloredSymbolSvg = symbolSvg.replace(/fill="#[0-9a-fA-F]{6}"/g, `fill="${color}"`)
+                                       .replace(/stroke="#[0-9a-fA-F]{6}"/g, `stroke="${color}"`)
+
+        // Also handle colors without quotes (shouldn't happen but be safe)
+        coloredSymbolSvg = coloredSymbolSvg.replace(/fill=["]?#[0-9a-fA-F]{6}["]?/g, `fill="${color}"`)
+                                           .replace(/stroke=["]?#[0-9a-fA-F]{6}["]?/g, `stroke="${color}"`)
+
+        // Fixed size for symbol-only exports (doesn't matter per user request)
+        const symbolSize = 512 // Standard icon size
+
+        // For SVG export: Keep it simple, just replace the viewBox size and add proper dimensions
+        // This matches how the preview displays it - just scaling the original SVG
+        const svgContent = coloredSymbolSvg.replace(/<svg[^>]*>/, `<svg width="${symbolSize}" height="${symbolSize}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">`)
+
+        // Create canvas for PNG generation
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          throw new Error('Canvas context not available')
+        }
+
+        // Set up high-resolution canvas
+        const scale = 2
+        canvas.width = symbolSize * scale
+        canvas.height = symbolSize * scale
+        ctx.scale(scale, scale)
+
+        // Create image from SVG
+        const img = new Image()
+        const svgBlob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' })
+        const url = URL.createObjectURL(svgBlob)
+
+        await new Promise((resolve, reject) => {
+          img.onload = async () => {
+            // Draw symbol centered
+            ctx.drawImage(img, 0, 0, symbolSize, symbolSize)
+            URL.revokeObjectURL(url)
+            resolve(null)
+          }
+          img.onerror = (e) => {
+            URL.revokeObjectURL(url)
+            reject(e)
+          }
+          img.src = url
+        })
+
+        // Convert canvas to blob for PNG
+        const pngBlob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob(blob => {
+            if (blob) resolve(blob)
+            else reject(new Error('Failed to create symbol PNG'))
+          }, 'image/png', 1.0)
+        })
+
+        return {
+          png: pngBlob,
+          svg: svgContent,
+          width: symbolSize,
+          height: symbolSize
+        }
+      }
+
+      // Helper function to create social media icon with colored background
+      const createSocialMediaIcon = async (backgroundColor: string, sizes: number[] = [512, 1024]) => {
+        const contrastColor = getContrastColor(backgroundColor)
+
+        // Create colored symbol with contrast color
+        let coloredSymbolSvg = symbolSvg.replace(/fill="#[0-9a-fA-F]{6}"/g, `fill="${contrastColor}"`)
+                                       .replace(/stroke="#[0-9a-fA-F]{6}"/g, `stroke="${contrastColor}"`)
+        coloredSymbolSvg = coloredSymbolSvg.replace(/fill=["]?#[0-9a-fA-F]{6}["]?/g, `fill="${contrastColor}"`)
+                                           .replace(/stroke=["]?#[0-9a-fA-F]{6}["]?/g, `stroke="${contrastColor}"`)
+
+        const results: { [key: string]: { png: Blob, svg: string } } = {}
+
+        for (const size of sizes) {
+          // Create SVG with background
+          const padding = size * 0.15 // 15% padding
+          const symbolSize = size - (padding * 2)
+          const svgWithBackground = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+  <rect width="${size}" height="${size}" fill="${backgroundColor}"/>
+  <g transform="translate(${padding}, ${padding}) scale(${symbolSize / 100})">
+    ${coloredSymbolSvg.replace(/<svg[^>]*>|<\/svg>/g, '').replace(/xmlns="[^"]*"/g, '')}
+  </g>
+</svg>`
+
+          // Create canvas for PNG
+          const canvas = document.createElement('canvas')
+          const ctx = canvas.getContext('2d')
+          if (!ctx) {
+            throw new Error('Canvas context not available')
+          }
+
+          const scale = 2
+          canvas.width = size * scale
+          canvas.height = size * scale
+          ctx.scale(scale, scale)
+
+          // Create image from SVG
+          const img = new Image()
+          const svgBlob = new Blob([svgWithBackground], { type: 'image/svg+xml;charset=utf-8' })
+          const url = URL.createObjectURL(svgBlob)
+
+          await new Promise((resolve, reject) => {
+            img.onload = () => {
+              ctx.drawImage(img, 0, 0, size, size)
+              URL.revokeObjectURL(url)
+              resolve(null)
+            }
+            img.onerror = (e) => {
+              URL.revokeObjectURL(url)
+              reject(e)
+            }
+            img.src = url
+          })
+
+          // Convert canvas to PNG blob
+          const pngBlob = await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob(blob => {
+              if (blob) resolve(blob)
+              else reject(new Error('Failed to create social media icon PNG'))
+            }, 'image/png', 1.0)
+          })
+
+          results[`${size}x${size}`] = {
+            png: pngBlob,
+            svg: svgWithBackground
+          }
+        }
+
+        return results
+      }
+
+      // Helper function to create logo with symbol assets
+      const createLogoWithSymbolAssets = async (logoColorParam: string, symbolColorParam: string, includeTagline: boolean = false) => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          throw new Error('Canvas context not available')
+        }
+
+        // Get colored symbol SVG using improved color replacement
+        let coloredSymbolSvg = symbolSvg.replace(/fill="#[0-9a-fA-F]{6}"/g, `fill="${symbolColorParam}"`)
+                                        .replace(/stroke="#[0-9a-fA-F]{6}"/g, `stroke="${symbolColorParam}"`)
+        // Also handle colors without quotes (shouldn't happen but be safe)
+        coloredSymbolSvg = coloredSymbolSvg.replace(/fill=["]?#[0-9a-fA-F]{6}["]?/g, `fill="${symbolColorParam}"`)
+                                           .replace(/stroke=["]?#[0-9a-fA-F]{6}["]?/g, `stroke="${symbolColorParam}"`)
+
+        // Get logo SVG (with or without tagline)
+        let logoSvg: string
+        if (includeTagline && getFullTaglineText()) {
+          logoSvg = await createClientVectorSVGWithTagline(logoColorParam, taglineColor)
+        } else {
+          logoSvg = await createClientVectorSVG(logoColorParam)
+        }
+
+        // Extract viewBox from logo SVG
+        const logoViewBoxMatch = logoSvg.match(/viewBox="([^"]*)"/)
+        let logoWidth = 400, logoHeight = 120
+        if (logoViewBoxMatch) {
+          const [, , logoW, logoH] = logoViewBoxMatch[1].split(' ').map(Number)
+          logoWidth = logoW * 0.95
+          logoHeight = logoH
+        }
+
+        // Calculate layout based on placement
+        const fontSize = 120
+        const symbolSizePixels = fontSize * (symbolSize / 100)
+        const symbolDistancePixels = fontSize * (symbolDistance / 100)
+        const padding = 40
+
+        let canvasWidth, canvasHeight, symbolX, symbolY, logoX, logoY
+
+        if (symbolPlacement === 'above') {
+          canvasWidth = Math.max(symbolSizePixels, logoWidth) + (padding * 2)
+          canvasHeight = symbolSizePixels + symbolDistancePixels + logoHeight + (padding * 2)
+          symbolX = padding + (canvasWidth - padding * 2 - symbolSizePixels) / 2
+          symbolY = padding
+          logoX = padding + (canvasWidth - padding * 2 - logoWidth) / 2
+          logoY = padding + symbolSizePixels + symbolDistancePixels
+        } else if (symbolPlacement === 'left') {
+          canvasWidth = symbolSizePixels + symbolDistancePixels + logoWidth + (padding * 2)
+          canvasHeight = Math.max(symbolSizePixels, logoHeight) + (padding * 2)
+          symbolX = padding
+          symbolY = padding + (canvasHeight - padding * 2 - symbolSizePixels) / 2
+          logoX = padding + symbolSizePixels + symbolDistancePixels
+          logoY = padding
+        } else { // separate
+          canvasWidth = Math.max(symbolSizePixels, logoWidth) + (padding * 2)
+          const separatorSpace = fontSize * 0.3 + 10
+          canvasHeight = symbolSizePixels + separatorSpace + logoHeight + (padding * 2)
+          symbolX = padding + (canvasWidth - padding * 2 - symbolSizePixels) / 2
+          symbolY = padding
+          logoX = padding + (canvasWidth - padding * 2 - logoWidth) / 2
+          logoY = padding + symbolSizePixels + separatorSpace
+        }
+
+        // Set up high-resolution canvas
+        const scale = 2
+        canvas.width = canvasWidth * scale
+        canvas.height = canvasHeight * scale
+        ctx.scale(scale, scale)
+
+        // Draw symbol
+        const tempDivSymbol = document.createElement('div')
+        tempDivSymbol.style.position = 'absolute'
+        tempDivSymbol.style.left = '-9999px'
+        tempDivSymbol.innerHTML = coloredSymbolSvg
+        document.body.appendChild(tempDivSymbol)
+
+        const svgSymbolElement = tempDivSymbol.querySelector('svg')
+        if (svgSymbolElement) {
+          svgSymbolElement.setAttribute('width', symbolSizePixels.toString())
+          svgSymbolElement.setAttribute('height', symbolSizePixels.toString())
+
+          const symbolSvgData = new XMLSerializer().serializeToString(svgSymbolElement)
+          const symbolImg = new Image()
+          const symbolBlob = new Blob([symbolSvgData], { type: 'image/svg+xml;charset=utf-8' })
+          const symbolUrl = URL.createObjectURL(symbolBlob)
+
+          await new Promise((resolve, reject) => {
+            symbolImg.onload = () => {
+              ctx.drawImage(symbolImg, symbolX, symbolY, symbolSizePixels, symbolSizePixels)
+              URL.revokeObjectURL(symbolUrl)
+              resolve(null)
+            }
+            symbolImg.onerror = reject
+            symbolImg.src = symbolUrl
+          })
+        }
+        document.body.removeChild(tempDivSymbol)
+
+        // Draw separator line for separate placement
+        if (symbolPlacement === 'separate') {
+          const separatorY = symbolY + symbolSizePixels + (fontSize * 0.3) / 2
+          const separatorWidth = 100
+          const separatorX = (canvasWidth - separatorWidth) / 2
+          ctx.strokeStyle = '#d1d5db' // gray-300
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(separatorX, separatorY)
+          ctx.lineTo(separatorX + separatorWidth, separatorY)
+          ctx.stroke()
+        }
+
+        // Draw logo/tagline
+        // For canvas rendering, we need to render the text directly since we can't easily embed the vector SVG
+        // This is a simplified version - the SVG output will be more accurate
+        ctx.fillStyle = logoColorParam
+        ctx.font = `${fontWeight} ${fontSize}px "${selectedFont}", Arial, sans-serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'top'
+        const logoTextToDraw = textCase === 'uppercase' ? brandName.toUpperCase() : brandName
+        ctx.fillText(logoTextToDraw, logoX + logoWidth / 2, logoY)
+
+        // Convert canvas to blob for PNG
+        const pngBlob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob(blob => {
+            if (blob) resolve(blob)
+            else reject(new Error('Failed to create PNG'))
+          }, 'image/png', 1.0)
+        })
+
+        // Combine symbol and logo SVGs
+        const logoPathContent = logoSvg.replace(/<svg[^>]*>|<\/svg>/g, '').replace(/xmlns="[^"]*"/g, '')
+        const symbolContent = coloredSymbolSvg.replace(/<svg[^>]*>|<\/svg>/g, '').replace(/xmlns="[^"]*"/g, '')
+
+        // Create combined SVG
+        let combinedSvg: string
+        if (symbolPlacement === 'above') {
+          combinedSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvasWidth} ${canvasHeight}">
+            <g transform="translate(${symbolX}, ${symbolY}) scale(${symbolSizePixels / 100})">
+              ${symbolContent}
+            </g>
+            <g transform="translate(${logoX}, ${logoY})">
+              ${logoPathContent}
+            </g>
+          </svg>`
+        } else if (symbolPlacement === 'left') {
+          combinedSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvasWidth} ${canvasHeight}">
+            <g transform="translate(${symbolX}, ${symbolY}) scale(${symbolSizePixels / 100})">
+              ${symbolContent}
+            </g>
+            <g transform="translate(${logoX}, ${logoY})">
+              ${logoPathContent}
+            </g>
+          </svg>`
+        } else { // separate
+          const separatorY = symbolY + symbolSizePixels + (fontSize * 0.3) / 2
+          const separatorWidth = 100
+          const separatorX = (canvasWidth - separatorWidth) / 2
+          combinedSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvasWidth} ${canvasHeight}">
+            <g transform="translate(${symbolX}, ${symbolY}) scale(${symbolSizePixels / 100})">
+              ${symbolContent}
+            </g>
+            <line x1="${separatorX}" y1="${separatorY}" x2="${separatorX + separatorWidth}" y2="${separatorY}" stroke="#d1d5db" stroke-width="1"/>
+            <g transform="translate(${logoX}, ${logoY})">
+              ${logoPathContent}
+            </g>
+          </svg>`
+        }
+
+        return {
+          png: pngBlob,
+          svg: combinedSvg,
+          width: Math.ceil(canvasWidth),
+          height: Math.ceil(canvasHeight)
+        }
+      }
+
       // Generate all variants
       console.log('Generating dark variants...')
       const darkAssets = await createLogoAssets(logoColor)
@@ -846,13 +1285,110 @@ function App() {
         // SVG files with tagline
         const darkTaglineSVGWhiteBG = addBackgroundToSVG(darkTaglineAssets.svg, '#ffffff')
         const lightTaglineSVGDarkBG = addBackgroundToSVG(lightTaglineAssets.svg, '#000000')
-        
+
         svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark.svg`, darkTaglineAssets.svg)
         svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light.svg`, lightTaglineAssets.svg)
         svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark-white-bg.svg`, darkTaglineSVGWhiteBG)
         svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light-dark-bg.svg`, lightTaglineSVGDarkBG)
       }
 
+      // Generate symbol variants if symbol exists
+      const hasSymbol = symbolMode !== 'none' && symbolSvg
+      let darkSymbolAssets, lightSymbolAssets
+      let darkLogoWithSymbolAssets, lightLogoWithSymbolAssets
+      let darkLogoWithSymbolAndTaglineAssets, lightLogoWithSymbolAndTaglineAssets
+      let socialMediaIcons
+
+      if (hasSymbol) {
+        console.log('Generating symbol variants...')
+
+        // Symbol-only files
+        darkSymbolAssets = await createSymbolAssets(logoColor)
+        lightSymbolAssets = await createSymbolAssets('#ffffff')
+        console.log('Symbol-only assets generated')
+
+        // Logo with symbol files
+        darkLogoWithSymbolAssets = await createLogoWithSymbolAssets(logoColor, symbolColor, false)
+        lightLogoWithSymbolAssets = await createLogoWithSymbolAssets('#ffffff', '#ffffff', false)
+        console.log('Logo with symbol assets generated')
+
+        // Logo with symbol and tagline files (if tagline exists)
+        if (hasTagline) {
+          darkLogoWithSymbolAndTaglineAssets = await createLogoWithSymbolAssets(logoColor, symbolColor, true)
+          lightLogoWithSymbolAndTaglineAssets = await createLogoWithSymbolAssets('#ffffff', '#ffffff', true)
+          console.log('Logo with symbol and tagline assets generated')
+        }
+
+        // Generate social media icons with colored background
+        console.log('Generating social media icons...')
+        socialMediaIcons = await createSocialMediaIcon(symbolColor, [512, 1024])
+        console.log('Social media icons generated')
+      }
+
+      // Add symbol-only files
+      if (hasSymbol && darkSymbolAssets && lightSymbolAssets) {
+        // PNG files
+        pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-dark.png`, darkSymbolAssets.png)
+        pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-light.png`, lightSymbolAssets.png)
+
+        // SVG files
+        const darkSymbolSVGWhiteBG = addBackgroundToSVG(darkSymbolAssets.svg, '#ffffff')
+        const lightSymbolSVGDarkBG = addBackgroundToSVG(lightSymbolAssets.svg, '#000000')
+
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-dark.svg`, darkSymbolAssets.svg)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-light.svg`, lightSymbolAssets.svg)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-dark-white-bg.svg`, darkSymbolSVGWhiteBG)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-light-dark-bg.svg`, lightSymbolSVGDarkBG)
+      }
+
+      // Add logo with symbol files
+      if (hasSymbol && darkLogoWithSymbolAssets && lightLogoWithSymbolAssets) {
+        // PNG files
+        pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-dark.png`, darkLogoWithSymbolAssets.png)
+        pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-light.png`, lightLogoWithSymbolAssets.png)
+
+        // SVG files
+        const darkLogoSymbolSVGWhiteBG = addBackgroundToSVG(darkLogoWithSymbolAssets.svg, '#ffffff')
+        const lightLogoSymbolSVGDarkBG = addBackgroundToSVG(lightLogoWithSymbolAssets.svg, '#000000')
+
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-dark.svg`, darkLogoWithSymbolAssets.svg)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-light.svg`, lightLogoWithSymbolAssets.svg)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-dark-white-bg.svg`, darkLogoSymbolSVGWhiteBG)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-light-dark-bg.svg`, lightLogoSymbolSVGDarkBG)
+      }
+
+      // Add logo with symbol and tagline files
+      if (hasSymbol && hasTagline && darkLogoWithSymbolAndTaglineAssets && lightLogoWithSymbolAndTaglineAssets) {
+        // PNG files
+        pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-dark.png`, darkLogoWithSymbolAndTaglineAssets.png)
+        pngFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-light.png`, lightLogoWithSymbolAndTaglineAssets.png)
+
+        // SVG files
+        const darkFullSVGWhiteBG = addBackgroundToSVG(darkLogoWithSymbolAndTaglineAssets.svg, '#ffffff')
+        const lightFullSVGDarkBG = addBackgroundToSVG(lightLogoWithSymbolAndTaglineAssets.svg, '#000000')
+
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-dark.svg`, darkLogoWithSymbolAndTaglineAssets.svg)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-light.svg`, lightLogoWithSymbolAndTaglineAssets.svg)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-dark-white-bg.svg`, darkFullSVGWhiteBG)
+        svgFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-light-dark-bg.svg`, lightFullSVGDarkBG)
+      }
+
+      // Add social media icons
+      if (hasSymbol && socialMediaIcons) {
+        const socialFolder = zip.folder('Social-Media-Icons')
+
+        // Add 512x512 icons
+        if (socialMediaIcons['512x512']) {
+          socialFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-icon-512x512.png`, socialMediaIcons['512x512'].png)
+          socialFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-icon-512x512.svg`, socialMediaIcons['512x512'].svg)
+        }
+
+        // Add 1024x1024 icons
+        if (socialMediaIcons['1024x1024']) {
+          socialFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-icon-1024x1024.png`, socialMediaIcons['1024x1024'].png)
+          socialFolder?.file(`${brandName.replace(/\s+/g, '-').toLowerCase()}-icon-1024x1024.svg`, socialMediaIcons['1024x1024'].svg)
+        }
+      }
 
       // Create simple brand info text file
       const brandInfo = `${brandName} Brand Package
@@ -860,11 +1396,33 @@ function App() {
 FILES INCLUDED:
 LOGO FILES:
 - ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-dark.png (for light backgrounds)
-- ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light.png (for dark backgrounds)  
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light.png (for dark backgrounds)
 - ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-dark.svg (vector, light backgrounds)
 - ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light.svg (vector, dark backgrounds)
 - ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-dark-white-bg.svg (with white background)
-- ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light-dark-bg.svg (with dark background)${hasTagline ? `
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-logo-light-dark-bg.svg (with dark background)${hasSymbol ? `
+
+SYMBOL FILES:
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-dark.png (symbol only, for light backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-light.png (symbol only, for dark backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-dark.svg (symbol only, vector, light backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-light.svg (symbol only, vector, dark backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-dark-white-bg.svg (symbol only, with white background)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-symbol-light-dark-bg.svg (symbol only, with dark background)
+
+LOGO WITH SYMBOL FILES:
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-dark.png (logo + symbol, for light backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-light.png (logo + symbol, for dark backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-dark.svg (logo + symbol, vector, light backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-light.svg (logo + symbol, vector, dark backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-dark-white-bg.svg (logo + symbol, with white background)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-light-dark-bg.svg (logo + symbol, with dark background)
+
+SOCIAL MEDIA ICONS:
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-icon-512x512.png (square icon, symbol color background)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-icon-512x512.svg (square icon, symbol color background, vector)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-icon-1024x1024.png (high-res square icon, symbol color background)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-icon-1024x1024.svg (high-res square icon, symbol color background, vector)` : ''}${hasTagline ? `
 
 LOGO WITH TAGLINE FILES:
 - ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark.png (for light backgrounds)
@@ -872,14 +1430,37 @@ LOGO WITH TAGLINE FILES:
 - ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark.svg (vector, light backgrounds)
 - ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light.svg (vector, dark backgrounds)
 - ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-dark-white-bg.svg (with white background)
-- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light-dark-bg.svg (with dark background)` : ''}
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-tagline-light-dark-bg.svg (with dark background)` : ''}${hasSymbol && hasTagline ? `
+
+LOGO WITH SYMBOL AND TAGLINE FILES:
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-dark.png (complete brand, for light backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-light.png (complete brand, for dark backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-dark.svg (complete brand, vector, light backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-light.svg (complete brand, vector, dark backgrounds)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-dark-white-bg.svg (complete brand, with white background)
+- ${brandName.replace(/\s+/g, '-').toLowerCase()}-with-symbol-and-tagline-light-dark-bg.svg (complete brand, with dark background)` : ''}
 
 BRAND SPECIFICATIONS:
 LOGO:
 Font: ${selectedFont}
 Weight: ${fontWeight}
 Letter Spacing: ${letterSpacing}px
-Case: ${textCase === 'uppercase' ? 'Uppercase' : 'Standard Case'}${hasTagline ? `
+Case: ${textCase === 'uppercase' ? 'Uppercase' : 'Standard Case'}${hasSymbol ? `
+
+SYMBOL:
+Mode: ${symbolMode === 'letter' ? `Letter (${(brandName || 'Y').charAt(0).toUpperCase()})` : symbolMode === 'shape' ? 'Geometric Shape' : 'Pattern'}${symbolMode === 'letter' ? `
+Font: ${symbolFont}` : ''}
+Placement: ${symbolPlacement === 'above' ? 'Above Logo' : symbolPlacement === 'left' ? 'To the Left of Logo' : 'Separate (with divider)'}
+Size: ${symbolSize}% of logo size
+Distance: ${symbolDistance}%
+Color: ${symbolColor.toUpperCase()}
+Seed: ${symbolSeed} (use this to recreate the exact same symbol)
+
+SOCIAL MEDIA ICONS:
+Background Color: ${symbolColor.toUpperCase()}
+Symbol Color: ${getContrastColor(symbolColor).toUpperCase()} (automatically selected for optimal contrast)
+Sizes: 512x512px and 1024x1024px (PNG and SVG formats)
+Note: Symbol automatically appears in white or black depending on background brightness` : ''}${hasTagline ? `
 
 TAGLINE: "${getFullTaglineText()}"
 Font: ${taglineFont}
@@ -906,17 +1487,20 @@ Pantone: ${formatPantone(hexToPantone(logoColor))}
 
 USAGE GUIDELINES:
 ✓ Use dark logos on light backgrounds
-✓ Use light logos on dark backgrounds  
+✓ Use light logos on dark backgrounds
 ✓ Use SVG files for websites and scalable applications
 ✓ Use PNG files for documents and presentations
 ✓ Maintain clear space around logo
-✓ Scale proportionally - don't stretch or distort${hasTagline ? `
+✓ Scale proportionally - don't stretch or distort${hasSymbol ? `
+✓ Use symbol-only files for app icons and social media
+✓ Use logo with symbol files for complete brand identity` : ''}${hasTagline ? `
 ✓ Use logo-only files when space is limited
 ✓ Use logo with tagline files when more context is needed` : ''}
 
 ✗ Don't change colors, fonts, or spacing
 ✗ Don't add effects or modify the logo
-✗ Don't use on busy backgrounds${hasTagline ? `
+✗ Don't use on busy backgrounds${hasSymbol ? `
+✗ Don't separate logo and symbol in different contexts` : ''}${hasTagline ? `
 ✗ Don't separate logo and tagline in different layouts` : ''}
 
 PROFESSIONAL QUALITY:
@@ -1032,55 +1616,97 @@ Generated with GoLogotype: https://gologotype.com
           <section ref={mobileContainerRef} className="lg:hidden bg-gray-50 -mx-4 rounded-none sm:mx-0 sm:rounded-lg p-4 flex items-center justify-center min-h-[200px] sticky top-4 z-10 relative overflow-visible" aria-label="Logo preview">
             <h2 className="sr-only">Logo Preview</h2>
             <div className="text-center w-full">
-              <div
-                ref={mobileLogoRef}
-                className={`select-none ${getFontClass(selectedFont)} inline-block`}
+              {/* Symbol and Logo Layout */}
+              <div className={`inline-flex items-center justify-center ${symbolPlacement === 'above' || symbolPlacement === 'separate' ? 'flex-col' : symbolPlacement === 'left' ? 'flex-row' : 'flex-col'}`}
                 style={{
-                  fontSize: previewFontSize,
-                  fontWeight: fontWeight,
-                  letterSpacing: getLetterSpacingValue(letterSpacing),
-                  textTransform: getTextTransform(textCase) as React.CSSProperties['textTransform'],
-                  color: logoColor,
-                  lineHeight: 1.2,
-                  whiteSpace: 'nowrap',
-                  overflow: 'visible',
-                }}
-              >
-                {textCase === 'uppercase' ? (brandName || 'Your Brand').toUpperCase() : (brandName || 'Your Brand')}
-                {trademarkSymbol !== 'none' && (
-                  <span
+                  gap: symbolMode !== 'none' && symbolSvg && symbolPlacement === 'left' ? `calc(${previewFontSize} * ${symbolDistance / 100})` : '0'
+                }}>
+                {/* Symbol Above or Separate */}
+                {symbolMode !== 'none' && symbolSvg && (symbolPlacement === 'above' || symbolPlacement === 'separate') && (
+                  <>
+                    <div
+                      className="transition-opacity duration-300"
+                      style={{
+                        width: `calc(${previewFontSize} * ${symbolSize / 100})`,
+                        height: `calc(${previewFontSize} * ${symbolSize / 100})`,
+                        marginBottom: symbolPlacement === 'above' ? `calc(${previewFontSize} * ${symbolDistance / 100})` : `calc(${previewFontSize} * 0.3)`,
+                      }}
+                      dangerouslySetInnerHTML={{ __html: symbolSvg }}
+                    />
+                    {symbolPlacement === 'separate' && (
+                      <div className="w-full border-t border-gray-300 dark:border-gray-600 my-2" style={{ maxWidth: '100px' }}></div>
+                    )}
+                  </>
+                )}
+
+                {/* Symbol To the Left */}
+                {symbolMode !== 'none' && symbolSvg && symbolPlacement === 'left' && (
+                  <div
+                    className="transition-opacity duration-300 flex-shrink-0"
                     style={{
-                      fontSize: `calc(${previewFontSize} * 0.35)`,
-                      verticalAlign: 'baseline',
-                      marginLeft: '0.02em',
-                      lineHeight: 1,
-                      position: 'relative',
-                      top: `calc(${previewFontSize} * -0.5)`,
-                      display: 'inline-block',
+                      width: `calc(${previewFontSize} * ${symbolSize / 100})`,
+                      height: `calc(${previewFontSize} * ${symbolSize / 100})`,
+                    }}
+                    dangerouslySetInnerHTML={{ __html: symbolSvg }}
+                  />
+                )}
+
+                {/* Logo and Tagline Wrapper */}
+                <div className="flex flex-col items-center">
+                  {/* Logo */}
+                  <div
+                    ref={mobileLogoRef}
+                    className={`select-none ${getFontClass(selectedFont)} inline-block`}
+                    style={{
+                      fontSize: previewFontSize,
+                      fontWeight: fontWeight,
+                      letterSpacing: getLetterSpacingValue(letterSpacing),
+                      textTransform: getTextTransform(textCase) as React.CSSProperties['textTransform'],
+                      color: logoColor,
+                      lineHeight: 1.2,
+                      whiteSpace: 'nowrap',
+                      overflow: 'visible',
                     }}
                   >
-                    {getTrademarkSymbol(trademarkSymbol)}
-                  </span>
-                )}
-              </div>
-              {getFullTaglineText() && (
-                <div
-                  className={`select-none ${getFontClass(taglineFont)}`}
-                  style={{
-                    fontSize: `calc(${previewFontSize} * ${taglineSize / 100})`,
-                    fontWeight: taglineFontWeight,
-                    letterSpacing: getLetterSpacingValue(taglineLetterSpacing),
-                    textTransform: getTextTransform(taglineTextCase) as React.CSSProperties['textTransform'],
-                    color: taglineColor,
-                    lineHeight: 1.3,
-                    whiteSpace: 'nowrap',
-                    overflow: 'visible',
-                    marginTop: `calc(${previewFontSize} * ${taglineDistance / 100})`,
-                  }}
-                >
-                  {getFullTaglineText()}
+                    {textCase === 'uppercase' ? (brandName || 'Your Brand').toUpperCase() : (brandName || 'Your Brand')}
+                    {trademarkSymbol !== 'none' && (
+                      <span
+                        style={{
+                          fontSize: `calc(${previewFontSize} * 0.35)`,
+                          verticalAlign: 'baseline',
+                          marginLeft: '0.02em',
+                          lineHeight: 1,
+                          position: 'relative',
+                          top: `calc(${previewFontSize} * -0.5)`,
+                          display: 'inline-block',
+                        }}
+                      >
+                        {getTrademarkSymbol(trademarkSymbol)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Tagline */}
+                  {getFullTaglineText() && (
+                    <div
+                      className={`select-none ${getFontClass(taglineFont)}`}
+                      style={{
+                        fontSize: `calc(${previewFontSize} * ${taglineSize / 100})`,
+                        fontWeight: taglineFontWeight,
+                        letterSpacing: getLetterSpacingValue(taglineLetterSpacing),
+                        textTransform: getTextTransform(taglineTextCase) as React.CSSProperties['textTransform'],
+                        color: taglineColor,
+                        lineHeight: 1.3,
+                        whiteSpace: 'nowrap',
+                        overflow: 'visible',
+                        marginTop: `calc(${previewFontSize} * ${taglineDistance / 100})`,
+                      }}
+                    >
+                      {getFullTaglineText()}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </section>
 
@@ -1236,6 +1862,200 @@ Generated with GoLogotype: https://gologotype.com
                 )}
               </div>
 
+              {/* Symbol Section */}
+              <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+                <button
+                  type="button"
+                  onClick={handleSymbolSectionToggle}
+                  className="flex items-center justify-between w-full text-base font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                >
+                  <span>Symbol (Optional)</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${showSymbolSection ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {showSymbolSection && (
+                  <div className="space-y-4 mt-4">
+                    {/* Mode Selector */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Symbol Mode</Label>
+                      <div className="grid grid-cols-4 gap-2">
+                        <Button
+                          type="button"
+                          variant={symbolMode === 'none' ? 'default' : 'outline'}
+                          className="h-9 text-xs"
+                          onClick={() => setSymbolMode('none')}
+                        >
+                          None
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={symbolMode === 'letter' ? 'default' : 'outline'}
+                          className="h-9 text-xs"
+                          onClick={() => setSymbolMode('letter')}
+                        >
+                          Letter
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={symbolMode === 'shape' ? 'default' : 'outline'}
+                          className="h-9 text-xs"
+                          onClick={() => setSymbolMode('shape')}
+                        >
+                          Shape
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={symbolMode === 'pattern' ? 'default' : 'outline'}
+                          className="h-9 text-xs"
+                          onClick={() => setSymbolMode('pattern')}
+                        >
+                          Pattern
+                        </Button>
+                      </div>
+                    </div>
+
+                    {symbolMode !== 'none' && (
+                      <>
+                        {/* Letter Mode: Font Selector */}
+                        {symbolMode === 'letter' && (
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Letter Font</Label>
+                            <Select value={symbolFont} onValueChange={setSymbolFont}>
+                              <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm h-10 sm:h-9">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {FONTS.map((font) => (
+                                  <SelectItem key={font} value={font} style={{ fontFamily: font }}>
+                                    {font}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <p className="text-xs text-gray-500">Using first letter: {(brandName || 'Y').charAt(0).toUpperCase()}</p>
+                          </div>
+                        )}
+
+                        {/* Placement Selector */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Placement</Label>
+                          <RadioGroup value={symbolPlacement} onValueChange={setSymbolPlacement as (value: string) => void} className="flex gap-4">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="above" id="placement-above" className="h-4 w-4" />
+                              <Label htmlFor="placement-above" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Above</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="left" id="placement-left" className="h-4 w-4" />
+                              <Label htmlFor="placement-left" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">To the left</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="separate" id="placement-separate" className="h-4 w-4" />
+                              <Label htmlFor="placement-separate" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Separate</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+
+                        {/* Size Slider */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Symbol Size ({symbolSize}%)
+                          </Label>
+                          <div className="px-1">
+                            <Slider
+                              value={[symbolSize]}
+                              onValueChange={(value) => setSymbolSize(value[0])}
+                              min={30}
+                              max={100}
+                              step={5}
+                              className="w-full"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                              <span>Small</span>
+                              <span>Medium</span>
+                              <span>Large</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Distance Slider (only for above/left placement) */}
+                        {(symbolPlacement === 'above' || symbolPlacement === 'left') && (
+                          <div className="space-y-2">
+                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Distance from Logo ({symbolDistance}%)
+                            </Label>
+                            <div className="px-1">
+                              <Slider
+                                value={[symbolDistance]}
+                                onValueChange={(value) => setSymbolDistance(value[0])}
+                                min={0}
+                                max={50}
+                                step={5}
+                                className="w-full"
+                              />
+                              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>Close</span>
+                                <span>Normal</span>
+                                <span>Far</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Symbol Color */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Symbol Color</Label>
+                          <div className="flex gap-2">
+                            <div className="flex-1 relative">
+                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
+                                #
+                              </div>
+                              <Input
+                                value={symbolColorInputValue}
+                                onChange={(e) => handleSymbolColorInputChange(e.target.value)}
+                                placeholder="f00 or ff0000"
+                                className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
+                                maxLength={6}
+                              />
+                            </div>
+                            <input
+                              type="color"
+                              value={symbolColor}
+                              onChange={(e) => handleSymbolColorPickerChange(e.target.value)}
+                              className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
+                        </div>
+
+                        {/* Regenerate Button with Seed */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Variation</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              value={symbolSeed}
+                              onChange={(e) => setSymbolSeed(e.target.value)}
+                              placeholder="Enter seed"
+                              className="flex-1 text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-9"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-10 sm:h-9 px-3"
+                              onClick={handleRegenerateSymbol}
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <p className="text-xs text-gray-500">Save this seed to recreate the same variation</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Tagline Section */}
               <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
                 <button
@@ -1244,8 +2064,8 @@ Generated with GoLogotype: https://gologotype.com
                   className="flex items-center justify-between w-full text-base font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
                   <span>Add Tagline (Optional)</span>
-                  <ChevronDown 
-                    className={`w-4 h-4 transition-transform ${showTaglineSection ? 'rotate-180' : ''}`} 
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${showTaglineSection ? 'rotate-180' : ''}`}
                   />
                 </button>
                 
@@ -1434,54 +2254,97 @@ Generated with GoLogotype: https://gologotype.com
           <section ref={containerRef} className="hidden lg:flex bg-gray-50 rounded-lg p-4 sm:p-8 items-center justify-center min-h-[400px] sm:min-h-[500px] relative overflow-visible" aria-label="Logo preview">
             <h2 className="sr-only">Logo Preview</h2>
             <div className="text-center w-full">
-              <div
-                className={`select-none ${getFontClass(selectedFont)} inline-block`}
+              {/* Symbol and Logo Layout */}
+              <div className={`inline-flex items-center justify-center ${symbolPlacement === 'above' || symbolPlacement === 'separate' ? 'flex-col' : symbolPlacement === 'left' ? 'flex-row' : 'flex-col'}`}
                 style={{
-                  fontSize: previewFontSize,
-                  fontWeight: fontWeight,
-                  letterSpacing: getLetterSpacingValue(letterSpacing),
-                  textTransform: getTextTransform(textCase) as React.CSSProperties['textTransform'],
-                  color: logoColor,
-                  lineHeight: 1.2,
-                  whiteSpace: 'nowrap',
-                  overflow: 'visible',
-                }}
-              >
-                {textCase === 'uppercase' ? (brandName || 'Your Brand').toUpperCase() : (brandName || 'Your Brand')}
-                {trademarkSymbol !== 'none' && (
-                  <span
+                  gap: symbolMode !== 'none' && symbolSvg && symbolPlacement === 'left' ? `calc(${previewFontSize} * ${symbolDistance / 100})` : '0'
+                }}>
+                {/* Symbol Above or Separate */}
+                {symbolMode !== 'none' && symbolSvg && (symbolPlacement === 'above' || symbolPlacement === 'separate') && (
+                  <>
+                    <div
+                      className="transition-opacity duration-300"
+                      style={{
+                        width: `calc(${previewFontSize} * ${symbolSize / 100})`,
+                        height: `calc(${previewFontSize} * ${symbolSize / 100})`,
+                        marginBottom: symbolPlacement === 'above' ? `calc(${previewFontSize} * ${symbolDistance / 100})` : `calc(${previewFontSize} * 0.3)`,
+                      }}
+                      dangerouslySetInnerHTML={{ __html: symbolSvg }}
+                    />
+                    {symbolPlacement === 'separate' && (
+                      <div className="w-full border-t border-gray-300 dark:border-gray-600 my-2" style={{ maxWidth: '100px' }}></div>
+                    )}
+                  </>
+                )}
+
+                {/* Symbol To the Left */}
+                {symbolMode !== 'none' && symbolSvg && symbolPlacement === 'left' && (
+                  <div
+                    className="transition-opacity duration-300 flex-shrink-0"
                     style={{
-                      fontSize: `calc(${previewFontSize} * 0.35)`,
-                      verticalAlign: 'baseline',
-                      marginLeft: '0.02em',
-                      lineHeight: 1,
-                      position: 'relative',
-                      top: `calc(${previewFontSize} * -0.5)`,
-                      display: 'inline-block',
+                      width: `calc(${previewFontSize} * ${symbolSize / 100})`,
+                      height: `calc(${previewFontSize} * ${symbolSize / 100})`,
+                    }}
+                    dangerouslySetInnerHTML={{ __html: symbolSvg }}
+                  />
+                )}
+
+                {/* Logo and Tagline Wrapper */}
+                <div className="flex flex-col items-center">
+                  {/* Logo */}
+                  <div
+                    ref={logoRef}
+                    className={`select-none ${getFontClass(selectedFont)} inline-block`}
+                    style={{
+                      fontSize: previewFontSize,
+                      fontWeight: fontWeight,
+                      letterSpacing: getLetterSpacingValue(letterSpacing),
+                      textTransform: getTextTransform(textCase) as React.CSSProperties['textTransform'],
+                      color: logoColor,
+                      lineHeight: 1.2,
+                      whiteSpace: 'nowrap',
+                      overflow: 'visible',
                     }}
                   >
-                    {getTrademarkSymbol(trademarkSymbol)}
-                  </span>
-                )}
-              </div>
-              {getFullTaglineText() && (
-                <div
-                  className={`select-none ${getFontClass(taglineFont)}`}
-                  style={{
-                    fontSize: `calc(${previewFontSize} * ${taglineSize / 100})`,
-                    fontWeight: taglineFontWeight,
-                    letterSpacing: getLetterSpacingValue(taglineLetterSpacing),
-                    textTransform: getTextTransform(taglineTextCase) as React.CSSProperties['textTransform'],
-                    color: taglineColor,
-                    lineHeight: 1.3,
-                    whiteSpace: 'nowrap',
-                    overflow: 'visible',
-                    marginTop: `calc(${previewFontSize} * ${taglineDistance / 100})`,
-                  }}
-                >
-                  {getFullTaglineText()}
+                    {textCase === 'uppercase' ? (brandName || 'Your Brand').toUpperCase() : (brandName || 'Your Brand')}
+                    {trademarkSymbol !== 'none' && (
+                      <span
+                        style={{
+                          fontSize: `calc(${previewFontSize} * 0.35)`,
+                          verticalAlign: 'baseline',
+                          marginLeft: '0.02em',
+                          lineHeight: 1,
+                          position: 'relative',
+                          top: `calc(${previewFontSize} * -0.5)`,
+                          display: 'inline-block',
+                        }}
+                      >
+                        {getTrademarkSymbol(trademarkSymbol)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Tagline */}
+                  {getFullTaglineText() && (
+                    <div
+                      className={`select-none ${getFontClass(taglineFont)}`}
+                      style={{
+                        fontSize: `calc(${previewFontSize} * ${taglineSize / 100})`,
+                        fontWeight: taglineFontWeight,
+                        letterSpacing: getLetterSpacingValue(taglineLetterSpacing),
+                        textTransform: getTextTransform(taglineTextCase) as React.CSSProperties['textTransform'],
+                        color: taglineColor,
+                        lineHeight: 1.3,
+                        whiteSpace: 'nowrap',
+                        overflow: 'visible',
+                        marginTop: `calc(${previewFontSize} * ${taglineDistance / 100})`,
+                      }}
+                    >
+                      {getFullTaglineText()}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </section>
         </main>
