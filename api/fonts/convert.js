@@ -8,7 +8,11 @@ export default async function handler(req, res) {
     'https://gologotype.com',
     'https://www.gologotype.com',
     'http://localhost:3000',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'http://localhost:5176',
+    'http://localhost:5177'
   ];
   
   // Allow any vercel deployment URL for development/staging
@@ -68,10 +72,14 @@ export default async function handler(req, res) {
 
     // Validate font family against whitelist
     const allowedFonts = [
-      'Inter', 'Playfair Display', 'Roboto', 'Montserrat', 'Lato', 'Open Sans', 
-      'Poppins', 'Source Sans Pro', 'Merriweather', 'Oswald', 'Outfit', 'Work Sans', 
-      'DM Sans', 'DM Serif Text', 'Nunito Sans', 'Quicksand', 'Lexend Deca', 'Questrial',
-      'Funnel Sans', 'Funnel Display', 'Onest', 'Gabarito', 'Figtree', 'Tomorrow', 'Sniglet'
+      'Alan Sans', 'Archivo Black', 'Asimovian', 'Bebas Neue', 'Cal Sans',
+      'DM Sans', 'DM Serif Text', 'Figtree', 'Fjalla One', 'Funnel Display',
+      'Funnel Sans', 'Gabarito', 'Geist', 'Inter', 'Lato', 'Lexend Deca',
+      'Manrope', 'Merriweather', 'Montserrat', 'National Park', 'Nunito Sans',
+      'Onest', 'Open Sans', 'Oswald', 'Outfit', 'Playfair Display', 'Poppins',
+      'Questrial', 'Quicksand', 'Roboto', 'Sansation', 'Sniglet', 'Source Sans Pro',
+      'Special Gothic', 'Special Gothic Condensed One', 'Special Gothic Expanded One',
+      'Tomorrow', 'Vend Sans', 'Work Sans'
     ];
     if (!allowedFonts.some(font => fontFamily.toLowerCase().includes(font.toLowerCase()))) {
       return res.status(400).json({

@@ -7,32 +7,18 @@
  */
 export function getApiUrl(): string {
   if (typeof window === 'undefined') {
-    return '';
+    return '/api/fonts/convert';
   }
 
   const hostname = window.location.hostname;
 
-  // Use the correct vector API endpoint
-  const VECTOR_API_URL = 'https://vector-api-alpha.vercel.app/api/convert';
-
-  // Production
-  if (hostname === 'gologotype.com' || hostname === 'www.gologotype.com') {
-    return VECTOR_API_URL;
-  }
-
-  // Staging/Vercel preview deployments
-  if (hostname.includes('.vercel.app')) {
-    return VECTOR_API_URL;
-  }
-
-  // Local development
+  // Local development - use external API temporarily until we deploy
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    // Use deployed vector-api
-    return VECTOR_API_URL;
+    return 'https://vector-api-alpha.vercel.app/api/convert';
   }
 
-  // Fallback
-  return VECTOR_API_URL;
+  // Production and Vercel deployments - use same-origin API
+  return '/api/fonts/convert';
 }
 
 export const API_CONFIG = {
