@@ -1870,7 +1870,7 @@ Generated with GoLogotype: https://gologotype.com
                   onClick={handleSymbolSectionToggle}
                   className="flex items-center justify-between w-full text-base font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
-                  <span>Symbol (Optional)</span>
+                  <span>Symbol and App icon (Optional)</span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${showSymbolSection ? 'rotate-180' : ''}`}
                   />
