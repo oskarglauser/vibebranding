@@ -15,9 +15,11 @@ import {
   getTrademarkSymbol,
   getLetterSpacingValue,
   getTextTransform,
-  type TrademarkSymbolType
+  type TrademarkSymbolType,
+  type TextCaseType
 } from './utils/textUtils'
 import { getFontClass } from './utils/fontUtils'
+import { hexToPantone, formatPantone } from './utils/pantoneUtils'
 import { FAQItem } from './components/FAQItem'
 
 // Declare gtag for TypeScript
@@ -34,10 +36,10 @@ function App() {
   const [selectedFont, setSelectedFont] = useState('Inter')
   const [fontWeight, setFontWeight] = useState('600')
   const [letterSpacing, setLetterSpacing] = useState(-3)
-  const [textCase, setTextCase] = useState('normal')
+  const [textCase, setTextCase] = useState<TextCaseType>('normal')
   const [logoColor, setLogoColor] = useState('#111827')
   const [colorInputValue, setColorInputValue] = useState('111827')
-  const [trademarkSymbol, setTrademarkSymbol] = useState('none')
+  const [trademarkSymbol, setTrademarkSymbol] = useState<TrademarkSymbolType>('none')
   const [previewFontSize, setPreviewFontSize] = useState('4rem')
   
   // Tagline states
@@ -45,7 +47,7 @@ function App() {
   const [taglineFont, setTaglineFont] = useState('Inter')
   const [taglineFontWeight, setTaglineFontWeight] = useState('400')
   const [taglineLetterSpacing, setTaglineLetterSpacing] = useState(0)
-  const [taglineTextCase, setTaglineTextCase] = useState('normal')
+  const [taglineTextCase, setTaglineTextCase] = useState<TextCaseType>('normal')
   const [taglineSize, setTaglineSize] = useState(30) // Percentage of logo size
   const [taglineDistance, setTaglineDistance] = useState(20) // Distance between logo and tagline as percentage
   const [taglineColor, setTaglineColor] = useState('#111827') // Default to same as logo
@@ -895,6 +897,7 @@ CMYK: ${(() => {
         const y = k === 1 ? 0 : (1 - b - k) / (1 - k)
         return `C${Math.round(c * 100)} M${Math.round(m * 100)} Y${Math.round(y * 100)} K${Math.round(k * 100)}`
       })()}
+Pantone: ${formatPantone(hexToPantone(logoColor))}
 
 USAGE GUIDELINES:
 ✓ Use dark logos on light backgrounds
@@ -1169,7 +1172,7 @@ Generated with GoLogotype: https://gologotype.com
                       
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Case</Label>
-                        <RadioGroup value={textCase} onValueChange={setTextCase} className="flex gap-4">
+                        <RadioGroup value={textCase} onValueChange={setTextCase as (value: string) => void} className="flex gap-4">
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="normal" id="case-normal" className="h-4 w-4" />
                             <Label htmlFor="case-normal" className="text-sm cursor-pointer text-gray-600">Normal (Aa)</Label>
@@ -1184,7 +1187,7 @@ Generated with GoLogotype: https://gologotype.com
 
                     <div className="space-y-2">
                       <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Trademark</Label>
-                      <Select value={trademarkSymbol} onValueChange={setTrademarkSymbol}>
+                      <Select value={trademarkSymbol} onValueChange={setTrademarkSymbol as (value: string) => void}>
                         <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm">
                           <SelectValue />
                         </SelectTrigger>
@@ -1316,7 +1319,7 @@ Generated with GoLogotype: https://gologotype.com
                       
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Case</Label>
-                        <RadioGroup value={taglineTextCase} onValueChange={setTaglineTextCase} className="flex gap-4">
+                        <RadioGroup value={taglineTextCase} onValueChange={setTaglineTextCase as (value: string) => void} className="flex gap-4">
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="normal" id="tagline-case-normal" className="h-4 w-4" />
                             <Label htmlFor="tagline-case-normal" className="text-sm cursor-pointer text-gray-600">Normal (Aa)</Label>
@@ -1587,12 +1590,12 @@ Generated with GoLogotype: https://gologotype.com
             </div>
             
             <div className="pt-6 border-t border-gray-200">
-              <div className="text-sm text-gray-600 space-y-3">
+              <div className="text-sm text-gray-600 space-y-3 text-center">
                 <p>
                   <strong className="text-gray-900">Need help developing your brand?</strong> Contact{' '}
-                  <a 
-                    href="https://glauser.com" 
-                    target="_blank" 
+                  <a
+                    href="https://glauser.com"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-gray-900 hover:underline font-medium"
                   >
@@ -1600,12 +1603,12 @@ Generated with GoLogotype: https://gologotype.com
                   </a>
                   {' '}for professional branding and design services.
                 </p>
-                <div className="flex flex-col sm:flex-row sm:justify-between gap-2 text-xs text-gray-400">
+                <div className="flex flex-col sm:flex-row sm:justify-center gap-2 text-xs text-gray-400">
                   <span>This logo generator is a vibe coded project by Glauser Creative.</span>
                   <span>
                     Have suggestions for improving this tool?{' '}
-                    <a 
-                      href="mailto:oskar@glauser.com" 
+                    <a
+                      href="mailto:oskar@glauser.com"
                       className="text-gray-600 hover:text-gray-900 hover:underline"
                     >
                       Email oskar@glauser.com
