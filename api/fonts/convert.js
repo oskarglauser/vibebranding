@@ -196,52 +196,45 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
       const xOffset = currentX + (position.xOffset || 0) * scale;
       const yOffset = (position.yOffset || 0) * scale;
 
-      // Debug: Check what we have
+      // Debug glyph info
       console.log(`Glyph ${i} (${text[i]}):`, {
+        id: glyph.id,
+        name: glyph.name,
         hasPath: !!glyph.path,
-        pathType: typeof glyph.path,
-        hasToSVG: glyph.path && typeof glyph.path.toSVG === 'function',
-        hasCommands: glyph.path && !!glyph.path.commands,
-        hasCbox: !!glyph.cbox,
-        hasBbox: !!glyph.bbox
+        hasCommands: glyph.path && glyph.path.commands && glyph.path.commands.length,
+        commandCount: glyph.path?.commands?.length || 0
       });
 
-      // Try to get path data
+      // Build path data from commands array (toSVG() is broken - returns same box for all glyphs)
       let pathData = '';
 
-      if (glyph.path) {
-        // Try toSVG() first
-        if (typeof glyph.path.toSVG === 'function') {
-          pathData = glyph.path.toSVG();
-          console.log(`toSVG() returned: ${pathData ? pathData.substring(0, 50) + '...' : 'EMPTY'}`);
-        }
+      if (glyph.path && glyph.path.commands && glyph.path.commands.length > 0) {
+        console.log(`Building from ${glyph.path.commands.length} commands`);
+        const commands = [];
 
-        // If toSVG() is empty, try building from commands
-        if (!pathData && glyph.path.commands && glyph.path.commands.length > 0) {
-          console.log(`Building from ${glyph.path.commands.length} commands`);
-          const commands = [];
-          for (const cmd of glyph.path.commands) {
-            switch (cmd.type) {
-              case 'M':
-                commands.push(`M${cmd.x},${cmd.y}`);
-                break;
-              case 'L':
-                commands.push(`L${cmd.x},${cmd.y}`);
-                break;
-              case 'C':
-                commands.push(`C${cmd.x1},${cmd.y1} ${cmd.x2},${cmd.y2} ${cmd.x},${cmd.y}`);
-                break;
-              case 'Q':
-                commands.push(`Q${cmd.x1},${cmd.y1} ${cmd.x},${cmd.y}`);
-                break;
-              case 'Z':
-                commands.push('Z');
-                break;
-            }
+        for (const cmd of glyph.path.commands) {
+          switch (cmd.type) {
+            case 'M':
+              commands.push(`M${cmd.x},${cmd.y}`);
+              break;
+            case 'L':
+              commands.push(`L${cmd.x},${cmd.y}`);
+              break;
+            case 'C':
+              commands.push(`C${cmd.x1},${cmd.y1} ${cmd.x2},${cmd.y2} ${cmd.x},${cmd.y}`);
+              break;
+            case 'Q':
+              commands.push(`Q${cmd.x1},${cmd.y1} ${cmd.x},${cmd.y}`);
+              break;
+            case 'Z':
+              commands.push('Z');
+              break;
           }
-          pathData = commands.join(' ');
-          console.log(`Built path: ${pathData.substring(0, 50)}...`);
         }
+        pathData = commands.join(' ');
+        console.log(`Built path (first 50 chars): ${pathData.substring(0, 50)}...`);
+      } else {
+        console.warn(`No commands found for glyph ${i} (${text[i]})`);
       }
 
       if (pathData) {

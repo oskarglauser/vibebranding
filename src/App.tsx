@@ -5,7 +5,7 @@ import { Label } from './components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './components/ui/select'
 import { RadioGroup, RadioGroupItem } from './components/ui/radio-group'
 import { Slider } from './components/ui/slider'
-import { Download, Share2, ChevronDown, RefreshCw } from 'lucide-react'
+import { Download, Share2, ChevronDown, RefreshCw, Type, Shapes, AlignLeft } from 'lucide-react'
 import JSZip from 'jszip'
 
 // Import shared constants and utilities
@@ -1721,9 +1721,12 @@ Generated with GoLogotype: https://gologotype.com
                   onClick={handleLogoSectionToggle}
                   className="flex items-center justify-between w-full text-base font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
-                  <span>Logo Settings</span>
-                  <ChevronDown 
-                    className={`w-4 h-4 transition-transform ${showLogoSection ? 'rotate-180' : ''}`} 
+                  <span className="flex items-center gap-2">
+                    <Type className="w-4 h-4" />
+                    Logo Settings
+                  </span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${showLogoSection ? 'rotate-180' : ''}`}
                   />
                 </button>
                 
@@ -1870,7 +1873,10 @@ Generated with GoLogotype: https://gologotype.com
                   onClick={handleSymbolSectionToggle}
                   className="flex items-center justify-between w-full text-base font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
-                  <span>Symbol and App icon (Optional)</span>
+                  <span className="flex items-center gap-2">
+                    <Shapes className="w-4 h-4" />
+                    Symbol and App icon (Optional)
+                  </span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${showSymbolSection ? 'rotate-180' : ''}`}
                   />
@@ -2065,7 +2071,10 @@ Generated with GoLogotype: https://gologotype.com
                   onClick={handleTaglineSectionToggle}
                   className="flex items-center justify-between w-full text-base font-bold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
-                  <span>Add Tagline (Optional)</span>
+                  <span className="flex items-center gap-2">
+                    <AlignLeft className="w-4 h-4" />
+                    Add Tagline (Optional)
+                  </span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${showTaglineSection ? 'rotate-180' : ''}`}
                   />
