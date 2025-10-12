@@ -63,7 +63,7 @@ function App() {
   const [symbolMode, setSymbolMode] = useState<SymbolMode>('none')
   const [symbolFont, setSymbolFont] = useState('Inter')
   const [symbolPlacement, setSymbolPlacement] = useState<SymbolPlacement>('above')
-  const [symbolSize, setSymbolSize] = useState(80) // Percentage
+  const [symbolSize, setSymbolSize] = useState(100) // Percentage (100% = same size as text)
   const [symbolDistance, setSymbolDistance] = useState(20) // Percentage
   const [symbolColor, setSymbolColor] = useState('#111827')
   const [symbolColorInputValue, setSymbolColorInputValue] = useState('111827')
@@ -1967,15 +1967,15 @@ Generated with GoLogotype: https://gologotype.com
                             <Slider
                               value={[symbolSize]}
                               onValueChange={(value) => setSymbolSize(value[0])}
-                              min={80}
+                              min={50}
                               max={150}
                               step={5}
                               className="w-full"
                             />
                             <div className="flex justify-between text-xs text-gray-500 mt-1">
-                              <span>Small</span>
-                              <span>Medium</span>
-                              <span>Large</span>
+                              <span>50%</span>
+                              <span>100%</span>
+                              <span>150%</span>
                             </div>
                           </div>
                         </div>
@@ -2042,11 +2042,12 @@ Generated with GoLogotype: https://gologotype.com
                             />
                             <Button
                               type="button"
-                              variant="outline"
-                              className="h-10 sm:h-9 px-3"
+                              variant="default"
+                              className="h-10 sm:h-9 px-4 gap-2 font-medium"
                               onClick={handleRegenerateSymbol}
                             >
                               <RefreshCw className="w-4 h-4" />
+                              <span className="hidden sm:inline">Randomize</span>
                             </Button>
                           </div>
                           <p className="text-xs text-gray-500">Save this seed to recreate the same variation</p>

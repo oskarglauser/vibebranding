@@ -799,24 +799,26 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
     case 0: // Radial dots
       const dotCount = randomInt(random, 6, 8);
       const dotRadius = randomInt(random, 4, 6);
+      const center0Size = randomSize(random, 8, 0.3);
       for (let i = 0; i < dotCount; i++) {
         const angle = (i * 360 / dotCount) * Math.PI / 180;
         const x = 50 + 35 * Math.cos(angle);
         const y = 50 + 35 * Math.sin(angle);
         shapes += `<circle cx="${x}" cy="${y}" r="${dotRadius}" fill="${color}"/>`;
       }
-      shapes += `<circle cx="50" cy="50" r="8" fill="${color}"/>`;
+      shapes += `<circle cx="50" cy="50" r="${center0Size}" fill="${color}"/>`;
       break;
 
     case 1: // Radial lines
       const lineCount = randomInt(random, 6, 8);
+      const line1Stroke = randomStrokeWidth(random, 3);
       for (let i = 0; i < lineCount; i++) {
         const angle = (i * 360 / lineCount) * Math.PI / 180;
         const x1 = 50 + 15 * Math.cos(angle);
         const y1 = 50 + 15 * Math.sin(angle);
         const x2 = 50 + 40 * Math.cos(angle);
         const y2 = 50 + 40 * Math.sin(angle);
-        shapes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="3" stroke-linecap="round"/>`;
+        shapes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${line1Stroke}" stroke-linecap="round"/>`;
       }
       break;
 
@@ -825,11 +827,13 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
       const spacing = 25;
       const startX = 50 - (gridSize - 1) * spacing / 2;
       const startY = 50 - (gridSize - 1) * spacing / 2;
+      const grid2SmallSize = randomSize(random, 5, 0.3);
+      const grid2CenterSize = randomSize(random, 7, 0.3);
       for (let i = 0; i < gridSize; i++) {
         for (let j = 0; j < gridSize; j++) {
           const x = startX + j * spacing;
           const y = startY + i * spacing;
-          const radius = (i === 1 && j === 1) ? 6 : 4;
+          const radius = (i === 1 && j === 1) ? grid2CenterSize : grid2SmallSize;
           shapes += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${color}"/>`;
         }
       }
@@ -837,6 +841,7 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
 
     case 3: // Radial triangles
       const triangleCount = randomInt(random, 5, 7);
+      const center3Size = randomSize(random, 12, 0.3);
       for (let i = 0; i < triangleCount; i++) {
         const angle = (i * 360 / triangleCount - 90) * Math.PI / 180;
         const x = 50 + 30 * Math.cos(angle);
@@ -844,27 +849,31 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
         const size = 8;
         shapes += `<path d="M ${x} ${y - size} L ${x - size * 0.866} ${y + size * 0.5} L ${x + size * 0.866} ${y + size * 0.5} Z" fill="${color}"/>`;
       }
-      shapes += `<circle cx="50" cy="50" r="10" fill="${color}"/>`;
+      shapes += `<circle cx="50" cy="50" r="${center3Size}" fill="${color}"/>`;
       break;
 
     case 4: // Concentric circles with gaps
+      const circle4Stroke = randomStrokeWidth(random, 4);
+      const center4Size = randomSize(random, 10, 0.3);
       shapes = `
-        <circle cx="50" cy="50" r="38" fill="none" stroke="${color}" stroke-width="4"/>
-        <circle cx="50" cy="50" r="28" fill="none" stroke="${color}" stroke-width="4"/>
-        <circle cx="50" cy="50" r="18" fill="none" stroke="${color}" stroke-width="4"/>
-        <circle cx="50" cy="50" r="8" fill="${color}"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="${color}" stroke-width="${circle4Stroke}"/>
+        <circle cx="50" cy="50" r="28" fill="none" stroke="${color}" stroke-width="${circle4Stroke}"/>
+        <circle cx="50" cy="50" r="18" fill="none" stroke="${color}" stroke-width="${circle4Stroke}"/>
+        <circle cx="50" cy="50" r="${center4Size}" fill="${color}"/>
       `;
       break;
 
     case 5: // Radial squares
       const squareCount = randomInt(random, 4, 6);
+      const square5Size = randomSize(random, 12, 0.3);
+      const center5Size = randomSize(random, 12, 0.3);
       for (let i = 0; i < squareCount; i++) {
         const angle = (i * 360 / squareCount) * Math.PI / 180;
-        const x = 50 + 30 * Math.cos(angle) - 5;
-        const y = 50 + 30 * Math.sin(angle) - 5;
-        shapes += `<rect x="${x}" y="${y}" width="10" height="10" fill="${color}" rx="2"/>`;
+        const x = 50 + 30 * Math.cos(angle) - square5Size / 2;
+        const y = 50 + 30 * Math.sin(angle) - square5Size / 2;
+        shapes += `<rect x="${x}" y="${y}" width="${square5Size}" height="${square5Size}" fill="${color}" rx="2"/>`;
       }
-      shapes += `<rect x="45" y="45" width="10" height="10" fill="${color}" rx="2"/>`;
+      shapes += `<rect x="${50 - center5Size / 2}" y="${50 - center5Size / 2}" width="${center5Size}" height="${center5Size}" fill="${color}" rx="2"/>`;
       break;
 
     case 6: // Star pattern
@@ -950,13 +959,14 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
       break;
 
     case 12: // Zigzag pattern
+      const zigzagStroke = randomStrokeWidth(random, 4);
       shapes = `
         <path d="M 15 30 L 30 15 L 45 30 L 60 15 L 75 30 L 90 15"
-              fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              fill="none" stroke="${color}" stroke-width="${zigzagStroke}" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M 15 50 L 30 35 L 45 50 L 60 35 L 75 50 L 90 35"
-              fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              fill="none" stroke="${color}" stroke-width="${zigzagStroke}" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M 15 70 L 30 55 L 45 70 L 60 55 L 75 70 L 90 55"
-              fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              fill="none" stroke="${color}" stroke-width="${zigzagStroke}" stroke-linecap="round" stroke-linejoin="round"/>
       `;
       break;
 
@@ -1123,13 +1133,14 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
       const arcLetterSize = randomSize(random, 18, 0.2);
       const arcSpan = randomSize(random, 180, 0.3);
       const arcStart = (180 - arcSpan) / 2;
+      const arc23Stroke = randomStrokeWidth(random, 2);
       for (let i = 0; i < arcLetterCount; i++) {
         const angle = (arcStart + (i * arcSpan / (arcLetterCount - 1)) - 90) * Math.PI / 180;
         const x = 50 + arcRadius * Math.cos(angle);
         const y = 50 + arcRadius * Math.sin(angle);
         shapes += `<text x="${x}" y="${y}" font-size="${arcLetterSize}" font-weight="600" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
       }
-      shapes += `<path d="M ${50 + arcRadius * Math.cos((arcStart - 90) * Math.PI / 180)} ${50 + arcRadius * Math.sin((arcStart - 90) * Math.PI / 180)} A ${arcRadius} ${arcRadius} 0 0 1 ${50 + arcRadius * Math.cos((arcStart + arcSpan - 90) * Math.PI / 180)} ${50 + arcRadius * Math.sin((arcStart + arcSpan - 90) * Math.PI / 180)}" fill="none" stroke="${color}" stroke-width="2"/>`;
+      shapes += `<path d="M ${50 + arcRadius * Math.cos((arcStart - 90) * Math.PI / 180)} ${50 + arcRadius * Math.sin((arcStart - 90) * Math.PI / 180)} A ${arcRadius} ${arcRadius} 0 0 1 ${50 + arcRadius * Math.cos((arcStart + arcSpan - 90) * Math.PI / 180)} ${50 + arcRadius * Math.sin((arcStart + arcSpan - 90) * Math.PI / 180)}" fill="none" stroke="${color}" stroke-width="${arc23Stroke}"/>`;
       break;
 
     case 24: // Letters forming radial burst
@@ -1137,6 +1148,7 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
       const burstInner = randomSize(random, 18, 0.2);
       const burstOuter = randomSize(random, 38, 0.15);
       const burstLetterSize = randomSize(random, 14, 0.2);
+      const burst24Stroke = randomStrokeWidth(random, 2);
       for (let i = 0; i < burstLetterCount; i++) {
         const angle = (i * 360 / burstLetterCount) * Math.PI / 180;
         const x1 = 50 + burstInner * Math.cos(angle);
@@ -1144,7 +1156,7 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
         const x2 = 50 + burstOuter * Math.cos(angle);
         const y2 = 50 + burstOuter * Math.sin(angle);
         shapes += `<text x="${x2}" y="${y2}" font-size="${burstLetterSize}" font-weight="600" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
-        shapes += `<line x1="${x1}" y1="${y1}" x2="${x2 - burstLetterSize/3 * Math.cos(angle)}" y2="${y2 - burstLetterSize/3 * Math.sin(angle)}" stroke="${color}" stroke-width="1.5"/>`;
+        shapes += `<line x1="${x1}" y1="${y1}" x2="${x2 - burstLetterSize/3 * Math.cos(angle)}" y2="${y2 - burstLetterSize/3 * Math.sin(angle)}" stroke="${color}" stroke-width="${burst24Stroke}"/>`;
       }
       break;
 
@@ -1172,6 +1184,7 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
       const polyLetterRadius = randomSize(random, 38, 0.15);
       const polyLetterSize = randomSize(random, 18, 0.2);
       const polyRotation = randomAngle(random);
+      const poly26Stroke = randomStrokeWidth(random, 2);
       const polyPoints = [];
       for (let i = 0; i < polyLetterCount; i++) {
         const angle = (i * 360 / polyLetterCount + polyRotation) * Math.PI / 180;
@@ -1180,7 +1193,7 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
         polyPoints.push(`${x},${y}`);
         shapes += `<text x="${x}" y="${y}" font-size="${polyLetterSize}" font-weight="600" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
       }
-      shapes += `<polygon points="${polyPoints.join(' ')}" fill="none" stroke="${color}" stroke-width="2"/>`;
+      shapes += `<polygon points="${polyPoints.join(' ')}" fill="none" stroke="${color}" stroke-width="${poly26Stroke}"/>`;
       shapes += `<text x="50" y="50" font-size="${polyLetterSize * 1.3}" font-weight="700" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
       break;
   }

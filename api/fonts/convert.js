@@ -41,8 +41,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Extract variables outside try block for error handler access
+  let text, fontFamily, fontWeight, fontSize, letterSpacing, color, textAlign;
+
   try {
-    const {
+    ({
       text,
       fontFamily,
       fontWeight = '400',
@@ -50,7 +53,7 @@ export default async function handler(req, res) {
       letterSpacing = 0,
       color = '#000000',
       textAlign = 'center'
-    } = req.body;
+    } = req.body);
 
     // Validate input
     if (!text || !fontFamily) {
@@ -133,11 +136,13 @@ export default async function handler(req, res) {
 async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterSpacing, color, textAlign }) {
   try {
     // Download Google Font CSS to get font file URL
+    // Use older browser User-Agent to get WOFF instead of WOFF2 (opentype.js doesn't support WOFF2)
     const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@${fontWeight}&display=swap`;
-    
+
     const cssResponse = await fetch(fontUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        // Firefox 40 User-Agent - gets WOFF format instead of WOFF2
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:40.0) Gecko/20100101 Firefox/40.0'
       }
     });
 
