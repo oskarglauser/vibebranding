@@ -7,7 +7,8 @@ export default async function handler(req, res) {
     'https://gologotype.com',
     'https://www.gologotype.com',
     'http://localhost:3000',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'http://localhost:5174'
   ]
   
   // Allow any vercel deployment URL for development/staging

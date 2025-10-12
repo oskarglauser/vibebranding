@@ -8,233 +8,26 @@ import { Slider } from './components/ui/slider'
 import { Download, Share2, ChevronDown } from 'lucide-react'
 import JSZip from 'jszip'
 
+// Import shared constants and utilities
+import { FONTS, FONT_WEIGHTS_BY_FAMILY } from './constants/fonts'
+import { API_CONFIG } from './constants/config'
+import {
+  getTrademarkSymbol,
+  getLetterSpacingValue,
+  getTextTransform,
+  type TrademarkSymbolType
+} from './utils/textUtils'
+import { getFontClass } from './utils/fontUtils'
+import { FAQItem } from './components/FAQItem'
+
 // Declare gtag for TypeScript
 declare global {
   interface Window {
-    gtag: (...args: any[]) => void;
+    gtag: (...args: unknown[]) => void;
   }
 }
 
-// FAQ Component
-const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  
-  return (
-    <div className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full p-4 text-left text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-      >
-        <span>{question}</span>
-        <ChevronDown 
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
-        />
-      </button>
-      {isOpen && (
-        <div className="px-4 pb-4 text-sm text-gray-700 dark:text-gray-300 text-left">
-          {answer}
-        </div>
-      )}
-    </div>
-  )
-}
-
-const fonts = [
-  'Inter',
-  'Playfair Display',
-  'Roboto',
-  'Montserrat',
-  'Lato',
-  'Open Sans',
-  'Poppins',
-  'Source Sans Pro',
-  'Merriweather',
-  'Oswald',
-  'Outfit',
-  'Work Sans',
-  'DM Sans',
-  'DM Serif Text',
-  'Nunito Sans',
-  'Quicksand',
-  'Lexend Deca',
-  'Questrial',
-  'Funnel Sans',
-  'Funnel Display',
-  'Onest',
-  'Gabarito',
-  'Figtree',
-  'Tomorrow',
-  'Sniglet'
-]
-
-const fontWeightsByFamily: { [key: string]: { value: string; label: string }[] } = {
-  'Inter': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Playfair Display': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Roboto': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Montserrat': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Lato': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Open Sans': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Poppins': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Source Sans Pro': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Merriweather': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Oswald': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Outfit': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Work Sans': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'DM Sans': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'DM Serif Text': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Nunito Sans': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Quicksand': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Lexend Deca': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Questrial': [
-    { value: '400', label: 'Regular' }
-  ],
-  'Funnel Sans': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Funnel Display': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Onest': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Gabarito': [
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Figtree': [
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' }
-  ],
-  'Tomorrow': [
-    { value: '100', label: 'Thin' },
-    { value: '200', label: 'Extra Light' },
-    { value: '300', label: 'Light' },
-    { value: '400', label: 'Regular' },
-    { value: '500', label: 'Medium' },
-    { value: '600', label: 'Semi Bold' },
-    { value: '700', label: 'Bold' },
-    { value: '800', label: 'Extra Bold' },
-    { value: '900', label: 'Black' }
-  ],
-  'Sniglet': [
-    { value: '400', label: 'Regular' },
-    { value: '800', label: 'Extra Bold' }
-  ]
-}
+// Font constants are now imported from constants/fonts.ts
 
 function App() {
   const [brandName, setBrandName] = useState('')
@@ -273,24 +66,6 @@ function App() {
     }
     return false
   })
-
-  const getLetterSpacingValue = (spacing: number) => {
-    if (spacing === 0) return 'normal'
-    return `${spacing / 100}em`
-  }
-
-  const getTextTransform = (caseType: string) => {
-    return caseType === 'uppercase' ? 'uppercase' : 'none'
-  }
-
-  const getTrademarkSymbol = (symbol: string) => {
-    switch (symbol) {
-      case 'r': return '®'
-      case 'c': return '©'
-      case 'tm': return '™'
-      default: return ''
-    }
-  }
 
   const handleColorInputChange = (value: string) => {
     // Remove any non-hex characters and limit to 6 characters
@@ -365,7 +140,7 @@ function App() {
   const getFullLogoText = () => {
     const displayName = brandName || 'Your Brand'
     const displayText = textCase === 'uppercase' ? displayName.toUpperCase() : displayName
-    const symbol = getTrademarkSymbol(trademarkSymbol)
+    const symbol = getTrademarkSymbol(trademarkSymbol as TrademarkSymbolType)
     return displayText + symbol
   }
 
@@ -401,37 +176,6 @@ function App() {
         })
       }, 100) // Small delay to allow section to expand
     }
-  }
-
-  const getFontClass = (font: string) => {
-    const fontMap: { [key: string]: string } = {
-      'Inter': 'font-inter',
-      'Playfair Display': 'font-playfair',
-      'Roboto': 'font-roboto',
-      'Montserrat': 'font-montserrat',
-      'Lato': 'font-lato',
-      'Open Sans': 'font-opensans',
-      'Poppins': 'font-poppins',
-      'Source Sans Pro': 'font-sourcesans',
-      'Merriweather': 'font-merriweather',
-      'Oswald': 'font-oswald',
-      'Outfit': 'font-outfit',
-      'Work Sans': 'font-worksans',
-      'DM Sans': 'font-dmsans',
-      'DM Serif Text': 'font-dmserif',
-      'Nunito Sans': 'font-nunitosans',
-      'Quicksand': 'font-quicksand',
-      'Lexend Deca': 'font-lexenddeca',
-      'Questrial': 'font-questrial',
-      'Funnel Sans': 'font-funnelsans',
-      'Funnel Display': 'font-funneldisplay',
-      'Onest': 'font-onest',
-      'Gabarito': 'font-gabarito',
-      'Figtree': 'font-figtree',
-      'Tomorrow': 'font-tomorrow',
-      'Sniglet': 'font-sniglet'
-    }
-    return fontMap[font] || 'font-inter'
   }
 
   const calculateOptimalFontSize = () => {
@@ -579,10 +323,10 @@ function App() {
       const createClientVectorSVG = async (color: string): Promise<string> => {
         try {
           console.log('Using vector API for font-to-path conversion:', selectedFont, fontWeight)
-          
-          // Use the dedicated vector-api endpoint 
-          const apiUrl = 'https://vector-cpxtftl6a-oskarglausers-projects.vercel.app/api/convert';
-          
+
+          // Use the configured vector API endpoint
+          const apiUrl = API_CONFIG.vectorApiUrl;
+
           const requestBody = {
             text: fullText,
             fontFamily: currentFont,
@@ -635,9 +379,9 @@ function App() {
         } catch (error) {
           console.error('Vector API conversion failed:', error)
           console.error('API Error details:', {
-            status: (error as any).status,
-            message: (error as any).message,
-            response: (error as any).response
+            status: error instanceof Error ? undefined : (error as {status?: number}).status,
+            message: error instanceof Error ? error.message : String(error),
+            response: error instanceof Error ? undefined : (error as {response?: unknown}).response
           })
           throw error
         }
@@ -647,8 +391,8 @@ function App() {
       const createClientVectorSVGWithTagline = async (logoColorParam: string, taglineColorParam?: string): Promise<string> => {
         try {
           console.log('Creating vector SVG with tagline using API')
-          const apiUrl = 'https://vector-cpxtftl6a-oskarglausers-projects.vercel.app/api/convert'
-          
+          const apiUrl = API_CONFIG.vectorApiUrl
+
           // Use provided tagline color or default to user's tagline color
           const actualTaglineColor = taglineColorParam || taglineColor
           
@@ -1206,12 +950,13 @@ Generated with GoLogotype: https://gologotype.com
       
     } catch (error) {
       console.error('Brand package generation failed:', error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
       console.error('Error details:', {
-        message: (error as any).message,
-        stack: (error as any).stack,
-        name: (error as any).name
+        message: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : undefined
       })
-      alert(`Failed to generate brand package: ${(error as any).message}. Check console for details.`)
+      alert(`Failed to generate brand package: ${errorMessage}. Check console for details.`)
     }
   }
 
@@ -1239,7 +984,7 @@ Generated with GoLogotype: https://gologotype.com
         await navigator.clipboard.writeText(shareData.url)
         alert('Link copied to clipboard!')
       }
-    } catch (error) {
+    } catch {
       // Final fallback: show URL in prompt
       prompt('Copy this link to share:', shareData.url)
     }
@@ -1286,7 +1031,7 @@ Generated with GoLogotype: https://gologotype.com
                   fontSize: previewFontSize,
                   fontWeight: fontWeight,
                   letterSpacing: getLetterSpacingValue(letterSpacing),
-                  textTransform: getTextTransform(textCase) as any,
+                  textTransform: getTextTransform(textCase) as React.CSSProperties['textTransform'],
                   color: logoColor,
                   lineHeight: 1.2,
                   whiteSpace: 'nowrap',
@@ -1317,7 +1062,7 @@ Generated with GoLogotype: https://gologotype.com
                     fontSize: `calc(${previewFontSize} * ${taglineSize / 100})`,
                     fontWeight: taglineFontWeight,
                     letterSpacing: getLetterSpacingValue(taglineLetterSpacing),
-                    textTransform: getTextTransform(taglineTextCase) as any,
+                    textTransform: getTextTransform(taglineTextCase) as React.CSSProperties['textTransform'],
                     color: taglineColor,
                     lineHeight: 1.3,
                     whiteSpace: 'nowrap',
@@ -1367,7 +1112,7 @@ Generated with GoLogotype: https://gologotype.com
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Font</Label>
                         <Select value={selectedFont} onValueChange={(font) => {
                           setSelectedFont(font)
-                          const availableWeights = fontWeightsByFamily[font] || []
+                          const availableWeights = FONT_WEIGHTS_BY_FAMILY[font] || []
                           if (availableWeights.length > 0 && !availableWeights.find(w => w.value === fontWeight)) {
                             setFontWeight(availableWeights[0].value)
                           }
@@ -1376,7 +1121,7 @@ Generated with GoLogotype: https://gologotype.com
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {fonts.map((font) => (
+                            {FONTS.map((font) => (
                               <SelectItem key={font} value={font} style={{ fontFamily: font }}>
                                 {font}
                               </SelectItem>
@@ -1392,7 +1137,7 @@ Generated with GoLogotype: https://gologotype.com
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {(fontWeightsByFamily[selectedFont] || []).map((weight) => (
+                            {(FONT_WEIGHTS_BY_FAMILY[selectedFont] || []).map((weight) => (
                               <SelectItem key={weight.value} value={weight.value}>
                                 {weight.label}
                               </SelectItem>
@@ -1514,7 +1259,7 @@ Generated with GoLogotype: https://gologotype.com
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Tagline Font</Label>
                         <Select value={taglineFont} onValueChange={(font) => {
                           setTaglineFont(font)
-                          const availableWeights = fontWeightsByFamily[font] || []
+                          const availableWeights = FONT_WEIGHTS_BY_FAMILY[font] || []
                           if (availableWeights.length > 0 && !availableWeights.find(w => w.value === taglineFontWeight)) {
                             setTaglineFontWeight(availableWeights[0].value)
                           }
@@ -1523,7 +1268,7 @@ Generated with GoLogotype: https://gologotype.com
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {fonts.map((font) => (
+                            {FONTS.map((font) => (
                               <SelectItem key={font} value={font} style={{ fontFamily: font }}>
                                 {font}
                               </SelectItem>
@@ -1539,7 +1284,7 @@ Generated with GoLogotype: https://gologotype.com
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {(fontWeightsByFamily[taglineFont] || []).map((weight) => (
+                            {(FONT_WEIGHTS_BY_FAMILY[taglineFont] || []).map((weight) => (
                               <SelectItem key={weight.value} value={weight.value}>
                                 {weight.label}
                               </SelectItem>
@@ -1684,7 +1429,7 @@ Generated with GoLogotype: https://gologotype.com
                   fontSize: previewFontSize,
                   fontWeight: fontWeight,
                   letterSpacing: getLetterSpacingValue(letterSpacing),
-                  textTransform: getTextTransform(textCase) as any,
+                  textTransform: getTextTransform(textCase) as React.CSSProperties['textTransform'],
                   color: logoColor,
                   lineHeight: 1.2,
                   whiteSpace: 'nowrap',
@@ -1715,7 +1460,7 @@ Generated with GoLogotype: https://gologotype.com
                     fontSize: `calc(${previewFontSize} * ${taglineSize / 100})`,
                     fontWeight: taglineFontWeight,
                     letterSpacing: getLetterSpacingValue(taglineLetterSpacing),
-                    textTransform: getTextTransform(taglineTextCase) as any,
+                    textTransform: getTextTransform(taglineTextCase) as React.CSSProperties['textTransform'],
                     color: taglineColor,
                     lineHeight: 1.3,
                     whiteSpace: 'nowrap',
