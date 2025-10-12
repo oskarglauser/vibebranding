@@ -18,3 +18,6 @@ Allow: /*.ico$
 
 # Crawl delay to be respectful
 Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://gologotype.com/sitemap.xml

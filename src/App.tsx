@@ -1064,19 +1064,20 @@ Generated with GoLogotype: https://gologotype.com
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-4 sm:p-6 transition-colors">
+    <div className="min-h-screen bg-white dark:bg-gray-900 px-4 py-3 sm:p-6 transition-colors">
       <div className="mx-auto max-w-6xl">
-        <header className="text-center mb-6 sm:mb-8 relative">
-          <div className="flex justify-center mb-2">
-            <img 
+        <header className="mb-3 sm:mb-4 relative flex items-center justify-between pl-3.5 sm:pl-5.5">
+          <div className="flex items-center gap-3">
+            <img
               src="/gologotype-dark.svg"
-              alt="GoLogotype" 
+              alt="GoLogotype"
               className="h-8 sm:h-10"
             />
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden sm:block">Logo generator with true vector SVG output</p>
           </div>
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="absolute top-0 right-0 p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             aria-label="Toggle dark mode"
           >
             {isDarkMode ? (
@@ -1089,12 +1090,11 @@ Generated with GoLogotype: https://gologotype.com
               </svg>
             )}
           </button>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Logo generator with true vector SVG output</p>
         </header>
 
         <main className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
           {/* Mobile: Preview on top, compact */}
-          <section ref={mobileContainerRef} className="lg:hidden bg-gray-50 dark:bg-gray-800 rounded-lg p-4 flex items-center justify-center min-h-[200px] sticky top-4 z-10 relative overflow-visible" aria-label="Logo preview">
+          <section ref={mobileContainerRef} className="lg:hidden bg-gray-50 -mx-4 rounded-none sm:mx-0 sm:rounded-lg p-4 flex items-center justify-center min-h-[200px] sticky top-4 z-10 relative overflow-visible" aria-label="Logo preview">
             <h2 className="sr-only">Logo Preview</h2>
             {/* Copy SVG Button */}
             <button
@@ -1162,7 +1162,7 @@ Generated with GoLogotype: https://gologotype.com
             </div>
           </section>
 
-          <section className="bg-white dark:bg-gray-800 p-4 sm:p-6 font-inter rounded-lg transition-colors" aria-label="Logo customization controls">
+          <section className="bg-white dark:bg-gray-800 -mx-4 rounded-none sm:mx-0 sm:rounded-lg p-4 sm:p-6 font-inter transition-colors" aria-label="Logo customization controls">
             <h2 className="sr-only">Logo Customization Options</h2>
             <div className="space-y-4">
               {/* Logo Section */}
@@ -1258,11 +1258,11 @@ Generated with GoLogotype: https://gologotype.com
                         <RadioGroup value={textCase} onValueChange={setTextCase as (value: string) => void} className="flex gap-4">
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="normal" id="case-normal" className="h-4 w-4" />
-                            <Label htmlFor="case-normal" className="text-sm cursor-pointer text-gray-600">Normal (Aa)</Label>
+                            <Label htmlFor="case-normal" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Normal (Aa)</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="uppercase" id="uppercase" className="h-4 w-4" />
-                            <Label htmlFor="uppercase" className="text-sm cursor-pointer text-gray-600">Upper (AA)</Label>
+                            <Label htmlFor="uppercase" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Upper (AA)</Label>
                           </div>
                         </RadioGroup>
                       </div>
@@ -1312,7 +1312,7 @@ Generated with GoLogotype: https://gologotype.com
               </div>
 
               {/* Tagline Section */}
-              <div className="border-t border-gray-200 pt-4">
+              <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
                 <button
                   type="button"
                   onClick={handleTaglineSectionToggle}
@@ -1405,11 +1405,11 @@ Generated with GoLogotype: https://gologotype.com
                         <RadioGroup value={taglineTextCase} onValueChange={setTaglineTextCase as (value: string) => void} className="flex gap-4">
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="normal" id="tagline-case-normal" className="h-4 w-4" />
-                            <Label htmlFor="tagline-case-normal" className="text-sm cursor-pointer text-gray-600">Normal (Aa)</Label>
+                            <Label htmlFor="tagline-case-normal" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Normal (Aa)</Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <RadioGroupItem value="uppercase" id="tagline-uppercase" className="h-4 w-4" />
-                            <Label htmlFor="tagline-uppercase" className="text-sm cursor-pointer text-gray-600">Upper (AA)</Label>
+                            <Label htmlFor="tagline-uppercase" className="text-sm cursor-pointer text-gray-600 dark:text-gray-300">Upper (AA)</Label>
                           </div>
                         </RadioGroup>
                       </div>
@@ -1485,8 +1485,8 @@ Generated with GoLogotype: https://gologotype.com
                 )}
               </div>
 
-              <div className="pt-4 border-t border-gray-200 space-y-3">
-                <Button onClick={generateBrandPackage} className="w-full gap-2 bg-gray-900 hover:bg-gray-800 h-12">
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-600 space-y-3">
+                <Button onClick={generateBrandPackage} className="w-full gap-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 h-12">
                   <Download className="w-4 h-4" />
                   Download Brand Package
                 </Button>
@@ -1506,7 +1506,7 @@ Generated with GoLogotype: https://gologotype.com
           </section>
 
           {/* Desktop: Preview on right side */}
-          <section ref={containerRef} className="hidden lg:flex bg-gray-50 dark:bg-gray-800 rounded-lg p-4 sm:p-8 items-center justify-center min-h-[400px] sm:min-h-[500px] relative overflow-visible" aria-label="Logo preview">
+          <section ref={containerRef} className="hidden lg:flex bg-gray-50 rounded-lg p-4 sm:p-8 items-center justify-center min-h-[400px] sm:min-h-[500px] relative overflow-visible" aria-label="Logo preview">
             <h2 className="sr-only">Logo Preview</h2>
             {/* Copy SVG Button */}
             <button
@@ -1575,46 +1575,46 @@ Generated with GoLogotype: https://gologotype.com
         </main>
 
         {/* SEO Footer */}
-        <footer className="mt-24 bg-gray-50 rounded-lg p-8">
-          <div className="max-w-4xl mx-auto text-center space-y-6">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+        <footer className="mt-4 bg-gray-50 dark:bg-gray-800 -mx-4 rounded-none sm:mt-10 sm:mx-0 sm:rounded-lg p-8">
+          <article className="max-w-4xl mx-auto text-center space-y-6">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Professional Logo Generator for Modern Brands
             </h2>
             
-            <div className="prose prose-gray mx-auto text-gray-600 leading-relaxed">
+            <div className="prose prose-gray mx-auto text-gray-600 dark:text-gray-400 leading-relaxed">
               <p className="text-lg mb-4">
-                Create stunning, professional logos in seconds with our advanced logotype maker. 
-                Perfect for startups, agencies, and creative professionals who need high-quality 
+                Create stunning, professional logos in seconds with our advanced logotype maker.
+                Perfect for startups, agencies, and creative professionals who need high-quality
                 brand assets quickly and efficiently.
               </p>
-              
-              <div className="grid md:grid-cols-2 gap-6 text-left">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">True Vector Output</h3>
+
+              <section className="grid md:grid-cols-2 gap-6 text-left">
+                <article>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">True Vector Output</h3>
                   <p className="text-sm">
-                    Export genuine vector SVG files with outlined font paths - not embedded text. 
+                    Export genuine vector SVG files with outlined font paths - not embedded text.
                     Perfect for print, web, scalable brand applications, and importing into Figma for design workflows.
                   </p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Professional Features</h3>
+                </article>
+
+                <article>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Professional Features</h3>
                   <p className="text-sm">
-                    Choose from premium Google Fonts, adjust letter spacing, add trademark symbols, 
+                    Choose from premium Google Fonts, adjust letter spacing, add trademark symbols,
                     and export in multiple formats with transparent backgrounds.
                   </p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Perfect for Vibecoders</h3>
+                </article>
+
+                <article>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Perfect for Vibecoders</h3>
                   <p className="text-sm">
-                    Ideal for creating logos for your next coding project, startup launch, 
+                    Ideal for creating logos for your next coding project, startup launch,
                     or client work. Perfect for vibecoders who need professional branding fast.
                   </p>
-                </div>
-                
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Trademark Symbols</h3>
+                </article>
+
+                <article>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Trademark Symbols</h3>
                   <p className="text-sm">
                     <strong>™</strong> - Unregistered trademark for any brand name<br/>
                     <strong>®</strong> - Registered trademark (requires official registration)<br/>
@@ -1628,8 +1628,8 @@ Generated with GoLogotype: https://gologotype.com
                       Learn more about trademarks →
                     </a>
                   </p>
-                </div>
-              </div>
+                </article>
+              </section>
               
               <p className="text-center mt-6 text-gray-500 text-sm">
                 Whether you're building the next big SaaS platform, launching a creative agency, 
@@ -1637,10 +1637,10 @@ Generated with GoLogotype: https://gologotype.com
                 branding assets you need. Perfect for creating the logo for your next vibe coded project.
               </p>
             </div>
-            
+
             {/* FAQ Section */}
-            <div className="pt-6 border-t border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 text-center">Frequently Asked Questions</h2>
+            <section className="pt-6 border-t border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">Frequently Asked Questions</h2>
               <div className="space-y-3 max-w-3xl mx-auto">
                 <FAQItem 
                   question="What file formats do I get when I download my logo?"
@@ -1683,12 +1683,12 @@ Generated with GoLogotype: https://gologotype.com
                   answer="The best font depends on your brand. Sans-serif fonts like Inter and Montserrat work well for modern, tech companies. Serif fonts like Playfair Display suit luxury or traditional brands. Our curated font collection includes the most versatile options for logo design."
                 />
               </div>
-            </div>
-            
-            <div className="pt-6 border-t border-gray-200">
-              <div className="text-sm text-gray-600 space-y-3 text-center">
+            </section>
+
+            <section className="pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-sm text-gray-600 dark:text-gray-400 space-y-3 text-center">
                 <p>
-                  <strong className="text-gray-900">Need help developing your brand?</strong> Contact{' '}
+                  <strong className="text-gray-900 dark:text-gray-100">Need help developing your brand?</strong> Contact{' '}
                   <a
                     href="https://glauser.com"
                     target="_blank"
@@ -1700,20 +1700,19 @@ Generated with GoLogotype: https://gologotype.com
                   {' '}for professional branding and design services.
                 </p>
                 <div className="flex flex-col sm:flex-row sm:justify-center gap-2 text-xs text-gray-400">
-                  <span>This logo generator is a vibe coded project by Glauser Creative.</span>
                   <span>
-                    Have suggestions for improving this tool?{' '}
+                    Have suggestions for improving this tool? Email{' '}
                     <a
                       href="mailto:oskar@glauser.com"
                       className="text-gray-600 hover:text-gray-900 hover:underline"
                     >
-                      Email oskar@glauser.com
+                      oskar@glauser.com
                     </a>
                   </span>
                 </div>
               </div>
-            </div>
-          </div>
+            </section>
+          </article>
         </footer>
       </div>
     </div>
