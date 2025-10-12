@@ -59,6 +59,15 @@ function randomStrokeWidth(random: () => number, base: number = 3, variance: num
 }
 
 /**
+ * Constrain radial distance for elements placed around center
+ * Accounts for element size and stroke width
+ */
+function constrainRadialDistance(elementSize: number, strokeWidth: number = 0): number {
+  const maxDistance = (VIEWBOX_SIZE / 2) - SAFE_MARGIN - elementSize - (strokeWidth / 2);
+  return Math.max(maxDistance, 5); // Ensure at least some minimum distance
+}
+
+/**
  * Generate a letter-based symbol combining typography with geometric shapes
  */
 export function generateLetterSymbol(
@@ -800,10 +809,11 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
       const dotCount = randomInt(random, 6, 8);
       const dotRadius = randomInt(random, 4, 6);
       const center0Size = randomSize(random, 8, 0.3);
+      const dotDistance = constrainRadialDistance(dotRadius);
       for (let i = 0; i < dotCount; i++) {
         const angle = (i * 360 / dotCount) * Math.PI / 180;
-        const x = 50 + 35 * Math.cos(angle);
-        const y = 50 + 35 * Math.sin(angle);
+        const x = 50 + dotDistance * Math.cos(angle);
+        const y = 50 + dotDistance * Math.sin(angle);
         shapes += `<circle cx="${x}" cy="${y}" r="${dotRadius}" fill="${color}"/>`;
       }
       shapes += `<circle cx="50" cy="50" r="${center0Size}" fill="${color}"/>`;
@@ -812,12 +822,13 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
     case 1: // Radial lines
       const lineCount = randomInt(random, 6, 8);
       const line1Stroke = randomStrokeWidth(random, 3);
+      const line1Outer = constrainRadialDistance(0, line1Stroke);
       for (let i = 0; i < lineCount; i++) {
         const angle = (i * 360 / lineCount) * Math.PI / 180;
         const x1 = 50 + 15 * Math.cos(angle);
         const y1 = 50 + 15 * Math.sin(angle);
-        const x2 = 50 + 40 * Math.cos(angle);
-        const y2 = 50 + 40 * Math.sin(angle);
+        const x2 = 50 + line1Outer * Math.cos(angle);
+        const y2 = 50 + line1Outer * Math.sin(angle);
         shapes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${line1Stroke}" stroke-linecap="round"/>`;
       }
       break;
@@ -842,12 +853,13 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
     case 3: // Radial triangles
       const triangleCount = randomInt(random, 5, 7);
       const center3Size = randomSize(random, 12, 0.3);
+      const triangle3Size = 8;
+      const triangle3Distance = constrainRadialDistance(triangle3Size * 1.5); // Triangle height is ~1.5x size
       for (let i = 0; i < triangleCount; i++) {
         const angle = (i * 360 / triangleCount - 90) * Math.PI / 180;
-        const x = 50 + 30 * Math.cos(angle);
-        const y = 50 + 30 * Math.sin(angle);
-        const size = 8;
-        shapes += `<path d="M ${x} ${y - size} L ${x - size * 0.866} ${y + size * 0.5} L ${x + size * 0.866} ${y + size * 0.5} Z" fill="${color}"/>`;
+        const x = 50 + triangle3Distance * Math.cos(angle);
+        const y = 50 + triangle3Distance * Math.sin(angle);
+        shapes += `<path d="M ${x} ${y - triangle3Size} L ${x - triangle3Size * 0.866} ${y + triangle3Size * 0.5} L ${x + triangle3Size * 0.866} ${y + triangle3Size * 0.5} Z" fill="${color}"/>`;
       }
       shapes += `<circle cx="50" cy="50" r="${center3Size}" fill="${color}"/>`;
       break;
@@ -867,10 +879,11 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
       const squareCount = randomInt(random, 4, 6);
       const square5Size = randomSize(random, 12, 0.3);
       const center5Size = randomSize(random, 12, 0.3);
+      const square5Distance = constrainRadialDistance(square5Size * 0.707); // Diagonal of square / 2
       for (let i = 0; i < squareCount; i++) {
         const angle = (i * 360 / squareCount) * Math.PI / 180;
-        const x = 50 + 30 * Math.cos(angle) - square5Size / 2;
-        const y = 50 + 30 * Math.sin(angle) - square5Size / 2;
+        const x = 50 + square5Distance * Math.cos(angle) - square5Size / 2;
+        const y = 50 + square5Distance * Math.sin(angle) - square5Size / 2;
         shapes += `<rect x="${x}" y="${y}" width="${square5Size}" height="${square5Size}" fill="${color}" rx="2"/>`;
       }
       shapes += `<rect x="${50 - center5Size / 2}" y="${50 - center5Size / 2}" width="${center5Size}" height="${center5Size}" fill="${color}" rx="2"/>`;
@@ -878,11 +891,11 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
 
     case 6: // Star pattern
       const starPoints = randomInt(random, 5, 7);
-      const outerRadius = 40;
+      const star6OuterRadius = constrainPolygonRadius(40);
       const innerRadius = 18;
       let starPath = 'M ';
       for (let i = 0; i < starPoints * 2; i++) {
-        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const radius = i % 2 === 0 ? star6OuterRadius : innerRadius;
         const angle = (i * 180 / starPoints - 90) * Math.PI / 180;
         const x = 50 + radius * Math.cos(angle);
         const y = 50 + radius * Math.sin(angle);
@@ -895,13 +908,13 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
 
     case 7: // Flower pattern
       const petalCount = randomCount(random, 6, 10);
-      const petal7Radius = randomSize(random, 25, 0.2);
       const petal7Size = randomSize(random, 12, 0.3);
+      const petal7Distance = constrainRadialDistance(petal7Size);
       const center7Size = randomSize(random, 12, 0.3);
       for (let i = 0; i < petalCount; i++) {
         const angle = (i * 360 / petalCount) * Math.PI / 180;
-        const x = 50 + petal7Radius * Math.cos(angle);
-        const y = 50 + petal7Radius * Math.sin(angle);
+        const x = 50 + petal7Distance * Math.cos(angle);
+        const y = 50 + petal7Distance * Math.sin(angle);
         shapes += `<circle cx="${x}" cy="${y}" r="${petal7Size}" fill="${color}"/>`;
       }
       shapes += `<circle cx="50" cy="50" r="${center7Size}" fill="${color}"/>`;
@@ -1006,15 +1019,15 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
     case 15: // Radial dashes
       const dashRayCount = randomCount(random, 8, 14);
       const dashInner = randomSize(random, 20, 0.2);
-      const dashOuter = randomSize(random, 40, 0.15);
       const dashStroke = randomSize(random, 4, 0.3);
+      const dash15Outer = constrainRadialDistance(0, dashStroke);
       const center15Size = randomSize(random, 15, 0.3);
       for (let i = 0; i < dashRayCount; i++) {
         const angle = (i * 360 / dashRayCount) * Math.PI / 180;
         const x1 = 50 + dashInner * Math.cos(angle);
         const y1 = 50 + dashInner * Math.sin(angle);
-        const x2 = 50 + dashOuter * Math.cos(angle);
-        const y2 = 50 + dashOuter * Math.sin(angle);
+        const x2 = 50 + dash15Outer * Math.cos(angle);
+        const y2 = 50 + dash15Outer * Math.sin(angle);
         shapes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${dashStroke}" stroke-linecap="round"/>`;
       }
       shapes += `<circle cx="50" cy="50" r="${center15Size}" fill="${color}"/>`;
@@ -1070,14 +1083,14 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
 
     case 19: // Petal burst
       const petalBurstCount = randomCount(random, 8, 14);
-      const petal19Radius = randomSize(random, 30, 0.2);
       const petal19Rx = randomSize(random, 8, 0.3);
       const petal19Ry = randomSize(random, 15, 0.3);
+      const petal19Distance = constrainRadialDistance(petal19Ry); // Use longer axis for constraint
       const center19Size = randomSize(random, 10, 0.3);
       for (let i = 0; i < petalBurstCount; i++) {
         const angle = (i * 360 / petalBurstCount) * Math.PI / 180;
-        const x = 50 + petal19Radius * Math.cos(angle);
-        const y = 50 + petal19Radius * Math.sin(angle);
+        const x = 50 + petal19Distance * Math.cos(angle);
+        const y = 50 + petal19Distance * Math.sin(angle);
         shapes += `<ellipse cx="${x}" cy="${y}" rx="${petal19Rx}" ry="${petal19Ry}" fill="${color}" transform="rotate(${i * 360 / petalBurstCount} ${x} ${y})"/>`;
       }
       shapes += `<circle cx="50" cy="50" r="${center19Size}" fill="${color}"/>`;

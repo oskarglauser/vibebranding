@@ -1,5 +1,5 @@
 // Vercel Serverless Function for font conversion
-import opentype from 'opentype.js';
+import fontkit from 'fontkit';
 
 export default async function handler(req, res) {
   // Dynamic CORS headers - allow gologotype.com and vercel deployments
@@ -135,14 +135,12 @@ export default async function handler(req, res) {
 
 async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterSpacing, color, textAlign }) {
   try {
-    // Download Google Font CSS to get font file URL
-    // Use older browser User-Agent to get WOFF instead of WOFF2 (opentype.js doesn't support WOFF2)
+    // Download Google Font CSS to get font file URL (WOFF2 supported by fontkit)
     const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@${fontWeight}&display=swap`;
 
     const cssResponse = await fetch(fontUrl, {
       headers: {
-        // Firefox 40 User-Agent - gets WOFF format instead of WOFF2
-        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:40.0) Gecko/20100101 Firefox/40.0'
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     });
 
@@ -154,7 +152,7 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
     console.log('Font CSS fetched successfully');
     console.log('CSS preview:', cssText.substring(0, 200));
 
-    // Extract font file URL from CSS  
+    // Extract font file URL from CSS
     const fontMatch = cssText.match(/url\(([^)]+\.(woff2|woff|ttf))\)/);
     if (!fontMatch) {
       throw new Error('Font file URL not found in CSS');
@@ -172,59 +170,99 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
     const fontBuffer = await fontResponse.arrayBuffer();
     console.log(`Font file downloaded: ${fontBuffer.byteLength} bytes`);
 
-    // Parse font with opentype.js
-    console.log('Parsing font with opentype.js...');
-    const font = opentype.parse(fontBuffer);
-    console.log(`Font parsed successfully: ${font.names.fontFamily?.en || 'Unknown'}`);
+    // Parse font with fontkit (supports WOFF2)
+    console.log('Parsing font with fontkit...');
+    const font = fontkit.create(Buffer.from(fontBuffer));
+    console.log(`Font parsed successfully: ${font.familyName || 'Unknown'}`);
 
-    // Convert text to vector paths
-    const path = font.getPath(text, 0, 0, fontSize, {
-      kerning: true,
-      letterSpacing: letterSpacing
-    });
+    // Layout text with fontkit to get positioned glyphs
+    const run = font.layout(text);
+    console.log(`Text layout complete: ${run.glyphs.length} glyphs`);
 
-    const pathData = path.toPathData(2); // 2 decimal places precision
-    
-    if (!pathData || pathData === 'M0,0Z') {
+    // Calculate scale factor (fontkit uses font units, we need pixels)
+    const scale = fontSize / font.unitsPerEm;
+    console.log(`Scale factor: ${scale} (fontSize: ${fontSize}, unitsPerEm: ${font.unitsPerEm})`);
+
+    // Build combined SVG path and calculate bounding box
+    const pathParts = [];
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let currentX = 0;
+
+    for (let i = 0; i < run.glyphs.length; i++) {
+      const glyph = run.glyphs[i];
+      const position = run.positions[i];
+
+      // Get glyph path and transform it
+      const glyphPath = glyph.path.toSVG();
+
+      // Calculate glyph position with letter spacing
+      const xOffset = currentX + (position.xOffset || 0) * scale;
+      const yOffset = (position.yOffset || 0) * scale;
+
+      // Transform the path data to include positioning
+      if (glyphPath) {
+        // Wrap path in a group with transform
+        pathParts.push(`<g transform="translate(${xOffset.toFixed(2)},${yOffset.toFixed(2)}) scale(${scale.toFixed(6)})"><path d="${glyphPath}"/></g>`);
+      }
+
+      // Update bounding box
+      if (glyph.bbox) {
+        const bboxMinX = xOffset + glyph.bbox.minX * scale;
+        const bboxMinY = yOffset + glyph.bbox.minY * scale;
+        const bboxMaxX = xOffset + glyph.bbox.maxX * scale;
+        const bboxMaxY = yOffset + glyph.bbox.maxY * scale;
+
+        minX = Math.min(minX, bboxMinX);
+        minY = Math.min(minY, bboxMinY);
+        maxX = Math.max(maxX, bboxMaxX);
+        maxY = Math.max(maxY, bboxMaxY);
+      }
+
+      // Advance position
+      currentX += (position.xAdvance || 0) * scale + letterSpacing;
+    }
+
+    if (pathParts.length === 0) {
       throw new Error('No vector paths generated from text');
     }
 
-    console.log(`Vector paths generated: ${pathData.length} characters`);
+    console.log(`Vector paths generated: ${pathParts.length} glyphs`);
+    console.log(`Bounding box: minX=${minX}, minY=${minY}, maxX=${maxX}, maxY=${maxY}`);
 
-    // Calculate bounding box for proper sizing
-    const bbox = path.getBoundingBox();
-    const width = Math.ceil(bbox.x2 - bbox.x1 + 40); // Add padding
-    const height = Math.ceil(bbox.y2 - bbox.y1 + 40);
-    
-    // Calculate centering
-    let offsetX = 20 - bbox.x1;
-    let offsetY = 20 - bbox.y1;
-    
+    // Add padding
+    const padding = 20;
+    const width = Math.ceil(maxX - minX + padding * 2);
+    const height = Math.ceil(maxY - minY + padding * 2);
+
+    // Calculate offset for centering/alignment
+    let offsetX = padding - minX;
+    const offsetY = padding - minY;
+
     // Handle text alignment
     if (textAlign === 'center') {
-      offsetX = (width - (bbox.x2 - bbox.x1)) / 2 - bbox.x1;
+      offsetX = (width - (maxX - minX)) / 2 - minX;
     } else if (textAlign === 'right') {
-      offsetX = width - 20 - bbox.x2;
+      offsetX = width - padding - maxX;
     }
 
-    // Generate clean vector SVG with only path elements
+    // Generate clean vector SVG
     const svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
-  <g transform="translate(${offsetX}, ${offsetY})">
-    <path d="${pathData}" fill="${color}"/>
+  <g transform="translate(${offsetX.toFixed(2)}, ${offsetY.toFixed(2)})" fill="${color}">
+    ${pathParts.join('\n    ')}
   </g>
 </svg>`;
 
     return {
       svg,
-      pathData,
+      pathData: svg, // For compatibility
       width,
       height,
       isVector: true,
       metrics: {
-        boundingBox: bbox,
+        boundingBox: { minX, minY, maxX, maxY },
         fontSize,
         letterSpacing,
-        fontFamily: font.names.fontFamily?.en || fontFamily
+        fontFamily: font.familyName || fontFamily
       }
     };
 
