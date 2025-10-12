@@ -6,18 +6,9 @@
  * Get the appropriate API URL based on the current environment
  */
 export function getApiUrl(): string {
-  if (typeof window === 'undefined') {
-    return '/api/fonts/convert';
-  }
-
-  const hostname = window.location.hostname;
-
-  // Local development - use external API temporarily until we deploy
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'https://vector-api-alpha.vercel.app/api/convert';
-  }
-
-  // Production and Vercel deployments - use same-origin API
+  // Always use same-origin API
+  // In local dev, Vite proxy forwards /api to production
+  // In production, /api routes to Vercel serverless functions
   return '/api/fonts/convert';
 }
 

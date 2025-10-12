@@ -1,7 +1,7 @@
 // Vercel Serverless Function for font conversion
-const opentype = require('opentype.js');
+import opentype from 'opentype.js';
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Dynamic CORS headers - allow gologotype.com and vercel deployments
   const origin = req.headers.origin;
   const allowedOrigins = [

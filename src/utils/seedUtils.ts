@@ -3,10 +3,12 @@
  */
 
 /**
- * Generate a random seed string based on timestamp
+ * Generate a completely random seed string
  */
 export function generateSeed(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  // Generate a fully random seed using multiple random values
+  return Math.random().toString(36).substr(2, 9) +
+         Math.random().toString(36).substr(2, 9);
 }
 
 /**

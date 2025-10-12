@@ -63,7 +63,7 @@ function App() {
   const [symbolMode, setSymbolMode] = useState<SymbolMode>('none')
   const [symbolFont, setSymbolFont] = useState('Inter')
   const [symbolPlacement, setSymbolPlacement] = useState<SymbolPlacement>('above')
-  const [symbolSize, setSymbolSize] = useState(75) // Percentage
+  const [symbolSize, setSymbolSize] = useState(85) // Percentage
   const [symbolDistance, setSymbolDistance] = useState(20) // Percentage
   const [symbolColor, setSymbolColor] = useState('#111827')
   const [symbolColorInputValue, setSymbolColorInputValue] = useState('111827')
