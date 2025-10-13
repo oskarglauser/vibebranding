@@ -67,7 +67,7 @@ function App() {
   const [symbolFont, setSymbolFont] = useState('Inter')
   const [symbolPlacement, setSymbolPlacement] = useState<SymbolPlacement>('above')
   const [symbolSize, setSymbolSize] = useState(150) // Percentage (100% = same size as text)
-  const [symbolDistance, setSymbolDistance] = useState(5) // Percentage - closer default for above placement
+  const [symbolDistance, setSymbolDistance] = useState(25) // Percentage - closer default for above placement
   const [symbolColor, setSymbolColor] = useState('#111827')
   const [symbolColorInputValue, setSymbolColorInputValue] = useState('111827')
   const [symbolSeed, setSymbolSeed] = useState(() => generateSeed())
@@ -2299,9 +2299,9 @@ Generated with GoLogotype: https://gologotype.com
                   <Download className="w-4 h-4" />
                   Download Brand Package
                 </Button>
-                <p className="text-xs text-gray-500 text-center">
-                  Includes PNG, SVG files + basic brand guidelines
-                </p>
+                <div className="text-xs text-gray-500">
+                  <p className="text-gray-700 dark:text-gray-300 mb-4">Includes Logo, symbol and icons for social media & apps (PNG & SVG). Color palette in RGB, CMYK and PANTONE and Basic brand guidelines.</p>
+                </div>
                 <Button 
                   onClick={handleShare} 
                   variant="outline" 
@@ -2481,27 +2481,35 @@ Generated with GoLogotype: https://gologotype.com
             <section className="pt-6 border-t border-gray-200 dark:border-gray-700">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">Frequently Asked Questions</h2>
               <div className="space-y-3 max-w-3xl mx-auto">
-                <FAQItem 
+                <FAQItem
                   question="What file formats do I get when I download my logo?"
-                  answer="You get a complete brand package including SVG (vector), PNG (transparent background), and versions with white/dark backgrounds. All files are professionally optimized for web, print, and any other use case."
+                  answer="You get a complete brand package including: Logo files in SVG (vector) and PNG formats with transparent, white, and dark backgrounds. If you add a symbol, you'll also receive app icons and social media icons in multiple sizes. The package includes your color palette in RGB, CMYK, and PANTONE formats, plus basic brand guidelines. All files are professionally optimized for web, print, and digital use."
                 />
                 <FAQItem 
                   question="Are the logos truly vector-based?"
                   answer="Yes! Our SVG files contain true vector font outlines, not embedded text. This means your logo will scale perfectly at any size without losing quality, and you don't need to install any fonts."
                 />
-                <FAQItem 
+                <FAQItem
                   question="Can I use these logos commercially?"
                   answer="Absolutely! All logos generated are free to use for any purpose including commercial projects, startups, businesses, and personal use. No attribution required."
                 />
-                <FAQItem 
+                <FAQItem
+                  question="What are symbols and app icons, and how do I use them?"
+                  answer="Symbols are unique graphic elements (letters, shapes, or patterns) that can be added to create a complete brand identity. When you add a symbol, the package automatically includes app icons and social media profile images in all required sizes. Perfect for creating a professional app icon, favicon, or social media presence. Choose from Letter (using your brand's first letter), Shape (geometric designs), or Pattern (abstract compositions)."
+                />
+                <FAQItem
                   question="Do I need to create an account to download logos?"
                   answer="No account needed! Simply customize your logo and download immediately. We believe in keeping the process simple and fast."
                 />
-                <FAQItem 
+                <FAQItem
                   question="What's the difference between the tagline versions?"
                   answer="You get both logo-only files and logo-with-tagline files. Use logo-only when space is limited, and logo-with-tagline when you need more context or brand messaging."
                 />
-                <FAQItem 
+                <FAQItem
+                  question="What color information is included in the brand package?"
+                  answer="The brand package includes your complete color palette with values in RGB (for digital/web use), CMYK (for professional printing), and PANTONE (for consistent brand colors across materials). This ensures your brand colors look perfect whether you're designing a website, printing business cards, or creating merchandise."
+                />
+                <FAQItem
                   question="Can I edit the colors after downloading?"
                   answer="Yes! The SVG files can be easily edited in any design software like Figma, Adobe Illustrator, or even code editors. You can change colors, modify spacing, or make other adjustments as needed."
                 />
