@@ -972,7 +972,7 @@ function generateOrganicShapes(random: () => number, color: string): string {
 /**
  * Generate sophisticated pattern with rotation and complexity
  */
-export function generatePatternSymbol(seed: string, color: string, letter?: string): SymbolSVGResult {
+export function generatePatternSymbol(seed: string, color: string, letter?: string, font: string = 'Inter'): SymbolSVGResult {
   const random = createSeededRandom(seed);
   const firstLetter = letter ? letter.charAt(0).toUpperCase() : 'A';
 
@@ -983,7 +983,7 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
 
   switch (structure) {
     case 'radial':
-      shapes = generateRadialPattern(random, color, firstLetter);
+      shapes = generateRadialPattern(random, color, firstLetter, font);
       break;
 
     case 'circular':
@@ -1003,7 +1003,7 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
       break;
 
     case 'spiral':
-      shapes = generateSpiralPattern(random, color, firstLetter);
+      shapes = generateSpiralPattern(random, color, firstLetter, font);
       break;
 
     case 'scattered':
@@ -1019,7 +1019,7 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
       break;
 
     case 'mandala':
-      shapes = generateMandalaPattern(random, color, firstLetter);
+      shapes = generateMandalaPattern(random, color, firstLetter, font);
       break;
   }
 
@@ -1031,7 +1031,7 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
   };
 }
 
-function generateRadialPattern(random: () => number, color: string, letter: string): string {
+function generateRadialPattern(random: () => number, color: string, letter: string, font: string): string {
   // Elements around center with rotation (fewer, bigger)
   const elementCount = 6 + Math.floor(random() * 6); // Max 11 instead of 14
   const radius = 30 + random() * 8;
@@ -1047,7 +1047,7 @@ function generateRadialPattern(random: () => number, color: string, letter: stri
   // Center element - either letter or shape
   if (useLetter && letter) {
     const letterSize = 20 + random() * 15; // 20-35
-    shapes += `<text x="50" y="50" font-family="inherit" font-size="${letterSize}" font-weight="700"
+    shapes += `<text x="50" y="50" font-family="${font}" font-size="${letterSize}" font-weight="700"
       fill="${color}" text-anchor="middle" dominant-baseline="central">${letter.charAt(0).toUpperCase()}</text>`;
   } else {
     shapes += `<circle cx="50" cy="50" r="${centerSize}" fill="${color}"/>`;
@@ -1240,7 +1240,7 @@ function generateTriangularPattern(random: () => number, color: string): string 
   return shapes;
 }
 
-function generateSpiralPattern(random: () => number, color: string, letter: string): string {
+function generateSpiralPattern(random: () => number, color: string, letter: string, font: string): string {
   // Golden spiral with elements (fewer, bigger)
   const elementCount = 8 + Math.floor(random() * 6); // Max 13 instead of 16
   const maxRadius = 35;
@@ -1272,7 +1272,7 @@ function generateSpiralPattern(random: () => number, color: string, letter: stri
   // Center element - either letter or shape
   if (useLetter && letter) {
     const letterSize = 18 + random() * 12; // 18-30
-    shapes += `<text x="50" y="50" font-family="inherit" font-size="${letterSize}" font-weight="700"
+    shapes += `<text x="50" y="50" font-family="${font}" font-size="${letterSize}" font-weight="700"
       fill="${color}" text-anchor="middle" dominant-baseline="central">${letter.charAt(0).toUpperCase()}</text>`;
   } else {
     shapes += `<circle cx="50" cy="50" r="${elementSize * 1.5}" fill="${color}"/>`;
@@ -1377,7 +1377,7 @@ function generateConstellationPattern(random: () => number, color: string): stri
   return shapes;
 }
 
-function generateMandalaPattern(random: () => number, color: string, letter?: string): string {
+function generateMandalaPattern(random: () => number, color: string, letter: string, font: string): string {
   // Symmetrical complexity (fewer, bigger)
   const sectors = 6 + Math.floor(random() * 4); // Max 9 instead of 12
   const layers = 2 + Math.floor(random() * 2);
@@ -1419,7 +1419,7 @@ function generateMandalaPattern(random: () => number, color: string, letter?: st
   // Center element - either letter or circle
   if (useLetter) {
     const letterSize = 18 + random() * 10; // 18-28
-    shapes += `<text x="50" y="50" font-family="inherit" font-size="${letterSize}" font-weight="700"
+    shapes += `<text x="50" y="50" font-family="${font}" font-size="${letterSize}" font-weight="700"
       fill="${color}" text-anchor="middle" dominant-baseline="central">${letter.charAt(0).toUpperCase()}</text>`;
   } else {
     shapes += `<circle cx="50" cy="50" r="12" fill="${color}"/>`;
@@ -1455,7 +1455,7 @@ export function generateSymbol(
     case 'shape':
       return generateShapeSymbol(seed, color);
     case 'pattern':
-      return generatePatternSymbol(seed, color, options?.letter);
+      return generatePatternSymbol(seed, color, options?.letter, options?.font);
     default:
       throw new Error(`Unknown symbol mode: ${mode}`);
   }
