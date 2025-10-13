@@ -1,74 +1,60 @@
 /**
- * Symbol generation utilities for creating abstract logo marks
+ * Award-Winning Symbol Generation System
+ * Uses generative design principles, golden ratio, and composition theory
+ * to create unique, professional symbols from any seed
  */
 
 import type { SymbolSVGResult } from '../types/symbol';
-import { createSeededRandom, randomInt } from './seedUtils';
+import { createSeededRandom } from './seedUtils';
+import {
+  GOLDEN_RATIO,
+  GOLDEN_RATIO_INVERSE,
+  goldenPoints,
+  harmonicScale,
+  complementaryAngle,
+  harmonicAngles,
+  goldenSizePair,
+  selectCompositionStyle,
+  selectShapeCompositionType,
+  selectPatternStructure,
+  goldenSpiralPoints,
+  circularPoints,
+  selectHarmonicStroke,
+  goldenPosition,
+  goldenSpacing
+} from './designPrinciples';
+import {
+  generatePolygon,
+  generateStar,
+  generateOrganicShape,
+  generateArc,
+  generateWave,
+  generateRoundedRect,
+  generateDiamond,
+  generateHexagon,
+  generateTriangle,
+  generatePentagon,
+  constrainRadius,
+  constrainToViewbox
+} from './shapePrimitives';
 
 const VIEWBOX_SIZE = 100;
-const SAFE_MARGIN = 3; // Margin to prevent cutoff at edges
+const SAFE_MARGIN = 7; // Increased to prevent cutoff with rotation
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+function pickFromArray<T>(random: () => number, array: T[]): T {
+  return array[Math.floor(random() * array.length)];
+}
+
+// ============================================================================
+// LETTER MODE - COMPOSITIONAL SYSTEM
+// ============================================================================
 
 /**
- * Helper functions for shape randomization
- */
-function randomSize(random: () => number, base: number, variance: number): number {
-  const min = base * (1 - variance);
-  const max = base * (1 + variance);
-  return random() * (max - min) + min;
-}
-
-function randomPosition(random: () => number, min: number, max: number): number {
-  return random() * (max - min) + min;
-}
-
-function randomAngle(random: () => number): number {
-  return random() * 360;
-}
-
-function randomCount(random: () => number, min: number, max: number): number {
-  return Math.floor(random() * (max - min + 1)) + min;
-}
-
-/**
- * Constrain a circle's radius to fit within bounds
- */
-function constrainCircleRadius(cx: number, cy: number, radius: number, strokeWidth: number = 0): number {
-  const maxRadius = Math.min(
-    cx - SAFE_MARGIN,
-    cy - SAFE_MARGIN,
-    VIEWBOX_SIZE - cx - SAFE_MARGIN,
-    VIEWBOX_SIZE - cy - SAFE_MARGIN
-  ) - strokeWidth / 2;
-  return Math.min(radius, Math.max(maxRadius, 1)); // Ensure at least radius of 1
-}
-
-/**
- * Constrain polygon radius to fit within bounds (accounts for rotation)
- */
-function constrainPolygonRadius(radius: number, strokeWidth: number = 0): number {
-  // For rotated polygons, use conservative constraint including stroke
-  return Math.min(radius, (VIEWBOX_SIZE / 2) - SAFE_MARGIN - (strokeWidth / 2) - 2);
-}
-
-/**
- * Generate stroke width with minimum thickness
- */
-function randomStrokeWidth(random: () => number, base: number = 3, variance: number = 0.3): number {
-  const minStroke = 2; // Minimum stroke width to ensure visibility
-  return Math.max(minStroke, randomSize(random, base, variance));
-}
-
-/**
- * Constrain radial distance for elements placed around center
- * Accounts for element size and stroke width
- */
-function constrainRadialDistance(elementSize: number, strokeWidth: number = 0): number {
-  const maxDistance = (VIEWBOX_SIZE / 2) - SAFE_MARGIN - elementSize - (strokeWidth / 2);
-  return Math.max(maxDistance, 5); // Ensure at least some minimum distance
-}
-
-/**
- * Generate a letter-based symbol combining typography with geometric shapes
+ * Generate award-winning letter-based symbol using composition theory
  */
 export function generateLetterSymbol(
   letter: string,
@@ -77,354 +63,54 @@ export function generateLetterSymbol(
   font: string = 'Inter'
 ): SymbolSVGResult {
   const random = createSeededRandom(seed);
-  const variation = randomInt(random, 0, 19);
   const firstLetter = letter.charAt(0).toUpperCase();
 
-  // Random rotation/tilt for letter (subtle tilt between -20 and 20 degrees)
-  const letterTilt = randomPosition(random, -20, 20);
+  // Determine composition style from seed
+  const style = selectCompositionStyle(random);
 
-  // Determine if this design should be inverted (transparent letter on filled background)
+  // Letter properties
+  const letterScale = 0.4 + random() * 0.25; // 40-65% of viewbox
+  const letterSize = VIEWBOX_SIZE * letterScale;
+
+  // Should we invert (light letter on dark background)?
   const shouldInvert = random() > 0.5;
+
+  // Golden ratio positioning
+  const positions = ['near', 'center', 'far'] as const;
+  const xPos = positions[Math.floor(random() * positions.length)];
+  const yPos = positions[Math.floor(random() * positions.length)];
+  const letterX = goldenPosition(VIEWBOX_SIZE, xPos, 'x');
+  const letterY = goldenPosition(VIEWBOX_SIZE, yPos, 'y');
+
+  // Harmonic rotation
+  const angles = harmonicAngles();
+  const letterRotation = pickFromArray(random, angles);
 
   let shapes = '';
 
-  switch (variation) {
-    case 0: // Letter in circle
-      const circleRadius = randomSize(random, 42, 0.15);
-      const circleStroke = randomSize(random, 4, 0.4);
-      const constrainedCircleRadius = constrainCircleRadius(50, 50, circleRadius, circleStroke);
-      const letterFill = shouldInvert ? '#ffffff' : color;
-      const circleFill = shouldInvert ? color : 'none';
-      const circleStrokeAttr = shouldInvert ? '' : `stroke="${color}" stroke-width="${circleStroke}"`;
-      shapes = `
-        <circle cx="50" cy="50" r="${constrainedCircleRadius}" fill="${circleFill}" ${circleStrokeAttr}/>
-        <text x="50" y="50" font-family="${font}" font-size="50" font-weight="600"
-              fill="${letterFill}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
+  switch (style) {
+    case 'minimal':
+      shapes = generateMinimalComposition(random, firstLetter, letterX, letterY, letterSize, letterRotation, font, color, shouldInvert);
       break;
 
-    case 1: // Letter in rounded square
-      const rectSize = randomSize(random, 84, 0.15);
-      const rectOffset = (100 - rectSize) / 2;
-      const rectRadius = randomSize(random, 12, 0.5);
-      const rectStroke = randomSize(random, 4, 0.4);
-      const rectLetterFill = shouldInvert ? '#ffffff' : color;
-      const rectFill = shouldInvert ? color : 'none';
-      const rectStrokeAttr = shouldInvert ? '' : `stroke="${color}" stroke-width="${rectStroke}"`;
-      shapes = `
-        <rect x="${rectOffset}" y="${rectOffset}" width="${rectSize}" height="${rectSize}" rx="${rectRadius}" fill="${rectFill}" ${rectStrokeAttr}/>
-        <text x="50" y="50" font-family="${font}" font-size="48" font-weight="600"
-              fill="${rectLetterFill}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
+    case 'balanced':
+      shapes = generateBalancedComposition(random, firstLetter, letterX, letterY, letterSize, letterRotation, font, color, shouldInvert);
       break;
 
-    case 2: // Letter with arc behind
-      const arcRotation = randomAngle(random);
-      const arcRadius = randomSize(random, 40, 0.25);
-      const arcStroke = randomSize(random, 8, 0.3);
-      shapes = `
-        <path d="M 50 ${10} A ${arcRadius} ${arcRadius} 0 0 1 ${50 + arcRadius} 50" fill="none" stroke="${color}"
-              stroke-width="${arcStroke}" stroke-linecap="round" transform="rotate(${arcRotation} 50 50)"/>
-        <text x="50" y="50" font-family="${font}" font-size="52" font-weight="700"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
+    case 'dynamic':
+      shapes = generateDynamicComposition(random, firstLetter, letterX, letterY, letterSize, letterRotation, font, color, shouldInvert);
       break;
 
-    case 3: // Letter with geometric accent circles
-      const accentCount = randomCount(random, 2, 4);
-      for (let i = 0; i < accentCount; i++) {
-        const accentSize = randomSize(random, 15, 0.4);
-        const accentX = randomPosition(random, 20, 80);
-        const accentY = randomPosition(random, 20, 40);
-        shapes += `<circle cx="${accentX}" cy="${accentY}" r="${accentSize}" fill="${color}"/>`;
-      }
-      shapes += `
-        <text x="50" y="55" font-family="${font}" font-size="55" font-weight="700"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 55)">${firstLetter}</text>
-      `;
+    case 'layered':
+      shapes = generateLayeredComposition(random, firstLetter, letterX, letterY, letterSize, letterRotation, font, color, shouldInvert);
       break;
 
-    case 4: // Letter with geometric shape
-      const shapeSize = randomSize(random, 30, 0.3);
-      const shapeX = randomPosition(random, 55, 70);
-      const shapeY = randomPosition(random, 30, 45);
-      const shapeRadius = randomSize(random, 4, 0.5);
-      const shapeRotation = randomAngle(random);
-      shapes = `
-        <rect x="${shapeX}" y="${shapeY}" width="${shapeSize}" height="${shapeSize}" rx="${shapeRadius}" fill="${color}" transform="rotate(${shapeRotation} ${shapeX + shapeSize/2} ${shapeY + shapeSize/2})"/>
-        <text x="45" y="50" font-family="${font}" font-size="50" font-weight="600"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 45 50)">${firstLetter}</text>
-      `;
+    case 'geometric':
+      shapes = generateGeometricComposition(random, firstLetter, letterX, letterY, letterSize, letterRotation, font, color, shouldInvert);
       break;
 
-    case 5: // Letter with corner triangles
-      const triangleCount = randomCount(random, 2, 4);
-      const triangleSize = randomSize(random, 15, 0.3);
-      const corners = [{x: 10, y: 10}, {x: 90, y: 10}, {x: 10, y: 90}, {x: 90, y: 90}];
-      for (let i = 0; i < triangleCount; i++) {
-        const corner = corners[i];
-        const xDir = corner.x === 10 ? 1 : -1;
-        const yDir = corner.y === 10 ? 1 : -1;
-        shapes += `<path d="M ${corner.x} ${corner.y} L ${corner.x + xDir * triangleSize} ${corner.y} L ${corner.x} ${corner.y + yDir * triangleSize} Z" fill="${color}"/>`;
-      }
-      shapes += `
-        <text x="50" y="50" font-family="${font}" font-size="48" font-weight="600"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 6: // Letter in polygon
-      const polyCount = randomCount(random, 5, 8);
-      const polyRadius = randomSize(random, 40, 0.12);
-      const polyStroke = randomSize(random, 4, 0.3);
-      const polyRotation = randomAngle(random);
-      const constrainedPolyRadius = constrainPolygonRadius(polyRadius, polyStroke);
-      const hexPoints = [];
-      for (let i = 0; i < polyCount; i++) {
-        const angle = (i * 360 / polyCount) * Math.PI / 180;
-        const x = 50 + constrainedPolyRadius * Math.cos(angle);
-        const y = 50 + constrainedPolyRadius * Math.sin(angle);
-        hexPoints.push(`${x},${y}`);
-      }
-      const polyLetterFill = shouldInvert ? '#ffffff' : color;
-      const polyFill = shouldInvert ? color : 'none';
-      const polyStrokeAttr = shouldInvert ? '' : `stroke="${color}" stroke-width="${polyStroke}"`;
-      shapes = `
-        <polygon points="${hexPoints.join(' ')}" fill="${polyFill}" ${polyStrokeAttr} transform="rotate(${polyRotation} 50 50)"/>
-        <text x="50" y="50" font-family="${font}" font-size="46" font-weight="600"
-              fill="${polyLetterFill}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 7: // Letter with concentric circles
-      const circleCount = randomCount(random, 2, 4);
-      const maxRadius = randomSize(random, 40, 0.12);
-      const maxStroke = randomStrokeWidth(random, 3);
-      const constrainedMaxRadius = constrainCircleRadius(50, 50, maxRadius, maxStroke);
-      for (let i = 0; i < circleCount; i++) {
-        const radius = constrainedMaxRadius - (i * constrainedMaxRadius / circleCount);
-        const stroke = randomStrokeWidth(random, 3);
-        shapes += `<circle cx="50" cy="50" r="${radius}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
-      }
-      shapes += `
-        <text x="50" y="50" font-family="${font}" font-size="48" font-weight="600"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 8: // Letter with diagonal lines
-      const diagonalAngle = randomAngle(random);
-      const lineCount = randomCount(random, 1, 3);
-      const lineStroke = randomSize(random, 6, 0.3);
-      for (let i = 0; i < lineCount; i++) {
-        const offset = (i - lineCount / 2) * 8;
-        shapes += `<line x1="15" y1="${50 + offset}" x2="85" y2="${50 + offset}" stroke="${color}" stroke-width="${lineStroke}"
-              transform="rotate(${diagonalAngle} 50 50)"/>`;
-      }
-      shapes += `
-        <text x="50" y="50" font-family="${font}" font-size="52" font-weight="700"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 9: // Letter with curved paths
-      const quarterRotation = randomAngle(random);
-      const curveCount = randomCount(random, 2, 4);
-      const curveStroke = randomSize(random, 5, 0.3);
-      for (let i = 0; i < curveCount; i++) {
-        const angle = (i * 360 / curveCount);
-        shapes += `<path d="M 10 10 Q 10 50 50 50" fill="none" stroke="${color}"
-              stroke-width="${curveStroke}" transform="rotate(${quarterRotation + angle} 50 50)"/>`;
-      }
-      shapes += `
-        <text x="50" y="50" font-family="${font}" font-size="50" font-weight="600"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 10: // Letter in diamond
-      const diamondSize = randomSize(random, 42, 0.2);
-      const diamondStroke = randomSize(random, 4, 0.3);
-      const diamondRotation = randomAngle(random);
-      const diamondLetterFill = shouldInvert ? '#ffffff' : color;
-      const diamondFill = shouldInvert ? color : 'none';
-      const diamondStrokeAttr = shouldInvert ? '' : `stroke="${color}" stroke-width="${diamondStroke}"`;
-      shapes = `
-        <path d="M 50 ${50-diamondSize} L ${50+diamondSize} 50 L 50 ${50+diamondSize} L ${50-diamondSize} 50 Z" fill="${diamondFill}" ${diamondStrokeAttr} transform="rotate(${diamondRotation} 50 50)"/>
-        <text x="50" y="50" font-family="${font}" font-size="46" font-weight="600"
-              fill="${diamondLetterFill}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 11: // Letter with side bars
-      const barCount = randomCount(random, 2, 4);
-      const barWidth = randomSize(random, 8, 0.4);
-      const barHeight = randomSize(random, 50, 0.3);
-      const barY = 50 - barHeight / 2;
-      for (let i = 0; i < barCount; i++) {
-        const barX = i < barCount / 2 ? randomPosition(random, 8, 15) : randomPosition(random, 77, 85);
-        shapes += `<rect x="${barX}" y="${barY}" width="${barWidth}" height="${barHeight}" fill="${color}"/>`;
-      }
-      shapes += `
-        <text x="50" y="50" font-family="${font}" font-size="52" font-weight="700"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 12: // Letter in ring
-      const ringRadius = randomSize(random, 45, 0.15);
-      const ringStroke = randomSize(random, 8, 0.5);
-      const ringLetterFill = shouldInvert ? '#ffffff' : color;
-      const ringFill = shouldInvert ? color : 'none';
-      const ringStrokeAttr = shouldInvert ? '' : `stroke="${color}" stroke-width="${ringStroke}"`;
-      shapes = `
-        <circle cx="50" cy="50" r="${ringRadius}" fill="${ringFill}" ${ringStrokeAttr}/>
-        <text x="50" y="50" font-family="${font}" font-size="52" font-weight="700"
-              fill="${ringLetterFill}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 13: // Letter with corner brackets
-      const bracketSize = randomSize(random, 15, 0.3);
-      const bracketStroke = randomSize(random, 4, 0.3);
-      const bracketCorners = [
-        {x: 10, y: 10, dx: 1, dy: 1},
-        {x: 90, y: 10, dx: -1, dy: 1},
-        {x: 10, y: 90, dx: 1, dy: -1},
-        {x: 90, y: 90, dx: -1, dy: -1}
-      ];
-      for (const corner of bracketCorners) {
-        shapes += `<path d="M ${corner.x} ${corner.y} L ${corner.x} ${corner.y + corner.dy * bracketSize} M ${corner.x} ${corner.y} L ${corner.x + corner.dx * bracketSize} ${corner.y}" stroke="${color}" stroke-width="${bracketStroke}" stroke-linecap="round"/>`;
-      }
-      shapes += `
-        <text x="50" y="50" font-family="${font}" font-size="50" font-weight="600"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 14: // Letter with orbiting elements
-      const orbitCount = randomCount(random, 2, 5);
-      const orbitRadius = randomSize(random, 35, 0.2);
-      const orbitSize = randomSize(random, 8, 0.3);
-      for (let i = 0; i < orbitCount; i++) {
-        const orbitAngle = (i * 360 / orbitCount + randomAngle(random)) * Math.PI / 180;
-        const orbitX = 50 + orbitRadius * Math.cos(orbitAngle);
-        const orbitY = 50 + orbitRadius * Math.sin(orbitAngle);
-        shapes += `<circle cx="${orbitX}" cy="${orbitY}" r="${orbitSize}" fill="${color}"/>`;
-      }
-      shapes += `
-        <text x="50" y="50" font-family="${font}" font-size="48" font-weight="600"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 15: // Letter with triangular frame
-      const triSize = randomSize(random, 35, 0.3);
-      const triStroke = randomSize(random, 4, 0.3);
-      const triRotation = randomAngle(random);
-      const triLetterFill = shouldInvert ? '#ffffff' : color;
-      const triFill = shouldInvert ? color : 'none';
-      const triStrokeAttr = shouldInvert ? '' : `stroke="${color}" stroke-width="${triStroke}"`;
-      shapes = `
-        <path d="M 50 ${50-triSize} L ${50+triSize*0.866} ${50+triSize*0.5} L ${50-triSize*0.866} ${50+triSize*0.5} Z" fill="${triFill}" ${triStrokeAttr} transform="rotate(${triRotation} 50 50)"/>
-        <text x="50" y="55" font-family="${font}" font-size="50" font-weight="600"
-              fill="${triLetterFill}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 55)">${firstLetter}</text>
-      `;
-      break;
-
-    case 16: // Letter with starburst lines
-      const burstLineCount = randomCount(random, 6, 12);
-      const innerBurstRadius = randomSize(random, 25, 0.2);
-      const outerBurstRadius = randomSize(random, 42, 0.15);
-      const burstStroke = randomStrokeWidth(random, 3);
-      for (let i = 0; i < burstLineCount; i++) {
-        const angle = (i * 360 / burstLineCount) * Math.PI / 180;
-        const x1 = 50 + innerBurstRadius * Math.cos(angle);
-        const y1 = 50 + innerBurstRadius * Math.sin(angle);
-        const x2 = 50 + outerBurstRadius * Math.cos(angle);
-        const y2 = 50 + outerBurstRadius * Math.sin(angle);
-        shapes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${burstStroke}"/>`;
-      }
-      shapes += `<text x="50" y="50" font-family="${font}" font-size="44" font-weight="700"
-            fill="${color}" text-anchor="middle" dominant-baseline="central"
-            transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>`;
-      break;
-
-    case 17: // Letter in polygon frame
-      const octCount = randomCount(random, 6, 9);
-      const octRadius = randomSize(random, 42, 0.15);
-      const octStroke = randomStrokeWidth(random, 3);
-      const octRotation = randomAngle(random);
-      const octPoints = [];
-      for (let i = 0; i < octCount; i++) {
-        const angle = (i * 360 / octCount) * Math.PI / 180;
-        const x = 50 + octRadius * Math.cos(angle);
-        const y = 50 + octRadius * Math.sin(angle);
-        octPoints.push(`${x},${y}`);
-      }
-      const octLetterFill = shouldInvert ? '#ffffff' : color;
-      const octFill = shouldInvert ? color : 'none';
-      const octStrokeAttr = shouldInvert ? '' : `stroke="${color}" stroke-width="${octStroke}"`;
-      shapes = `
-        <polygon points="${octPoints.join(' ')}" fill="${octFill}" ${octStrokeAttr} transform="rotate(${octRotation} 50 50)"/>
-        <text x="50" y="50" font-family="${font}" font-size="44" font-weight="600"
-              fill="${octLetterFill}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 18: // Letter with curved swoosh
-      const swooshRotation = randomAngle(random);
-      const swooshStroke = randomSize(random, 6, 0.3);
-      const swooshCurve = randomSize(random, 30, 0.3);
-      shapes = `
-        <path d="M 20 50 Q ${swooshCurve} 20 50 20 Q ${70} 20 80 50" fill="none" stroke="${color}"
-              stroke-width="${swooshStroke}" stroke-linecap="round" transform="rotate(${swooshRotation} 50 50)"/>
-        <text x="50" y="50" font-family="${font}" font-size="48" font-weight="700"
-              fill="${color}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 50)">${firstLetter}</text>
-      `;
-      break;
-
-    case 19: // Letter with star frame
-      const starPointCount = randomCount(random, 4, 7);
-      const starOuterRadius = randomSize(random, 42, 0.15);
-      const starInnerRadius = randomSize(random, 22, 0.2);
-      const starStroke = randomSize(random, 4, 0.3);
-      const starRotation = randomAngle(random);
-      const pentagonPoints = [];
-      for (let i = 0; i < starPointCount * 2; i++) {
-        const radius = i % 2 === 0 ? starOuterRadius : starInnerRadius;
-        const angle = (i * 180 / starPointCount - 90) * Math.PI / 180;
-        const x = 50 + radius * Math.cos(angle);
-        const y = 50 + radius * Math.sin(angle);
-        pentagonPoints.push(`${x},${y}`);
-      }
-      const starLetterFill = shouldInvert ? '#ffffff' : color;
-      const starFill = shouldInvert ? color : 'none';
-      const starStrokeAttr = shouldInvert ? '' : `stroke="${color}" stroke-width="${starStroke}"`;
-      shapes = `
-        <polygon points="${pentagonPoints.join(' ')}" fill="${starFill}" ${starStrokeAttr} transform="rotate(${starRotation} 50 50)"/>
-        <text x="50" y="52" font-family="${font}" font-size="46" font-weight="600"
-              fill="${starLetterFill}" text-anchor="middle" dominant-baseline="central"
-              transform="rotate(${letterTilt} 50 52)">${firstLetter}</text>
-      `;
+    case 'organic':
+      shapes = generateOrganicComposition(random, firstLetter, letterX, letterY, letterSize, letterRotation, font, color, shouldInvert);
       break;
   }
 
@@ -436,353 +122,391 @@ export function generateLetterSymbol(
   };
 }
 
+function generateMinimalComposition(
+  random: () => number,
+  letter: string,
+  letterX: number,
+  letterY: number,
+  letterSize: number,
+  letterRotation: number,
+  font: string,
+  color: string,
+  shouldInvert: boolean
+): string {
+  // Letter + 1 simple shape
+  const shapeType = Math.floor(random() * 4); // circle, polygon, diamond, arc
+  const shapeSize = letterSize * GOLDEN_RATIO;
+  const stroke = selectHarmonicStroke(random);
+
+  const letterFill = shouldInvert ? '#ffffff' : color;
+  const shapeFill = shouldInvert ? color : 'none';
+  const shapeStroke = shouldInvert ? '' : `stroke="${color}" stroke-width="${stroke}"`;
+
+  let bgShape = '';
+
+  switch (shapeType) {
+    case 0: // Circle
+      const circleRadius = constrainRadius(50, 50, shapeSize / 2, stroke);
+      bgShape = `<circle cx="50" cy="50" r="${circleRadius}" fill="${shapeFill}" ${shapeStroke}/>`;
+      break;
+
+    case 1: // Polygon
+      const sides = 5 + Math.floor(random() * 4); // 5-8 sides
+      const polyRadius = constrainRadius(50, 50, shapeSize / 2, stroke);
+      const polyRotation = pickFromArray(random, harmonicAngles());
+      const polyPoints = generatePolygon(sides, 50, 50, polyRadius, polyRotation);
+      bgShape = `<polygon points="${polyPoints}" fill="${shapeFill}" ${shapeStroke}/>`;
+      break;
+
+    case 2: // Diamond
+      const diamondSize = shapeSize * 0.85;
+      const diamondPoints = generateDiamond(50, 50, diamondSize, pickFromArray(random, harmonicAngles()));
+      bgShape = `<polygon points="${diamondPoints}" fill="${shapeFill}" ${shapeStroke}/>`;
+      break;
+
+    case 3: // Rounded rect
+      const rectSize = shapeSize * 0.9;
+      const rectOffset = (VIEWBOX_SIZE - rectSize) / 2;
+      const cornerRadius = rectSize * 0.15;
+      const rectRotation = pickFromArray(random, harmonicAngles());
+      const rect = generateRoundedRect(rectOffset, rectOffset, rectSize, rectSize, cornerRadius, rectRotation);
+      bgShape = `<path d="${rect.path}" fill="${shapeFill}" ${shapeStroke} transform="${rect.transform}"/>`;
+      break;
+  }
+
+  return `
+    ${bgShape}
+    <text x="${letterX}" y="${letterY}" font-family="${font}" font-size="${letterSize}" font-weight="600"
+          fill="${letterFill}" text-anchor="middle" dominant-baseline="central"
+          transform="rotate(${letterRotation} ${letterX} ${letterY})">${letter}</text>
+  `;
+}
+
+function generateBalancedComposition(
+  random: () => number,
+  letter: string,
+  letterX: number,
+  letterY: number,
+  letterSize: number,
+  letterRotation: number,
+  font: string,
+  color: string,
+  shouldInvert: boolean
+): string {
+  // Letter + symmetrical elements
+  const letterFill = shouldInvert ? '#ffffff' : color;
+  const bgFill = shouldInvert ? color : 'none';
+
+  // Background shape
+  const shapeRadius = letterSize * GOLDEN_RATIO * 0.6;
+  const constrainedRadius = constrainRadius(50, 50, shapeRadius);
+  const stroke = selectHarmonicStroke(random);
+  const bgStroke = shouldInvert ? '' : `stroke="${color}" stroke-width="${stroke}"`;
+
+  // Symmetrical accent elements (fewer, bigger)
+  const accentCount = 4 + Math.floor(random() * 2) * 2; // 4 or 6 (even for symmetry)
+  const accentDistance = constrainedRadius * 1.3;
+  const accentSize = letterSize * 0.25; // Increased from 0.15
+
+  let shapes = `<circle cx="50" cy="50" r="${constrainedRadius}" fill="${bgFill}" ${bgStroke}/>`;
+
+  // Place accents symmetrically
+  for (let i = 0; i < accentCount; i++) {
+    const angle = (i * 360 / accentCount) * Math.PI / 180;
+    const x = 50 + accentDistance * Math.cos(angle);
+    const y = 50 + accentDistance * Math.sin(angle);
+
+    if (x >= SAFE_MARGIN && x <= VIEWBOX_SIZE - SAFE_MARGIN &&
+        y >= SAFE_MARGIN && y <= VIEWBOX_SIZE - SAFE_MARGIN) {
+      shapes += `<circle cx="${x}" cy="${y}" r="${accentSize}" fill="${color}"/>`;
+    }
+  }
+
+  shapes += `<text x="${letterX}" y="${letterY}" font-family="${font}" font-size="${letterSize}" font-weight="600"
+    fill="${letterFill}" text-anchor="middle" dominant-baseline="central"
+    transform="rotate(${letterRotation} ${letterX} ${letterY})">${letter}</text>`;
+
+  return shapes;
+}
+
+function generateDynamicComposition(
+  random: () => number,
+  letter: string,
+  letterX: number,
+  letterY: number,
+  letterSize: number,
+  letterRotation: number,
+  font: string,
+  color: string,
+  _shouldInvert: boolean
+): string {
+  // Letter + asymmetric elements for energy
+  const letterFill = color;
+
+  // Diagonal line accent
+  const lineAngle = pickFromArray(random, [30, 45, 60, 120, 135, 150]);
+  const lineLength = VIEWBOX_SIZE * 0.7;
+  const lineStroke = selectHarmonicStroke(random);
+  const lineX1 = 50 - (lineLength / 2) * Math.cos(lineAngle * Math.PI / 180);
+  const lineY1 = 50 - (lineLength / 2) * Math.sin(lineAngle * Math.PI / 180);
+  const lineX2 = 50 + (lineLength / 2) * Math.cos(lineAngle * Math.PI / 180);
+  const lineY2 = 50 + (lineLength / 2) * Math.sin(lineAngle * Math.PI / 180);
+
+  // Asymmetric shapes
+  const { large, small } = goldenSizePair(letterSize * 0.4);
+  const largeAngle = random() * 360;
+  const largeDistance = letterSize * 0.8;
+  const largeX = 50 + largeDistance * Math.cos(largeAngle * Math.PI / 180);
+  const largeY = 50 + largeDistance * Math.sin(largeAngle * Math.PI / 180);
+
+  const smallAngle = complementaryAngle(largeAngle, 3);
+  const smallDistance = letterSize * 0.9;
+  const smallX = 50 + smallDistance * Math.cos(smallAngle * Math.PI / 180);
+  const smallY = 50 + smallDistance * Math.sin(smallAngle * Math.PI / 180);
+
+  let shapes = `<line x1="${lineX1}" y1="${lineY1}" x2="${lineX2}" y2="${lineY2}"
+    stroke="${color}" stroke-width="${lineStroke}" stroke-linecap="round"/>`;
+
+  // Add shapes if they're in bounds
+  if (largeX >= SAFE_MARGIN + large && largeX <= VIEWBOX_SIZE - SAFE_MARGIN - large &&
+      largeY >= SAFE_MARGIN + large && largeY <= VIEWBOX_SIZE - SAFE_MARGIN - large) {
+    const triPoints = generateTriangle(largeX, largeY, large, random() * 360);
+    shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+  }
+
+  if (smallX >= SAFE_MARGIN + small && smallX <= VIEWBOX_SIZE - SAFE_MARGIN - small &&
+      smallY >= SAFE_MARGIN + small && smallY <= VIEWBOX_SIZE - SAFE_MARGIN - small) {
+    shapes += `<circle cx="${smallX}" cy="${smallY}" r="${small}" fill="${color}"/>`;
+  }
+
+  shapes += `<text x="${letterX}" y="${letterY}" font-family="${font}" font-size="${letterSize}" font-weight="700"
+    fill="${letterFill}" text-anchor="middle" dominant-baseline="central"
+    transform="rotate(${letterRotation} ${letterX} ${letterY})">${letter}</text>`;
+
+  return shapes;
+}
+
+function generateLayeredComposition(
+  random: () => number,
+  letter: string,
+  letterX: number,
+  letterY: number,
+  letterSize: number,
+  letterRotation: number,
+  font: string,
+  color: string,
+  _shouldInvert: boolean
+): string {
+  // Letter with depth/shadow effects using multiple layers
+  const layerCount = 2 + Math.floor(random() * 2); // 2-3 layers
+  const layerOffsetX = letterSize * 0.08;
+  const layerOffsetY = letterSize * 0.08;
+
+  const shapeType = Math.floor(random() * 2); // circle or polygon
+  let shapes = '';
+
+  for (let i = layerCount - 1; i >= 0; i--) {
+    const offsetX = letterX + (layerOffsetX * i);
+    const offsetY = letterY + (layerOffsetY * i);
+    const strokeWidth = selectHarmonicStroke(random);
+    const size = letterSize * GOLDEN_RATIO * (0.9 + i * 0.05);
+
+    if (shapeType === 0) {
+      const radius = constrainRadius(offsetX, offsetY, size / 2);
+      shapes += `<circle cx="${offsetX}" cy="${offsetY}" r="${radius}"
+        fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+    } else {
+      const sides = 5 + Math.floor(random() * 4);
+      const radius = constrainRadius(offsetX, offsetY, size / 2);
+      const rotation = pickFromArray(random, harmonicAngles());
+      const points = generatePolygon(sides, offsetX, offsetY, radius, rotation);
+      shapes += `<polygon points="${points}" fill="none" stroke="${color}"
+        stroke-width="${strokeWidth}"/>`;
+    }
+  }
+
+  shapes += `<text x="${letterX}" y="${letterY}" font-family="${font}" font-size="${letterSize}" font-weight="700"
+    fill="${color}" text-anchor="middle" dominant-baseline="central"
+    transform="rotate(${letterRotation} ${letterX} ${letterY})">${letter}</text>`;
+
+  return shapes;
+}
+
+function generateGeometricComposition(
+  random: () => number,
+  letter: string,
+  letterX: number,
+  letterY: number,
+  letterSize: number,
+  letterRotation: number,
+  font: string,
+  color: string,
+  shouldInvert: boolean
+): string {
+  // Letter + multiple geometric shapes
+  const letterFill = shouldInvert ? '#ffffff' : color;
+
+  // Main geometric shape
+  const mainType = Math.floor(random() * 3);
+  const mainSize = letterSize * GOLDEN_RATIO * 0.7;
+  const mainRotation = pickFromArray(random, harmonicAngles());
+  const stroke = selectHarmonicStroke(random);
+
+  const bgFill = shouldInvert ? color : 'none';
+  const bgStroke = shouldInvert ? '' : `stroke="${color}" stroke-width="${stroke}"`;
+
+  let shapes = '';
+
+  switch (mainType) {
+    case 0: // Hexagon
+      const hexRadius = constrainRadius(50, 50, mainSize / 2);
+      const hexPoints = generateHexagon(50, 50, hexRadius, mainRotation);
+      shapes += `<polygon points="${hexPoints}" fill="${bgFill}" ${bgStroke}/>`;
+      break;
+
+    case 1: // Pentagon
+      const pentRadius = constrainRadius(50, 50, mainSize / 2);
+      const pentPoints = generatePentagon(50, 50, pentRadius, mainRotation);
+      shapes += `<polygon points="${pentPoints}" fill="${bgFill}" ${bgStroke}/>`;
+      break;
+
+    case 2: // Star
+      const starOuter = constrainRadius(50, 50, mainSize / 2);
+      const starInner = starOuter / GOLDEN_RATIO;
+      const starPoints = generateStar(5, 50, 50, starOuter, starInner, mainRotation);
+      shapes += `<polygon points="${starPoints}" fill="${bgFill}" ${bgStroke}/>`;
+      break;
+  }
+
+  // Add accent geometric elements (fewer, bigger)
+  const accentCount = 2 + Math.floor(random() * 2); // 2-3 accents
+  const accentTypes = [0, 1, 2]; // triangle, circle, square
+
+  for (let i = 0; i < accentCount; i++) {
+    const accentType = pickFromArray(random, accentTypes);
+    const accentSize = letterSize * 0.3; // Increased from 0.2 / GOLDEN_RATIO
+    const angle = (i * 360 / accentCount + random() * 60) * Math.PI / 180;
+    const distance = mainSize * 0.85;
+    const x = 50 + distance * Math.cos(angle);
+    const y = 50 + distance * Math.sin(angle);
+
+    if (x >= SAFE_MARGIN + accentSize && x <= VIEWBOX_SIZE - SAFE_MARGIN - accentSize &&
+        y >= SAFE_MARGIN + accentSize && y <= VIEWBOX_SIZE - SAFE_MARGIN - accentSize) {
+      switch (accentType) {
+        case 0: // Triangle
+          const triPoints = generateTriangle(x, y, accentSize, random() * 360);
+          shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+          break;
+        case 1: // Circle
+          shapes += `<circle cx="${x}" cy="${y}" r="${accentSize}" fill="${color}"/>`;
+          break;
+        case 2: // Square
+          shapes += `<rect x="${x - accentSize}" y="${y - accentSize}"
+            width="${accentSize * 2}" height="${accentSize * 2}" fill="${color}"/>`;
+          break;
+      }
+    }
+  }
+
+  shapes += `<text x="${letterX}" y="${letterY}" font-family="${font}" font-size="${letterSize}" font-weight="600"
+    fill="${letterFill}" text-anchor="middle" dominant-baseline="central"
+    transform="rotate(${letterRotation} ${letterX} ${letterY})">${letter}</text>`;
+
+  return shapes;
+}
+
+function generateOrganicComposition(
+  random: () => number,
+  letter: string,
+  letterX: number,
+  letterY: number,
+  letterSize: number,
+  letterRotation: number,
+  font: string,
+  color: string,
+  shouldInvert: boolean
+): string {
+  // Letter + curved/flowing forms
+  const letterFill = shouldInvert ? '#ffffff' : color;
+
+  // Organic blob background
+  const blobSize = letterSize * GOLDEN_RATIO * 0.6;
+  const blobPath = generateOrganicShape(50, 50, blobSize, 0.3, random, random() * 360);
+  const stroke = selectHarmonicStroke(random);
+
+  const bgFill = shouldInvert ? color : 'none';
+  const bgStroke = shouldInvert ? '' : `stroke="${color}" stroke-width="${stroke}"`;
+
+  let shapes = `<path d="${blobPath}" fill="${bgFill}" ${bgStroke}/>`;
+
+  // Add flowing arcs
+  const arcCount = 1 + Math.floor(random() * 2);
+  for (let i = 0; i < arcCount; i++) {
+    const arcRotation = (i * 120 + random() * 60) * Math.PI / 180;
+    const arcRadius = letterSize * 0.6;
+    const arcStart = random() * 90;
+    const arcEnd = arcStart + 90 + random() * 90;
+    const arcStroke = selectHarmonicStroke(random) * 0.8;
+
+    const arcPath = generateArc(50, 50, arcRadius, arcStart, arcEnd);
+    shapes += `<path d="${arcPath}" fill="none" stroke="${color}"
+      stroke-width="${arcStroke}" stroke-linecap="round"
+      transform="rotate(${arcRotation * 180 / Math.PI} 50 50)"/>`;
+  }
+
+  shapes += `<text x="${letterX}" y="${letterY}" font-family="${font}" font-size="${letterSize}" font-weight="600"
+    fill="${letterFill}" text-anchor="middle" dominant-baseline="central"
+    transform="rotate(${letterRotation} ${letterX} ${letterY})">${letter}</text>`;
+
+  return shapes;
+}
+
+// ============================================================================
+// SHAPE MODE - GEOMETRIC COMPOSITOR
+// ============================================================================
+
 /**
- * Generate a geometric shape-based symbol
+ * Generate award-winning geometric composition
  */
 export function generateShapeSymbol(seed: string, color: string): SymbolSVGResult {
   const random = createSeededRandom(seed);
-  const variation = randomInt(random, 0, 24);
+
+  // Determine composition type from seed
+  const compositionType = selectShapeCompositionType(random);
 
   let shapes = '';
 
-  switch (variation) {
-    case 0: // Abstract triangle composition
-      const t1Rotation = randomAngle(random);
-      const t1Size = randomSize(random, 55, 0.3);
-      const t2Size = randomSize(random, 25, 0.3);
-      const t2Rotation = t1Rotation + randomPosition(random, 160, 200);
-      shapes = `
-        <path d="M 50 ${50-t1Size/2} L ${50+t1Size/2.3} ${50+t1Size/2} L ${50-t1Size/2.3} ${50+t1Size/2} Z" fill="${color}" transform="rotate(${t1Rotation} 50 50)"/>
-        <path d="M 50 ${50-t2Size/2} L ${50+t2Size/2.3} ${50+t2Size/2} L ${50-t2Size/2.3} ${50+t2Size/2} Z" fill="${color}" transform="rotate(${t2Rotation} 50 50)"/>
-      `;
+  switch (compositionType) {
+    case 'intersecting':
+      shapes = generateIntersectingShapes(random, color);
       break;
 
-    case 1: // Overlapping circles
-      const c1x = randomPosition(random, 30, 45);
-      const c2x = randomPosition(random, 55, 70);
-      const c1r = randomSize(random, 30, 0.2);
-      const c2r = randomSize(random, 30, 0.2);
-      const c1y = randomPosition(random, 45, 55);
-      const c2y = randomPosition(random, 45, 55);
-      shapes = `
-        <circle cx="${c1x}" cy="${c1y}" r="${c1r}" fill="none" stroke="${color}" stroke-width="${randomSize(random, 6, 0.3)}"/>
-        <circle cx="${c2x}" cy="${c2y}" r="${c2r}" fill="none" stroke="${color}" stroke-width="${randomSize(random, 6, 0.3)}"/>
-      `;
+    case 'nested':
+      shapes = generateNestedShapes(random, color);
       break;
 
-    case 2: // Split circle with geometric element
-      const splitRadius = randomSize(random, 40, 0.2);
-      const splitStroke = randomSize(random, 8, 0.3);
-      const splitRotation = randomAngle(random);
-      const splitDash = splitRadius * Math.PI;
-      const innerSize = randomSize(random, 16, 0.3);
-      shapes = `
-        <circle cx="50" cy="50" r="${splitRadius}" fill="none" stroke="${color}" stroke-width="${splitStroke}" stroke-dasharray="${splitDash} ${splitDash}" transform="rotate(${splitRotation} 50 50)"/>
-        <rect x="${50-innerSize/2}" y="${50-innerSize/2}" width="${innerSize}" height="${innerSize}" fill="${color}" transform="rotate(${randomAngle(random)} 50 50)"/>
-      `;
+    case 'split':
+      shapes = generateSplitShapes(random, color);
       break;
 
-    case 3: // Polygon
-      const shapePolyCount = randomCount(random, 5, 8);
-      const shapePolyRadius = randomSize(random, 40, 0.2);
-      const shapePolyRotation = randomAngle(random);
-      const pentagonPoints = [];
-      for (let i = 0; i < shapePolyCount; i++) {
-        const angle = (i * 360 / shapePolyCount - 90) * Math.PI / 180;
-        const x = 50 + shapePolyRadius * Math.cos(angle);
-        const y = 50 + shapePolyRadius * Math.sin(angle);
-        pentagonPoints.push(`${x},${y}`);
-      }
-      shapes = `<polygon points="${pentagonPoints.join(' ')}" fill="${color}" transform="rotate(${shapePolyRotation} 50 50)"/>`;
+    case 'scattered':
+      shapes = generateScatteredShapes(random, color);
       break;
 
-    case 4: // Arc composition
-      const arcCount = randomCount(random, 2, 4);
-      const arcRadius = randomSize(random, 20, 0.3);
-      const arcStroke = randomSize(random, 8, 0.3);
-      const baseArcRotation = randomAngle(random);
-      for (let i = 0; i < arcCount; i++) {
-        const arcRotation = baseArcRotation + (i * 360 / arcCount);
-        shapes += `
-          <path d="M ${50-arcRadius} 50 A ${arcRadius} ${arcRadius} 0 0 1 50 ${50-arcRadius}" fill="none" stroke="${color}"
-                stroke-width="${arcStroke}" stroke-linecap="round" transform="rotate(${arcRotation} 50 50)"/>
-        `;
-      }
+    case 'orbital':
+      shapes = generateOrbitalShapes(random, color);
       break;
 
-    case 5: // Polygon
-      const hex2Count = randomCount(random, 5, 8);
-      const hex2Radius = randomSize(random, 38, 0.2);
-      const hex2Rotation = randomAngle(random);
-      const hexPoints = [];
-      for (let i = 0; i < hex2Count; i++) {
-        const angle = (i * 360 / hex2Count) * Math.PI / 180;
-        const x = 50 + hex2Radius * Math.cos(angle);
-        const y = 50 + hex2Radius * Math.sin(angle);
-        hexPoints.push(`${x},${y}`);
-      }
-      shapes = `<polygon points="${hexPoints.join(' ')}" fill="${color}" transform="rotate(${hex2Rotation} 50 50)"/>`;
+    case 'layered':
+      shapes = generateLayeredShapes(random, color);
       break;
 
-    case 6: // Intersecting rectangles
-      const rect1Width = randomSize(random, 60, 0.2);
-      const rect1Height = randomSize(random, 20, 0.3);
-      const rect2Width = randomSize(random, 20, 0.3);
-      const rect2Height = randomSize(random, 60, 0.2);
-      const rect1Rotation = randomAngle(random);
-      const rect2Rotation = rect1Rotation + randomPosition(random, 80, 100);
-      shapes = `
-        <rect x="${50-rect1Width/2}" y="${50-rect1Height/2}" width="${rect1Width}" height="${rect1Height}" fill="${color}" transform="rotate(${rect1Rotation} 50 50)"/>
-        <rect x="${50-rect2Width/2}" y="${50-rect2Height/2}" width="${rect2Width}" height="${rect2Height}" fill="${color}" transform="rotate(${rect2Rotation} 50 50)"/>
-      `;
+    case 'radial':
+      shapes = generateRadialShapes(random, color);
       break;
 
-    case 7: // Wave-like curves
-      const waveStroke1 = randomSize(random, 8, 0.3);
-      const waveStroke2 = randomSize(random, 6, 0.3);
-      const waveOffset = randomSize(random, 10, 0.4);
-      const waveRotation = randomAngle(random);
-      shapes = `
-        <g transform="rotate(${waveRotation} 50 50)">
-          <path d="M 20 50 Q 35 ${30-waveOffset}, 50 50 T 80 50" fill="none" stroke="${color}" stroke-width="${waveStroke1}" stroke-linecap="round"/>
-          <path d="M 20 ${50+waveOffset} Q 35 ${30}, 50 ${50+waveOffset} T 80 ${50+waveOffset}" fill="none" stroke="${color}" stroke-width="${waveStroke2}" stroke-linecap="round"/>
-        </g>
-      `;
-      break;
-
-    case 8: // Geometric abstract form
-      const formRotation = randomAngle(random);
-      const formScale = randomSize(random, 1, 0.15);
-      shapes = `
-        <g transform="rotate(${formRotation} 50 50) scale(${formScale} ${formScale}) translate(${50*(1-formScale)} ${50*(1-formScale)})">
-          <path d="M 25 20 L 25 80 L 40 80 L 40 55 L 60 55 L 75 80 L 90 80 L 70 50 L 85 20 L 70 20 L 55 45 L 40 45 L 40 20 Z" fill="${color}"/>
-        </g>
-      `;
-      break;
-
-    case 9: // Diamond composition
-      const diamond1Size = randomSize(random, 35, 0.3);
-      const diamond2Size = randomSize(random, 20, 0.3);
-      const diamondRotation9 = randomAngle(random);
-      shapes = `
-        <path d="M 50 ${50-diamond1Size} L ${50+diamond1Size} 50 L 50 ${50+diamond1Size} L ${50-diamond1Size} 50 Z" fill="${color}" transform="rotate(${diamondRotation9} 50 50)"/>
-        <path d="M 50 ${50-diamond2Size} L ${50+diamond2Size} 50 L 50 ${50+diamond2Size} L ${50-diamond2Size} 50 Z" fill="${color}" transform="rotate(${diamondRotation9 + 45} 50 50)"/>
-      `;
-      break;
-
-    case 10: // Spiral
-      const spiralStroke = randomSize(random, 6, 0.3);
-      const spiralRotation = randomAngle(random);
-      const spiralSize = randomSize(random, 1, 0.2);
-      shapes = `
-        <g transform="rotate(${spiralRotation} 50 50) scale(${spiralSize} ${spiralSize}) translate(${50*(1-spiralSize)} ${50*(1-spiralSize)})">
-          <path d="M 50 50 Q 70 50 70 30 Q 70 10 50 10 Q 20 10 20 40 Q 20 80 60 80"
-                fill="none" stroke="${color}" stroke-width="${spiralStroke}" stroke-linecap="round"/>
-        </g>
-      `;
-      break;
-
-    case 11: // Polygon
-      const oct2Count = randomCount(random, 6, 9);
-      const oct2Radius = randomSize(random, 40, 0.2);
-      const oct2Rotation = randomAngle(random);
-      const octPoints = [];
-      for (let i = 0; i < oct2Count; i++) {
-        const angle = (i * 360 / oct2Count) * Math.PI / 180;
-        const x = 50 + oct2Radius * Math.cos(angle);
-        const y = 50 + oct2Radius * Math.sin(angle);
-        octPoints.push(`${x},${y}`);
-      }
-      shapes = `<polygon points="${octPoints.join(' ')}" fill="${color}" transform="rotate(${oct2Rotation} 50 50)"/>`;
-      break;
-
-    case 12: // Cross/Plus
-      const crossWidth = randomSize(random, 16, 0.3);
-      const crossLength = randomSize(random, 80, 0.15);
-      const crossRotation = randomAngle(random);
-      shapes = `
-        <g transform="rotate(${crossRotation} 50 50)">
-          <rect x="${50-crossWidth/2}" y="${50-crossLength/2}" width="${crossWidth}" height="${crossLength}" fill="${color}"/>
-          <rect x="${50-crossLength/2}" y="${50-crossWidth/2}" width="${crossLength}" height="${crossWidth}" fill="${color}"/>
-        </g>
-      `;
-      break;
-
-    case 13: // Curved organic shape
-      const curveRotation = randomAngle(random);
-      const curveSize = randomSize(random, 30, 0.3);
-      const curveVar = randomSize(random, 15, 0.4);
-      shapes = `
-        <path d="M 50 ${50-curveSize} Q ${50+curveSize+curveVar} ${50-curveVar} ${50+curveVar} 50 Q ${50+curveVar} ${50+curveSize+curveVar} 50 ${50+curveVar} Q ${50-curveSize-curveVar} ${50+curveVar} ${50-curveVar} 50 Q ${50-curveVar} ${50-curveSize-curveVar} 50 ${50-curveSize}"
-              fill="${color}" transform="rotate(${curveRotation} 50 50)"/>
-      `;
-      break;
-
-    case 14: // Nested squares
-      const nestedCount = randomCount(random, 2, 4);
-      const maxSquareSize = randomSize(random, 70, 0.15);
-      const nestedRotation = randomAngle(random);
-      for (let i = 0; i < nestedCount; i++) {
-        const size = maxSquareSize - (i * maxSquareSize / nestedCount);
-        const offset = (100 - size) / 2;
-        const stroke = randomStrokeWidth(random, 3);
-        if (i === nestedCount - 1) {
-          shapes += `<rect x="${offset}" y="${offset}" width="${size}" height="${size}" fill="${color}" transform="rotate(${nestedRotation} 50 50)"/>`;
-        } else {
-          shapes += `<rect x="${offset}" y="${offset}" width="${size}" height="${size}" fill="none" stroke="${color}" stroke-width="${stroke}" transform="rotate(${nestedRotation} 50 50)"/>`;
-        }
-      }
-      break;
-
-    case 15: // Infinity symbol
-      const infStroke = randomSize(random, 6, 0.3);
-      const infRotation = randomAngle(random);
-      const infScale = randomSize(random, 1, 0.15);
-      shapes = `
-        <g transform="rotate(${infRotation} 50 50) scale(${infScale} ${infScale}) translate(${50*(1-infScale)} ${50*(1-infScale)})">
-          <path d="M 20 50 Q 30 30, 40 50 Q 50 70, 60 50 Q 70 30, 80 50 Q 70 70, 60 50 Q 50 30, 40 50 Q 30 70, 20 50"
-                fill="none" stroke="${color}" stroke-width="${infStroke}" stroke-linecap="round"/>
-        </g>
-      `;
-      break;
-
-    case 16: // Droplet/organic shape
-      const dropRotation = randomAngle(random);
-      const dropWidth = randomSize(random, 40, 0.25);
-      const dropHeight = randomSize(random, 75, 0.2);
-      shapes = `
-        <path d="M 50 ${50-dropHeight/2} Q ${50+dropWidth/2} ${50-dropHeight/4} ${50+dropWidth/2} 50 Q ${50+dropWidth/2} ${50+dropHeight/3} 50 ${50+dropHeight/2} Q ${50-dropWidth/2} ${50+dropHeight/3} ${50-dropWidth/2} 50 Q ${50-dropWidth/2} ${50-dropHeight/4} 50 ${50-dropHeight/2}"
-              fill="${color}" transform="rotate(${dropRotation} 50 50)"/>
-      `;
-      break;
-
-    case 17: // Split diamond
-      const split17Rotation = randomAngle(random);
-      const split17Size = randomSize(random, 35, 0.3);
-      shapes = `
-        <path d="M 50 ${50-split17Size} L ${50+split17Size} 50 L 50 50 Z" fill="${color}" transform="rotate(${split17Rotation} 50 50)"/>
-        <path d="M 50 50 L ${50+split17Size} 50 L 50 ${50+split17Size} Z" fill="${color}" transform="rotate(${split17Rotation} 50 50)"/>
-        <path d="M 50 50 L ${50-split17Size} 50 L 50 ${50-split17Size} Z" fill="${color}" transform="rotate(${split17Rotation} 50 50)"/>
-        <path d="M 50 50 L ${50-split17Size} 50 L 50 ${50+split17Size} Z" fill="${color}" transform="rotate(${split17Rotation} 50 50)"/>
-      `;
-      break;
-
-    case 18: // Y-shape / Branch
-      const yStroke = randomSize(random, 8, 0.3);
-      const yRotation = randomAngle(random);
-      const yAngle = randomSize(random, 30, 0.3);
-      shapes = `
-        <g transform="rotate(${yRotation} 50 50)">
-          <path d="M 50 10 L 50 40 M 50 40 L ${50-yAngle} 60 M 50 40 L ${50+yAngle} 60 M ${50-yAngle} 60 L ${50-yAngle} 85 M ${50+yAngle} 60 L ${50+yAngle} 85"
-                stroke="${color}" stroke-width="${yStroke}" stroke-linecap="round" fill="none"/>
-        </g>
-      `;
-      break;
-
-    case 19: // Circle cluster
-      const clusterCount = randomCount(random, 3, 5);
-      const clusterRadius = randomSize(random, 25, 0.2);
-      const circleSize = randomSize(random, 12, 0.25);
-      for (let i = 0; i < clusterCount; i++) {
-        const angle = (i * 360 / clusterCount - 90) * Math.PI / 180;
-        const x = 50 + clusterRadius * Math.cos(angle);
-        const y = 50 + clusterRadius * Math.sin(angle);
-        shapes += `<circle cx="${x}" cy="${y}" r="${circleSize}" fill="${color}"/>`;
-      }
-      break;
-
-    case 20: // Circular composition
-      const yy20Radius = randomSize(random, 40, 0.15);
-      const yy20Stroke = randomSize(random, 6, 0.3);
-      const yy20Rotation = randomAngle(random);
-      const yy20Fill = randomSize(random, 30, 0.3);
-      const yy20Circle = randomSize(random, 10, 0.3);
-      shapes = `
-        <g transform="rotate(${yy20Rotation} 50 50)">
-          <circle cx="50" cy="50" r="${yy20Radius}" fill="none" stroke="${color}" stroke-width="${yy20Stroke}"/>
-          <path d="M 50 ${50-yy20Radius} Q ${50+yy20Fill} ${50-yy20Fill} ${50+yy20Fill} 50 Q ${50+yy20Fill} ${50+yy20Fill} 50 ${50+yy20Radius}"
-                fill="${color}"/>
-          <circle cx="50" cy="${50+yy20Radius/2}" r="${yy20Circle}" fill="${color}"/>
-        </g>
-      `;
-      break;
-
-    case 21: // Polygon with center
-      const hex3Count = randomCount(random, 5, 8);
-      const hex3Radius = randomSize(random, 38, 0.2);
-      const hex3Stroke = randomSize(random, 4, 0.3);
-      const hex3Rotation = randomAngle(random);
-      const centerCircleSize = randomSize(random, 12, 0.3);
-      const hexPoints2 = [];
-      for (let i = 0; i < hex3Count; i++) {
-        const angle = (i * 360 / hex3Count) * Math.PI / 180;
-        const x = 50 + hex3Radius * Math.cos(angle);
-        const y = 50 + hex3Radius * Math.sin(angle);
-        hexPoints2.push(`${x},${y}`);
-      }
-      shapes = `
-        <polygon points="${hexPoints2.join(' ')}" fill="none" stroke="${color}" stroke-width="${hex3Stroke}" transform="rotate(${hex3Rotation} 50 50)"/>
-        <circle cx="50" cy="50" r="${centerCircleSize}" fill="${color}"/>
-      `;
-      break;
-
-    case 22: // Mountain peaks / zigzag
-      const peakStroke = randomSize(random, 6, 0.3);
-      const peakCount = randomCount(random, 3, 5);
-      const peakRotation = randomAngle(random);
-      let peakPath = 'M 10 70';
-      for (let i = 0; i < peakCount; i++) {
-        const x = 10 + (i + 1) * (80 / (peakCount + 1));
-        const y = randomPosition(random, 20, 40);
-        peakPath += ` L ${x} ${y}`;
-        if (i < peakCount - 1) {
-          const valleyX = x + (80 / (peakCount + 1)) / 2;
-          const valleyY = randomPosition(random, 50, 65);
-          peakPath += ` L ${valleyX} ${valleyY}`;
-        }
-      }
-      peakPath += ' L 90 70';
-      shapes = `
-        <g transform="rotate(${peakRotation} 50 50)">
-          <path d="${peakPath}" fill="none" stroke="${color}" stroke-width="${peakStroke}" stroke-linecap="round" stroke-linejoin="round"/>
-        </g>
-      `;
-      break;
-
-    case 23: // Concentric polygons
-      const pent23Count = randomCount(random, 4, 7);
-      const pent23Outer = randomSize(random, 40, 0.15);
-      const pent23Inner = randomSize(random, 25, 0.2);
-      const pent23Stroke = randomSize(random, 4, 0.3);
-      const pent23Rotation = randomAngle(random);
-      const pent1Points = [];
-      const pent2Points = [];
-      for (let i = 0; i < pent23Count; i++) {
-        const angle = (i * 360 / pent23Count - 90) * Math.PI / 180;
-        const x1 = 50 + pent23Outer * Math.cos(angle);
-        const y1 = 50 + pent23Outer * Math.sin(angle);
-        const x2 = 50 + pent23Inner * Math.cos(angle);
-        const y2 = 50 + pent23Inner * Math.sin(angle);
-        pent1Points.push(`${x1},${y1}`);
-        pent2Points.push(`${x2},${y2}`);
-      }
-      shapes = `
-        <polygon points="${pent1Points.join(' ')}" fill="none" stroke="${color}" stroke-width="${pent23Stroke}" transform="rotate(${pent23Rotation} 50 50)"/>
-        <polygon points="${pent2Points.join(' ')}" fill="${color}" transform="rotate(${pent23Rotation} 50 50)"/>
-      `;
-      break;
-
-    case 24: // Crescent
-      const crescentRotation = randomAngle(random);
-      const crescentOuter = randomSize(random, 35, 0.15);
-      const crescentInnerX = randomPosition(random, 55, 65);
-      const crescentInner = randomSize(random, 30, 0.15);
-      shapes = `
-        <g transform="rotate(${crescentRotation} 50 50)">
-          <circle cx="50" cy="50" r="${crescentOuter}" fill="${color}"/>
-          <circle cx="${crescentInnerX}" cy="50" r="${crescentInner}" fill="#ffffff"/>
-        </g>
-      `;
+    case 'organic':
+      shapes = generateOrganicShapes(random, color);
       break;
   }
 
@@ -794,420 +518,508 @@ export function generateShapeSymbol(seed: string, color: string): SymbolSVGResul
   };
 }
 
+function generateIntersectingShapes(random: () => number, color: string): string {
+  // 2-3 shapes with meaningful overlap
+  const shapeCount = 2 + Math.floor(random() * 2);
+  const baseSize = 35 + random() * 15;
+  const { large, small } = goldenSizePair(baseSize);
+
+  let shapes = '';
+  const shapeTypes = ['circle', 'polygon', 'triangle', 'hexagon'];
+
+  for (let i = 0; i < shapeCount; i++) {
+    const shapeType = pickFromArray(random, shapeTypes);
+    const size = i === 0 ? large : small;
+    const angle = (i * 120 + random() * 60) * Math.PI / 180;
+    const distance = size * 0.6; // Overlap distance
+    const x = 50 + distance * Math.cos(angle);
+    const y = 50 + distance * Math.sin(angle);
+    const rotation = pickFromArray(random, harmonicAngles());
+    const stroke = selectHarmonicStroke(random);
+
+    const constrained = constrainToViewbox(x, y, size);
+
+    switch (shapeType) {
+      case 'circle':
+        const radius = constrainRadius(constrained.x, constrained.y, constrained.size / 2);
+        shapes += `<circle cx="${constrained.x}" cy="${constrained.y}" r="${radius}"
+          fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        break;
+
+      case 'polygon':
+        const sides = 5 + Math.floor(random() * 4);
+        const polyRadius = constrainRadius(constrained.x, constrained.y, constrained.size / 2);
+        const points = generatePolygon(sides, constrained.x, constrained.y, polyRadius, rotation);
+        shapes += `<polygon points="${points}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        break;
+
+      case 'triangle':
+        const triRadius = constrainRadius(constrained.x, constrained.y, constrained.size / 2);
+        const triPoints = generateTriangle(constrained.x, constrained.y, triRadius, rotation);
+        shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+        break;
+
+      case 'hexagon':
+        const hexRadius = constrainRadius(constrained.x, constrained.y, constrained.size / 2);
+        const hexPoints = generateHexagon(constrained.x, constrained.y, hexRadius, rotation);
+        shapes += `<polygon points="${hexPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        break;
+    }
+  }
+
+  return shapes;
+}
+
+function generateNestedShapes(random: () => number, color: string): string {
+  // Concentric shapes with golden ratio sizing
+  const layerCount = 2 + Math.floor(random() * 2);
+  const baseRadius = 40;
+  const shapeType = pickFromArray(random, ['circle', 'polygon', 'star']);
+  const rotation = pickFromArray(random, harmonicAngles());
+
+  let shapes = '';
+
+  for (let i = layerCount - 1; i >= 0; i--) {
+    const radius = constrainRadius(50, 50, baseRadius * Math.pow(GOLDEN_RATIO_INVERSE, layerCount - 1 - i));
+    const stroke = selectHarmonicStroke(random);
+    const filled = i === 0;
+
+    switch (shapeType) {
+      case 'circle':
+        shapes += `<circle cx="50" cy="50" r="${radius}"
+          fill="${filled ? color : 'none'}" ${filled ? '' : `stroke="${color}" stroke-width="${stroke}"`}/>`;
+        break;
+
+      case 'polygon':
+        const sides = 5 + Math.floor(random() * 4);
+        const points = generatePolygon(sides, 50, 50, radius, rotation + i * 15);
+        shapes += `<polygon points="${points}"
+          fill="${filled ? color : 'none'}" ${filled ? '' : `stroke="${color}" stroke-width="${stroke}"`}/>`;
+        break;
+
+      case 'star':
+        const innerRadius = radius / GOLDEN_RATIO;
+        const starPoints = generateStar(5, 50, 50, radius, innerRadius, rotation + i * 15);
+        shapes += `<polygon points="${starPoints}"
+          fill="${filled ? color : 'none'}" ${filled ? '' : `stroke="${color}" stroke-width="${stroke}"`}/>`;
+        break;
+    }
+  }
+
+  return shapes;
+}
+
+function generateSplitShapes(random: () => number, color: string): string {
+  // Shape divided by lines/other shapes
+  const mainRadius = constrainRadius(50, 50, 38);
+  const mainType = pickFromArray(random, ['circle', 'hexagon', 'pentagon']);
+  const rotation = pickFromArray(random, harmonicAngles());
+
+  let shapes = '';
+
+  // Main shape
+  switch (mainType) {
+    case 'circle':
+      shapes += `<circle cx="50" cy="50" r="${mainRadius}" fill="${color}"/>`;
+      break;
+    case 'hexagon':
+      const hexPoints = generateHexagon(50, 50, mainRadius, rotation);
+      shapes += `<polygon points="${hexPoints}" fill="${color}"/>`;
+      break;
+    case 'pentagon':
+      const pentPoints = generatePentagon(50, 50, mainRadius, rotation);
+      shapes += `<polygon points="${pentPoints}" fill="${color}"/>`;
+      break;
+  }
+
+  // Splitting lines
+  const lineCount = 1 + Math.floor(random() * 2);
+  const lineStroke = selectHarmonicStroke(random) * 1.5;
+
+  for (let i = 0; i < lineCount; i++) {
+    const angle = (i * 180 / lineCount + random() * 30) * Math.PI / 180;
+    const length = mainRadius * 2.5;
+    const x1 = 50 - length * Math.cos(angle);
+    const y1 = 50 - length * Math.sin(angle);
+    const x2 = 50 + length * Math.cos(angle);
+    const y2 = 50 + length * Math.sin(angle);
+
+    shapes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+      stroke="#ffffff" stroke-width="${lineStroke}" stroke-linecap="round"/>`;
+  }
+
+  return shapes;
+}
+
+function generateScatteredShapes(random: () => number, color: string): string {
+  // 2-3 LARGE shapes in asymmetric balance (logo-style composition)
+  const shapeCount = 2 + Math.floor(random() * 2);
+  let shapes = '';
+
+  // Create large, bold shapes with clear hierarchy
+  for (let i = 0; i < shapeCount; i++) {
+    const shapeType = pickFromArray(random, ['circle', 'triangle', 'square', 'pentagon', 'hexagon']);
+    const size = i === 0 ? 35 + random() * 10 : 25 + random() * 10; // First shape largest
+
+    // Use golden ratio for positioning with clear separation
+    const gPoints = goldenPoints();
+    const xIndex = Math.floor(random() * gPoints.x.length);
+    const yIndex = Math.floor(random() * gPoints.y.length);
+    const x = gPoints.x[xIndex] * VIEWBOX_SIZE;
+    const y = gPoints.y[yIndex] * VIEWBOX_SIZE;
+
+    const rotation = pickFromArray(random, harmonicAngles());
+    const constrained = constrainToViewbox(x, y, size);
+    const useFill = i === 0 || random() > 0.5; // First shape always filled
+    const stroke = selectHarmonicStroke(random);
+
+    switch (shapeType) {
+      case 'circle':
+        const radius = constrainRadius(constrained.x, constrained.y, constrained.size / 2);
+        if (useFill) {
+          shapes += `<circle cx="${constrained.x}" cy="${constrained.y}" r="${radius}" fill="${color}"/>`;
+        } else {
+          shapes += `<circle cx="${constrained.x}" cy="${constrained.y}" r="${radius}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        }
+        break;
+
+      case 'triangle':
+        const triRadius = constrainRadius(constrained.x, constrained.y, constrained.size / 2);
+        const triPoints = generateTriangle(constrained.x, constrained.y, triRadius, rotation);
+        if (useFill) {
+          shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+        } else {
+          shapes += `<polygon points="${triPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        }
+        break;
+
+      case 'square':
+        const halfSize = constrained.size / 2;
+        if (useFill) {
+          shapes += `<rect x="${constrained.x - halfSize}" y="${constrained.y - halfSize}"
+            width="${constrained.size}" height="${constrained.size}" fill="${color}"
+            transform="rotate(${rotation} ${constrained.x} ${constrained.y})"/>`;
+        } else {
+          shapes += `<rect x="${constrained.x - halfSize}" y="${constrained.y - halfSize}"
+            width="${constrained.size}" height="${constrained.size}" fill="none" stroke="${color}" stroke-width="${stroke}"
+            transform="rotate(${rotation} ${constrained.x} ${constrained.y})"/>`;
+        }
+        break;
+
+      case 'pentagon':
+        const pentRadius = constrainRadius(constrained.x, constrained.y, constrained.size / 2);
+        const pentPoints = generatePentagon(constrained.x, constrained.y, pentRadius, rotation);
+        if (useFill) {
+          shapes += `<polygon points="${pentPoints}" fill="${color}"/>`;
+        } else {
+          shapes += `<polygon points="${pentPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        }
+        break;
+
+      case 'hexagon':
+        const hexRadius = constrainRadius(constrained.x, constrained.y, constrained.size / 2);
+        const hexPoints = generateHexagon(constrained.x, constrained.y, hexRadius, rotation);
+        if (useFill) {
+          shapes += `<polygon points="${hexPoints}" fill="${color}"/>`;
+        } else {
+          shapes += `<polygon points="${hexPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        }
+        break;
+    }
+  }
+
+  return shapes;
+}
+
+function generateOrbitalShapes(random: () => number, color: string): string {
+  // Two LARGE shapes in opposing/divided relationship (like yin-yang concept)
+  const divisionType = Math.floor(random() * 3);
+  let shapes = '';
+
+  const shapeA = pickFromArray(random, ['circle', 'triangle', 'square', 'pentagon', 'hexagon']);
+  const shapeB = pickFromArray(random, ['circle', 'triangle', 'square', 'pentagon', 'hexagon']);
+  const size = 28 + random() * 8; // Large shapes
+  const stroke = selectHarmonicStroke(random);
+
+  switch (divisionType) {
+    case 0: // Left-Right division
+      const leftX = 30;
+      const rightX = 70;
+      const centerY = 50;
+
+      // Left shape
+      const leftConstrained = constrainToViewbox(leftX, centerY, size);
+      shapes += generateSingleShape(shapeA, leftConstrained.x, leftConstrained.y, leftConstrained.size, random, color, stroke);
+
+      // Right shape
+      const rightConstrained = constrainToViewbox(rightX, centerY, size);
+      shapes += generateSingleShape(shapeB, rightConstrained.x, rightConstrained.y, rightConstrained.size, random, color, stroke);
+      break;
+
+    case 1: // Top-Bottom division
+      const centerX = 50;
+      const topY = 30;
+      const bottomY = 70;
+
+      // Top shape
+      const topConstrained = constrainToViewbox(centerX, topY, size);
+      shapes += generateSingleShape(shapeA, topConstrained.x, topConstrained.y, topConstrained.size, random, color, stroke);
+
+      // Bottom shape
+      const bottomConstrained = constrainToViewbox(centerX, bottomY, size);
+      shapes += generateSingleShape(shapeB, bottomConstrained.x, bottomConstrained.y, bottomConstrained.size, random, color, stroke);
+      break;
+
+    case 2: // Diagonal division
+      const topLeft = { x: 30, y: 30 };
+      const bottomRight = { x: 70, y: 70 };
+
+      // Top-left shape
+      const tlConstrained = constrainToViewbox(topLeft.x, topLeft.y, size);
+      shapes += generateSingleShape(shapeA, tlConstrained.x, tlConstrained.y, tlConstrained.size, random, color, stroke);
+
+      // Bottom-right shape
+      const brConstrained = constrainToViewbox(bottomRight.x, bottomRight.y, size);
+      shapes += generateSingleShape(shapeB, brConstrained.x, brConstrained.y, brConstrained.size, random, color, stroke);
+      break;
+  }
+
+  return shapes;
+}
+
+// Helper function to generate a single shape
+function generateSingleShape(
+  shapeType: string,
+  x: number,
+  y: number,
+  size: number,
+  random: () => number,
+  color: string,
+  stroke: number
+): string {
+  const rotation = pickFromArray(random, harmonicAngles());
+  const useFill = random() > 0.5;
+
+  switch (shapeType) {
+    case 'circle':
+      const radius = constrainRadius(x, y, size / 2);
+      return useFill
+        ? `<circle cx="${x}" cy="${y}" r="${radius}" fill="${color}"/>`
+        : `<circle cx="${x}" cy="${y}" r="${radius}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+
+    case 'triangle':
+      const triRadius = constrainRadius(x, y, size / 2);
+      const triPoints = generateTriangle(x, y, triRadius, rotation);
+      return useFill
+        ? `<polygon points="${triPoints}" fill="${color}"/>`
+        : `<polygon points="${triPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+
+    case 'square':
+      const halfSize = size / 2;
+      return useFill
+        ? `<rect x="${x - halfSize}" y="${y - halfSize}" width="${size}" height="${size}" fill="${color}" transform="rotate(${rotation} ${x} ${y})"/>`
+        : `<rect x="${x - halfSize}" y="${y - halfSize}" width="${size}" height="${size}" fill="none" stroke="${color}" stroke-width="${stroke}" transform="rotate(${rotation} ${x} ${y})"/>`;
+
+    case 'pentagon':
+      const pentRadius = constrainRadius(x, y, size / 2);
+      const pentPoints = generatePentagon(x, y, pentRadius, rotation);
+      return useFill
+        ? `<polygon points="${pentPoints}" fill="${color}"/>`
+        : `<polygon points="${pentPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+
+    case 'hexagon':
+      const hexRadius = constrainRadius(x, y, size / 2);
+      const hexPoints = generateHexagon(x, y, hexRadius, rotation);
+      return useFill
+        ? `<polygon points="${hexPoints}" fill="${color}"/>`
+        : `<polygon points="${hexPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+
+    default:
+      return '';
+  }
+}
+
+function generateLayeredShapes(random: () => number, color: string): string {
+  // Shapes stacked with depth
+  const layerCount = 2 + Math.floor(random() * 2);
+  const offsetX = 8;
+  const offsetY = 8;
+  const shapeType = pickFromArray(random, ['triangle', 'hexagon', 'pentagon', 'square']);
+
+  let shapes = '';
+
+  for (let i = layerCount - 1; i >= 0; i--) {
+    const x = 50 + (offsetX * i);
+    const y = 50 + (offsetY * i);
+    const size = 35 - i * 3;
+    const radius = constrainRadius(x, y, size / 2);
+    const rotation = pickFromArray(random, harmonicAngles());
+    const isFront = i === 0;
+    const stroke = selectHarmonicStroke(random);
+
+    switch (shapeType) {
+      case 'triangle':
+        const triPoints = generateTriangle(x, y, radius, rotation);
+        if (isFront) {
+          shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+        } else {
+          shapes += `<polygon points="${triPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        }
+        break;
+
+      case 'hexagon':
+        const hexPoints = generateHexagon(x, y, radius, rotation);
+        if (isFront) {
+          shapes += `<polygon points="${hexPoints}" fill="${color}"/>`;
+        } else {
+          shapes += `<polygon points="${hexPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        }
+        break;
+
+      case 'pentagon':
+        const pentPoints = generatePentagon(x, y, radius, rotation);
+        if (isFront) {
+          shapes += `<polygon points="${pentPoints}" fill="${color}"/>`;
+        } else {
+          shapes += `<polygon points="${pentPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        }
+        break;
+
+      case 'square':
+        const halfSize = size / 2;
+        if (isFront) {
+          shapes += `<rect x="${x - halfSize}" y="${y - halfSize}" width="${size}" height="${size}"
+            fill="${color}" transform="rotate(${rotation} ${x} ${y})"/>`;
+        } else {
+          shapes += `<rect x="${x - halfSize}" y="${y - halfSize}" width="${size}" height="${size}"
+            fill="none" stroke="${color}" stroke-width="${stroke}" transform="rotate(${rotation} ${x} ${y})"/>`;
+        }
+        break;
+    }
+  }
+
+  return shapes;
+}
+
+function generateRadialShapes(random: () => number, color: string): string {
+  // FRAMED: One large shape inside another (frame concept)
+  const outerShape = pickFromArray(random, ['circle', 'square', 'pentagon', 'hexagon']);
+  const innerShape = pickFromArray(random, ['circle', 'triangle', 'square', 'pentagon', 'hexagon']);
+
+  const outerSize = 70 + random() * 10; // Very large outer frame
+  const innerSize = outerSize / GOLDEN_RATIO; // Golden ratio for inner shape
+
+  const stroke = selectHarmonicStroke(random);
+
+  let shapes = '';
+
+  // Outer shape (always stroke-only, acts as frame)
+  const outerConstrained = constrainToViewbox(50, 50, outerSize);
+  shapes += generateSingleShape(outerShape, outerConstrained.x, outerConstrained.y, outerConstrained.size, random, color, stroke).replace('fill="${color}"', `fill="none" stroke="${color}" stroke-width="${stroke}"`);
+
+  // Inner shape (filled, centered)
+  const innerConstrained = constrainToViewbox(50, 50, innerSize);
+  shapes += generateSingleShape(innerShape, innerConstrained.x, innerConstrained.y, innerConstrained.size, random, color, stroke);
+
+  return shapes;
+}
+
+function generateOrganicShapes(random: () => number, color: string): string {
+  // Curved forms in harmony
+  const blobCount = 1 + Math.floor(random() * 2);
+  let shapes = '';
+
+  for (let i = 0; i < blobCount; i++) {
+    const blobSize = 25 + random() * 15;
+    const angle = (i * 120 + random() * 60) * Math.PI / 180;
+    const distance = blobSize * 0.7;
+    const x = 50 + distance * Math.cos(angle);
+    const y = 50 + distance * Math.sin(angle);
+    const rotation = random() * 360;
+    const complexity = 0.2 + random() * 0.3;
+
+    const blobPath = generateOrganicShape(x, y, blobSize, complexity, random, rotation);
+    const stroke = selectHarmonicStroke(random);
+
+    if (random() > 0.5) {
+      shapes += `<path d="${blobPath}" fill="${color}"/>`;
+    } else {
+      shapes += `<path d="${blobPath}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+    }
+  }
+
+  // Add flowing curves
+  const waveCount = 1 + Math.floor(random() * 2);
+  for (let i = 0; i < waveCount; i++) {
+    const waveRotation = (i * 90 + random() * 45) * Math.PI / 180;
+    const amplitude = 8 + random() * 6;
+    const frequency = 1 + random();
+    const stroke = selectHarmonicStroke(random);
+
+    const wavePath = generateWave(20, 50, 80, amplitude, frequency);
+    shapes += `<path d="${wavePath}" fill="none" stroke="${color}"
+      stroke-width="${stroke}" stroke-linecap="round"
+      transform="rotate(${waveRotation * 180 / Math.PI} 50 50)"/>`;
+  }
+
+  return shapes;
+}
+
+// ============================================================================
+// PATTERN MODE - ADVANCED PATTERN GENERATOR
+// ============================================================================
+
 /**
- * Generate a pattern-based symbol
+ * Generate sophisticated pattern with rotation and complexity
  */
 export function generatePatternSymbol(seed: string, color: string, letter?: string): SymbolSVGResult {
   const random = createSeededRandom(seed);
-  const variation = randomInt(random, 0, 26);
   const firstLetter = letter ? letter.charAt(0).toUpperCase() : 'A';
+
+  // Determine pattern structure from seed
+  const structure = selectPatternStructure(random);
 
   let shapes = '';
 
-  switch (variation) {
-    case 0: // Radial dots
-      const dotCount = randomInt(random, 6, 8);
-      const dotRadius = randomInt(random, 4, 6);
-      const center0Size = randomSize(random, 8, 0.3);
-      const dotDistance = constrainRadialDistance(dotRadius);
-      for (let i = 0; i < dotCount; i++) {
-        const angle = (i * 360 / dotCount) * Math.PI / 180;
-        const x = 50 + dotDistance * Math.cos(angle);
-        const y = 50 + dotDistance * Math.sin(angle);
-        shapes += `<circle cx="${x}" cy="${y}" r="${dotRadius}" fill="${color}"/>`;
-      }
-      shapes += `<circle cx="50" cy="50" r="${center0Size}" fill="${color}"/>`;
+  switch (structure) {
+    case 'radial':
+      shapes = generateRadialPattern(random, color, firstLetter);
       break;
 
-    case 1: // Radial lines
-      const lineCount = randomInt(random, 6, 8);
-      const line1Stroke = randomStrokeWidth(random, 3);
-      const line1Outer = constrainRadialDistance(0, line1Stroke);
-      for (let i = 0; i < lineCount; i++) {
-        const angle = (i * 360 / lineCount) * Math.PI / 180;
-        const x1 = 50 + 15 * Math.cos(angle);
-        const y1 = 50 + 15 * Math.sin(angle);
-        const x2 = 50 + line1Outer * Math.cos(angle);
-        const y2 = 50 + line1Outer * Math.sin(angle);
-        shapes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${line1Stroke}" stroke-linecap="round"/>`;
-      }
+    case 'circular':
+      shapes = generateCircularPattern(random, color);
       break;
 
-    case 2: // Grid of small circles
-      const gridSize = 3;
-      const spacing = 25;
-      const startX = 50 - (gridSize - 1) * spacing / 2;
-      const startY = 50 - (gridSize - 1) * spacing / 2;
-      const grid2SmallSize = randomSize(random, 5, 0.3);
-      const grid2CenterSize = randomSize(random, 7, 0.3);
-      for (let i = 0; i < gridSize; i++) {
-        for (let j = 0; j < gridSize; j++) {
-          const x = startX + j * spacing;
-          const y = startY + i * spacing;
-          const radius = (i === 1 && j === 1) ? grid2CenterSize : grid2SmallSize;
-          shapes += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${color}"/>`;
-        }
-      }
+    case 'square':
+      shapes = generateSquarePattern(random, color);
       break;
 
-    case 3: // Radial triangles
-      const triangleCount = randomInt(random, 5, 7);
-      const center3Size = randomSize(random, 12, 0.3);
-      const triangle3Size = 8;
-      const triangle3Distance = constrainRadialDistance(triangle3Size * 1.5); // Triangle height is ~1.5x size
-      for (let i = 0; i < triangleCount; i++) {
-        const angle = (i * 360 / triangleCount - 90) * Math.PI / 180;
-        const x = 50 + triangle3Distance * Math.cos(angle);
-        const y = 50 + triangle3Distance * Math.sin(angle);
-        shapes += `<path d="M ${x} ${y - triangle3Size} L ${x - triangle3Size * 0.866} ${y + triangle3Size * 0.5} L ${x + triangle3Size * 0.866} ${y + triangle3Size * 0.5} Z" fill="${color}"/>`;
-      }
-      shapes += `<circle cx="50" cy="50" r="${center3Size}" fill="${color}"/>`;
+    case 'hexagonal':
+      shapes = generateHexagonalPattern(random, color);
       break;
 
-    case 4: // Concentric circles with gaps
-      const circle4Stroke = randomStrokeWidth(random, 4);
-      const center4Size = randomSize(random, 10, 0.3);
-      shapes = `
-        <circle cx="50" cy="50" r="38" fill="none" stroke="${color}" stroke-width="${circle4Stroke}"/>
-        <circle cx="50" cy="50" r="28" fill="none" stroke="${color}" stroke-width="${circle4Stroke}"/>
-        <circle cx="50" cy="50" r="18" fill="none" stroke="${color}" stroke-width="${circle4Stroke}"/>
-        <circle cx="50" cy="50" r="${center4Size}" fill="${color}"/>
-      `;
+    case 'triangular':
+      shapes = generateTriangularPattern(random, color);
       break;
 
-    case 5: // Radial squares
-      const squareCount = randomInt(random, 4, 6);
-      const square5Size = randomSize(random, 12, 0.3);
-      const center5Size = randomSize(random, 12, 0.3);
-      const square5Distance = constrainRadialDistance(square5Size * 0.707); // Diagonal of square / 2
-      for (let i = 0; i < squareCount; i++) {
-        const angle = (i * 360 / squareCount) * Math.PI / 180;
-        const x = 50 + square5Distance * Math.cos(angle) - square5Size / 2;
-        const y = 50 + square5Distance * Math.sin(angle) - square5Size / 2;
-        shapes += `<rect x="${x}" y="${y}" width="${square5Size}" height="${square5Size}" fill="${color}" rx="2"/>`;
-      }
-      shapes += `<rect x="${50 - center5Size / 2}" y="${50 - center5Size / 2}" width="${center5Size}" height="${center5Size}" fill="${color}" rx="2"/>`;
+    case 'spiral':
+      shapes = generateSpiralPattern(random, color, firstLetter);
       break;
 
-    case 6: // Star pattern
-      const starPoints = randomInt(random, 5, 7);
-      const star6OuterRadius = constrainPolygonRadius(40);
-      const innerRadius = 18;
-      let starPath = 'M ';
-      for (let i = 0; i < starPoints * 2; i++) {
-        const radius = i % 2 === 0 ? star6OuterRadius : innerRadius;
-        const angle = (i * 180 / starPoints - 90) * Math.PI / 180;
-        const x = 50 + radius * Math.cos(angle);
-        const y = 50 + radius * Math.sin(angle);
-        starPath += `${x} ${y} `;
-        if (i < starPoints * 2 - 1) starPath += 'L ';
-      }
-      starPath += 'Z';
-      shapes = `<path d="${starPath}" fill="${color}"/>`;
+    case 'scattered':
+      shapes = generateScatteredPattern(random, color);
       break;
 
-    case 7: // Flower pattern
-      const petalCount = randomCount(random, 6, 10);
-      const petal7Size = randomSize(random, 12, 0.3);
-      const petal7Distance = constrainRadialDistance(petal7Size);
-      const center7Size = randomSize(random, 12, 0.3);
-      for (let i = 0; i < petalCount; i++) {
-        const angle = (i * 360 / petalCount) * Math.PI / 180;
-        const x = 50 + petal7Distance * Math.cos(angle);
-        const y = 50 + petal7Distance * Math.sin(angle);
-        shapes += `<circle cx="${x}" cy="${y}" r="${petal7Size}" fill="${color}"/>`;
-      }
-      shapes += `<circle cx="50" cy="50" r="${center7Size}" fill="${color}"/>`;
+    case 'wave':
+      shapes = generateWavePattern(random, color);
       break;
 
-    case 8: // Diamond grid
-      const diamond8Spacing = randomSize(random, 30, 0.2);
-      const diamond8Size = randomSize(random, 8, 0.3);
-      const diamond8Rows = randomCount(random, 3, 4);
-      for (let i = 0; i < diamond8Rows; i++) {
-        for (let j = 0; j < diamond8Rows; j++) {
-          const x = (100 - (diamond8Rows - 1) * diamond8Spacing) / 2 + j * diamond8Spacing;
-          const y = (100 - (diamond8Rows - 1) * diamond8Spacing) / 2 + i * diamond8Spacing;
-          const size = (i === Math.floor(diamond8Rows/2) && j === Math.floor(diamond8Rows/2)) ? diamond8Size * 1.4 : diamond8Size;
-          shapes += `<path d="M ${x} ${y - size} L ${x + size} ${y} L ${x} ${y + size} L ${x - size} ${y} Z" fill="${color}"/>`;
-        }
-      }
+    case 'constellation':
+      shapes = generateConstellationPattern(random, color);
       break;
 
-    case 9: // Cross hatch pattern
-      const hatchCount = randomCount(random, 3, 5);
-      const hatchStroke = randomStrokeWidth(random, 3);
-      const center9Size = randomSize(random, 15, 0.3);
-      const hatchSpacing = 70 / (hatchCount - 1);
-      for (let i = 0; i < hatchCount; i++) {
-        const offset = 15 + i * hatchSpacing;
-        shapes += `<line x1="${offset}" y1="15" x2="${offset}" y2="85" stroke="${color}" stroke-width="${hatchStroke}"/>`;
-        shapes += `<line x1="15" y1="${offset}" x2="85" y2="${offset}" stroke="${color}" stroke-width="${hatchStroke}"/>`;
-      }
-      shapes += `<circle cx="50" cy="50" r="${center9Size}" fill="${color}"/>`;
-      break;
-
-    case 10: // Hexagonal grid
-      const hexGridSize = randomCount(random, 3, 4);
-      const hexSpacing = randomSize(random, 20, 0.15);
-      const hexDotSize = randomSize(random, 5, 0.3);
-      for (let row = 0; row < hexGridSize; row++) {
-        for (let col = 0; col < hexGridSize; col++) {
-          const x = (100 - (hexGridSize - 1) * hexSpacing) / 2 + col * hexSpacing + (row % 2) * (hexSpacing / 2);
-          const y = (100 - (hexGridSize - 1) * hexSpacing * 0.85) / 2 + row * hexSpacing * 0.85;
-          shapes += `<circle cx="${x}" cy="${y}" r="${hexDotSize}" fill="${color}"/>`;
-        }
-      }
-      break;
-
-    case 11: // Radiating arcs
-      const arc11Count = randomCount(random, 3, 6);
-      const arc11Stroke = randomStrokeWidth(random, 3);
-      const arc11Start = randomSize(random, 15, 0.2);
-      const arc11Spacing = randomSize(random, 8, 0.3);
-      for (let i = 0; i < arc11Count; i++) {
-        const radius = arc11Start + i * arc11Spacing;
-        shapes += `<circle cx="50" cy="50" r="${radius}" fill="none" stroke="${color}" stroke-width="${arc11Stroke}"/>`;
-      }
-      break;
-
-    case 12: // Zigzag pattern
-      const zigzagStroke = randomStrokeWidth(random, 4);
-      shapes = `
-        <path d="M 15 30 L 30 15 L 45 30 L 60 15 L 75 30 L 90 15"
-              fill="none" stroke="${color}" stroke-width="${zigzagStroke}" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M 15 50 L 30 35 L 45 50 L 60 35 L 75 50 L 90 35"
-              fill="none" stroke="${color}" stroke-width="${zigzagStroke}" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M 15 70 L 30 55 L 45 70 L 60 55 L 75 70 L 90 55"
-              fill="none" stroke="${color}" stroke-width="${zigzagStroke}" stroke-linecap="round" stroke-linejoin="round"/>
-      `;
-      break;
-
-    case 13: // Corner dots pattern
-      const cornerDotCount = randomCount(random, 3, 5);
-      const cornerDotSize = randomSize(random, 6, 0.3);
-      const center13Size = randomSize(random, 15, 0.3);
-      const cornerSpacing = 60 / (cornerDotCount - 1);
-      for (let i = 0; i < cornerDotCount; i++) {
-        for (let j = 0; j < cornerDotCount; j++) {
-          if ((i === 0 || i === cornerDotCount - 1) && (j === 0 || j === cornerDotCount - 1)) {
-            const x = 20 + j * cornerSpacing;
-            const y = 20 + i * cornerSpacing;
-            shapes += `<circle cx="${x}" cy="${y}" r="${cornerDotSize}" fill="${color}"/>`;
-          }
-        }
-      }
-      shapes += `<circle cx="50" cy="50" r="${center13Size}" fill="${color}"/>`;
-      break;
-
-    case 14: // Orbital rings
-      const ringCount = randomCount(random, 3, 5);
-      const orbitSize = randomSize(random, 6, 0.3);
-      const ringStroke = randomStrokeWidth(random, 2);
-      const center14Size = randomSize(random, 8, 0.3);
-      for (let i = 0; i < ringCount; i++) {
-        const radius = 12 + i * 12;
-        const angle = (i * (360 / ringCount)) * Math.PI / 180;
-        const x = 50 + radius * Math.cos(angle);
-        const y = 50 + radius * Math.sin(angle);
-        shapes += `<circle cx="${x}" cy="${y}" r="${orbitSize}" fill="${color}"/>`;
-        shapes += `<circle cx="50" cy="50" r="${radius}" fill="none" stroke="${color}" stroke-width="${ringStroke}" stroke-dasharray="3 3"/>`;
-      }
-      shapes += `<circle cx="50" cy="50" r="${center14Size}" fill="${color}"/>`;
-      break;
-
-    case 15: // Radial dashes
-      const dashRayCount = randomCount(random, 8, 14);
-      const dashInner = randomSize(random, 20, 0.2);
-      const dashStroke = randomSize(random, 4, 0.3);
-      const dash15Outer = constrainRadialDistance(0, dashStroke);
-      const center15Size = randomSize(random, 15, 0.3);
-      for (let i = 0; i < dashRayCount; i++) {
-        const angle = (i * 360 / dashRayCount) * Math.PI / 180;
-        const x1 = 50 + dashInner * Math.cos(angle);
-        const y1 = 50 + dashInner * Math.sin(angle);
-        const x2 = 50 + dash15Outer * Math.cos(angle);
-        const y2 = 50 + dash15Outer * Math.sin(angle);
-        shapes += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${dashStroke}" stroke-linecap="round"/>`;
-      }
-      shapes += `<circle cx="50" cy="50" r="${center15Size}" fill="${color}"/>`;
-      break;
-
-    case 16: // Layered squares
-      const squareLayerCount = randomCount(random, 3, 5);
-      const maxSquare16Size = randomSize(random, 70, 0.15);
-      const square16Stroke = randomStrokeWidth(random, 3);
-      const square16Rotation = randomAngle(random);
-      for (let i = 0; i < squareLayerCount; i++) {
-        const size = maxSquare16Size - (i * maxSquare16Size / squareLayerCount);
-        const offset = (100 - size) / 2;
-        shapes += `<rect x="${offset}" y="${offset}" width="${size}" height="${size}" fill="none" stroke="${color}" stroke-width="${square16Stroke}" transform="rotate(${square16Rotation} 50 50)"/>`;
-      }
-      break;
-
-    case 17: // Diagonal stripes
-      const stripeCount = randomCount(random, 5, 8);
-      const stripeStroke = randomStrokeWidth(random, 3);
-      const stripeAngle = randomAngle(random);
-      const stripeSpacing = 80 / stripeCount;
-      for (let i = 0; i < stripeCount; i++) {
-        const x = 10 + i * stripeSpacing;
-        shapes += `<line x1="${x}" y1="10" x2="${x + 50}" y2="90" stroke="${color}" stroke-width="${stripeStroke}" transform="rotate(${stripeAngle} 50 50)"/>`;
-      }
-      break;
-
-    case 18: // Constellation pattern
-      const starCount2 = randomCount(random, 6, 10);
-      const constellation = [];
-      const star18Size = randomSize(random, 3, 0.3);
-      const center18Size = randomSize(random, 4, 0.3);
-      const lineStroke = randomStrokeWidth(random, 2);
-      const constellationRadius = randomSize(random, 28, 0.25);
-      for (let i = 0; i < starCount2; i++) {
-        const angle = (i * 360 / starCount2) * Math.PI / 180;
-        const radiusVar = constellationRadius + randomSize(random, 0, 0.3);
-        const x = 50 + radiusVar * Math.cos(angle);
-        const y = 50 + radiusVar * Math.sin(angle);
-        constellation.push({ x, y });
-        shapes += `<circle cx="${x}" cy="${y}" r="${star18Size}" fill="${color}"/>`;
-      }
-      // Connect some stars with lines
-      for (let i = 0; i < starCount2; i++) {
-        const next = (i + 1) % starCount2;
-        if (i % 2 === 0) {
-          shapes += `<line x1="${constellation[i].x}" y1="${constellation[i].y}" x2="${constellation[next].x}" y2="${constellation[next].y}" stroke="${color}" stroke-width="${lineStroke}"/>`;
-        }
-      }
-      shapes += `<circle cx="50" cy="50" r="${center18Size}" fill="${color}"/>`;
-      break;
-
-    case 19: // Petal burst
-      const petalBurstCount = randomCount(random, 8, 14);
-      const petal19Rx = randomSize(random, 8, 0.3);
-      const petal19Ry = randomSize(random, 15, 0.3);
-      const petal19Distance = constrainRadialDistance(petal19Ry); // Use longer axis for constraint
-      const center19Size = randomSize(random, 10, 0.3);
-      for (let i = 0; i < petalBurstCount; i++) {
-        const angle = (i * 360 / petalBurstCount) * Math.PI / 180;
-        const x = 50 + petal19Distance * Math.cos(angle);
-        const y = 50 + petal19Distance * Math.sin(angle);
-        shapes += `<ellipse cx="${x}" cy="${y}" rx="${petal19Rx}" ry="${petal19Ry}" fill="${color}" transform="rotate(${i * 360 / petalBurstCount} ${x} ${y})"/>`;
-      }
-      shapes += `<circle cx="50" cy="50" r="${center19Size}" fill="${color}"/>`;
-      break;
-
-    case 20: // Radial circle of letters
-      const radialLetterCount = randomCount(random, 6, 10);
-      const radialLetterRadius = randomSize(random, 35, 0.15);
-      const radialLetterSize = randomSize(random, 16, 0.2);
-      for (let i = 0; i < radialLetterCount; i++) {
-        const angle = (i * 360 / radialLetterCount - 90) * Math.PI / 180;
-        const x = 50 + radialLetterRadius * Math.cos(angle);
-        const y = 50 + radialLetterRadius * Math.sin(angle);
-        const rotation = (i * 360 / radialLetterCount);
-        shapes += `<text x="${x}" y="${y}" font-size="${radialLetterSize}" font-weight="600" fill="${color}" text-anchor="middle" dominant-baseline="central" transform="rotate(${rotation} ${x} ${y})">${firstLetter}</text>`;
-      }
-      shapes += `<text x="50" y="50" font-size="${radialLetterSize * 1.5}" font-weight="700" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
-      break;
-
-    case 21: // Grid of repeating letters
-      const gridLetterSize = randomCount(random, 3, 4);
-      const gridSpacing = 80 / (gridLetterSize - 1);
-      const letterGridSize = randomSize(random, 18, 0.2);
-      for (let i = 0; i < gridLetterSize; i++) {
-        for (let j = 0; j < gridLetterSize; j++) {
-          const x = 10 + j * gridSpacing;
-          const y = 10 + i * gridSpacing;
-          const isCenterish = (i === Math.floor(gridLetterSize/2) && j === Math.floor(gridLetterSize/2));
-          const size = isCenterish ? letterGridSize * 1.4 : letterGridSize;
-          const weight = isCenterish ? "700" : "600";
-          shapes += `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
-        }
-      }
-      break;
-
-    case 22: // Spiral of letters
-      const spiralLetterCount = randomCount(random, 6, 10);
-      const spiralTightness = randomSize(random, 3, 0.3);
-      const spiralStart = randomSize(random, 12, 0.3);
-      const spiralLetterSize = randomSize(random, 14, 0.2);
-      for (let i = 0; i < spiralLetterCount; i++) {
-        const angle = (i * 70) * Math.PI / 180;
-        const radius = spiralStart + i * spiralTightness;
-        const x = 50 + radius * Math.cos(angle);
-        const y = 50 + radius * Math.sin(angle);
-        shapes += `<text x="${x}" y="${y}" font-size="${spiralLetterSize}" font-weight="600" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
-      }
-      break;
-
-    case 23: // Arc of letters
-      const arcLetterCount = randomCount(random, 5, 8);
-      const arcRadius = randomSize(random, 35, 0.15);
-      const arcLetterSize = randomSize(random, 18, 0.2);
-      const arcSpan = randomSize(random, 180, 0.3);
-      const arcStart = (180 - arcSpan) / 2;
-      const arc23Stroke = randomStrokeWidth(random, 2);
-      for (let i = 0; i < arcLetterCount; i++) {
-        const angle = (arcStart + (i * arcSpan / (arcLetterCount - 1)) - 90) * Math.PI / 180;
-        const x = 50 + arcRadius * Math.cos(angle);
-        const y = 50 + arcRadius * Math.sin(angle);
-        shapes += `<text x="${x}" y="${y}" font-size="${arcLetterSize}" font-weight="600" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
-      }
-      shapes += `<path d="M ${50 + arcRadius * Math.cos((arcStart - 90) * Math.PI / 180)} ${50 + arcRadius * Math.sin((arcStart - 90) * Math.PI / 180)} A ${arcRadius} ${arcRadius} 0 0 1 ${50 + arcRadius * Math.cos((arcStart + arcSpan - 90) * Math.PI / 180)} ${50 + arcRadius * Math.sin((arcStart + arcSpan - 90) * Math.PI / 180)}" fill="none" stroke="${color}" stroke-width="${arc23Stroke}"/>`;
-      break;
-
-    case 24: // Letters forming radial burst
-      const burstLetterCount = randomCount(random, 8, 12);
-      const burstInner = randomSize(random, 18, 0.2);
-      const burstOuter = randomSize(random, 38, 0.15);
-      const burstLetterSize = randomSize(random, 14, 0.2);
-      const burst24Stroke = randomStrokeWidth(random, 2);
-      for (let i = 0; i < burstLetterCount; i++) {
-        const angle = (i * 360 / burstLetterCount) * Math.PI / 180;
-        const x1 = 50 + burstInner * Math.cos(angle);
-        const y1 = 50 + burstInner * Math.sin(angle);
-        const x2 = 50 + burstOuter * Math.cos(angle);
-        const y2 = 50 + burstOuter * Math.sin(angle);
-        shapes += `<text x="${x2}" y="${y2}" font-size="${burstLetterSize}" font-weight="600" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
-        shapes += `<line x1="${x1}" y1="${y1}" x2="${x2 - burstLetterSize/3 * Math.cos(angle)}" y2="${y2 - burstLetterSize/3 * Math.sin(angle)}" stroke="${color}" stroke-width="${burst24Stroke}"/>`;
-      }
-      break;
-
-    case 25: // Concentric rings of letters
-      const ringLetterCount = randomCount(random, 2, 3);
-      const baseRingRadius = randomSize(random, 28, 0.15);
-      const ringSpacing = randomSize(random, 15, 0.2);
-      const ringLetterSize = randomSize(random, 14, 0.2);
-      const baseLetterCount = randomCount(random, 8, 12);
-      for (let ring = 0; ring < ringLetterCount; ring++) {
-        const radius = baseRingRadius - ring * ringSpacing;
-        const lettersInRing = Math.max(4, Math.floor(baseLetterCount - ring * 2));
-        for (let i = 0; i < lettersInRing; i++) {
-          const angle = (i * 360 / lettersInRing) * Math.PI / 180;
-          const x = 50 + radius * Math.cos(angle);
-          const y = 50 + radius * Math.sin(angle);
-          shapes += `<text x="${x}" y="${y}" font-size="${ringLetterSize}" font-weight="600" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
-        }
-      }
-      shapes += `<text x="50" y="50" font-size="${ringLetterSize * 1.5}" font-weight="700" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
-      break;
-
-    case 26: // Letters arranged in star/polygon
-      const polyLetterCount = randomCount(random, 5, 8);
-      const polyLetterRadius = randomSize(random, 38, 0.15);
-      const polyLetterSize = randomSize(random, 18, 0.2);
-      const polyRotation = randomAngle(random);
-      const poly26Stroke = randomStrokeWidth(random, 2);
-      const polyPoints = [];
-      for (let i = 0; i < polyLetterCount; i++) {
-        const angle = (i * 360 / polyLetterCount + polyRotation) * Math.PI / 180;
-        const x = 50 + polyLetterRadius * Math.cos(angle);
-        const y = 50 + polyLetterRadius * Math.sin(angle);
-        polyPoints.push(`${x},${y}`);
-        shapes += `<text x="${x}" y="${y}" font-size="${polyLetterSize}" font-weight="600" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
-      }
-      shapes += `<polygon points="${polyPoints.join(' ')}" fill="none" stroke="${color}" stroke-width="${poly26Stroke}"/>`;
-      shapes += `<text x="50" y="50" font-size="${polyLetterSize * 1.3}" font-weight="700" fill="${color}" text-anchor="middle" dominant-baseline="central">${firstLetter}</text>`;
+    case 'mandala':
+      shapes = generateMandalaPattern(random, color, firstLetter);
       break;
   }
 
@@ -1218,6 +1030,407 @@ export function generatePatternSymbol(seed: string, color: string, letter?: stri
     viewBox: { width: VIEWBOX_SIZE, height: VIEWBOX_SIZE }
   };
 }
+
+function generateRadialPattern(random: () => number, color: string, letter: string): string {
+  // Elements around center with rotation (fewer, bigger)
+  const elementCount = 6 + Math.floor(random() * 6); // Max 11 instead of 14
+  const radius = 30 + random() * 8;
+  const elementSize = 8 + random() * 4; // Minimum 8 to ensure visibility
+  const centerSize = elementSize * 1.5;
+  const useLetter = random() > 0.5; // 50% chance to include letter
+
+  // Individual or global rotation
+  const rotationType = pickFromArray(random, ['individual', 'progressive', 'none']);
+
+  let shapes = '';
+
+  // Center element - either letter or shape
+  if (useLetter && letter) {
+    const letterSize = 20 + random() * 15; // 20-35
+    shapes += `<text x="50" y="50" font-family="inherit" font-size="${letterSize}" font-weight="700"
+      fill="${color}" text-anchor="middle" dominant-baseline="central">${letter.charAt(0).toUpperCase()}</text>`;
+  } else {
+    shapes += `<circle cx="50" cy="50" r="${centerSize}" fill="${color}"/>`;
+  }
+
+  const points = circularPoints(elementCount, 50, 50, radius);
+
+  for (let i = 0; i < elementCount; i++) {
+    const point = points[i];
+    let rotation = 0;
+
+    switch (rotationType) {
+      case 'individual':
+        rotation = random() * 360;
+        break;
+      case 'progressive':
+        rotation = (i * 360 / elementCount);
+        break;
+    }
+
+    // Mix element types
+    const elementType = Math.floor(random() * 3);
+
+    switch (elementType) {
+      case 0: // Circle
+        shapes += `<circle cx="${point.x}" cy="${point.y}" r="${elementSize}" fill="${color}"/>`;
+        break;
+
+      case 1: // Triangle
+        const triPoints = generateTriangle(point.x, point.y, elementSize, rotation);
+        shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+        break;
+
+      case 2: // Square
+        const halfSize = elementSize;
+        shapes += `<rect x="${point.x - halfSize}" y="${point.y - halfSize}"
+          width="${elementSize * 2}" height="${elementSize * 2}" fill="${color}"
+          transform="rotate(${rotation} ${point.x} ${point.y})"/>`;
+        break;
+    }
+  }
+
+  return shapes;
+}
+
+function generateCircularPattern(random: () => number, color: string): string {
+  // Concentric circles with variations (fewer, bigger)
+  const ringCount = 3 + Math.floor(random() * 2); // Max 4 instead of 5
+  const spacing = goldenSpacing(40, ringCount);
+  const stroke = selectHarmonicStroke(random);
+  const centerSize = 8 + random() * 4; // Increased from 6
+
+  // Add variation: some rings filled, some dashed
+  const useVariation = random() > 0.5;
+
+  let shapes = '';
+
+  for (let i = 0; i < ringCount; i++) {
+    const radius = spacing[i];
+    const strokeWidth = i === 0 ? stroke * 1.5 : stroke;
+
+    if (useVariation && i % 2 === 0 && random() > 0.5) {
+      // Alternate: dashed circles for variety
+      shapes += `<circle cx="50" cy="50" r="${radius}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-dasharray="8,4"/>`;
+    } else {
+      shapes += `<circle cx="50" cy="50" r="${radius}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+    }
+  }
+
+  shapes += `<circle cx="50" cy="50" r="${centerSize}" fill="${color}"/>`;
+
+  return shapes;
+}
+
+function generateSquarePattern(random: () => number, color: string): string {
+  // Grid with variations (bigger elements)
+  const gridSize = 3 + Math.floor(random() * 2); // 3x3 or 4x4
+  const elementSize = 8 + random() * 4; // Increased from 6
+  const spacing = (VIEWBOX_SIZE - SAFE_MARGIN * 2 - elementSize * gridSize) / (gridSize - 1);
+  const startPos = SAFE_MARGIN + elementSize / 2;
+
+  // Add more element variety
+  const elementTypes = ['circle', 'triangle', 'square', 'pentagon'];
+  const useRotationVariation = random() > 0.5;
+
+  let shapes = '';
+
+  for (let i = 0; i < gridSize; i++) {
+    for (let j = 0; j < gridSize; j++) {
+      const x = startPos + j * (spacing + elementSize);
+      const y = startPos + i * (spacing + elementSize);
+      const isCenterish = (i === Math.floor(gridSize / 2) && j === Math.floor(gridSize / 2));
+      const size = isCenterish ? elementSize * 1.5 : elementSize;
+      const rotation = useRotationVariation ? (i + j) * 45 : random() * 360;
+
+      // Vary element types with more options
+      if (random() > 0.3) {
+        const elementType = pickFromArray(random, elementTypes);
+
+        switch (elementType) {
+          case 'circle':
+            shapes += `<circle cx="${x}" cy="${y}" r="${size}" fill="${color}"/>`;
+            break;
+          case 'triangle':
+            const triPoints = generateTriangle(x, y, size, rotation);
+            shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+            break;
+          case 'square':
+            const halfSize = size;
+            shapes += `<rect x="${x - halfSize}" y="${y - halfSize}" width="${size * 2}" height="${size * 2}"
+              fill="${color}" transform="rotate(${rotation} ${x} ${y})"/>`;
+            break;
+          case 'pentagon':
+            const pentPoints = generatePentagon(x, y, size, rotation);
+            shapes += `<polygon points="${pentPoints}" fill="${color}"/>`;
+            break;
+        }
+      }
+    }
+  }
+
+  return shapes;
+}
+
+function generateHexagonalPattern(random: () => number, color: string): string {
+  // Honeycomb-like structure (bigger hexagons)
+  const gridSize = 3;
+  const elementSize = 14 + random() * 6; // Increased from 12
+  const spacing = elementSize * 1.8;
+  const startX = 50 - ((gridSize - 1) * spacing) / 2;
+  const startY = 50 - ((gridSize - 1) * spacing * 0.866) / 2;
+
+  // Add rotation variation
+  const useRotationVariation = random() > 0.5;
+  const baseRotation = pickFromArray(random, [0, 15, 30]);
+
+  let shapes = '';
+
+  for (let row = 0; row < gridSize; row++) {
+    for (let col = 0; col < gridSize; col++) {
+      const x = startX + col * spacing + (row % 2) * (spacing / 2);
+      const y = startY + row * spacing * 0.866;
+
+      if (random() > 0.2) {
+        const rotation = useRotationVariation ? baseRotation + (row + col) * 10 : random() * 30;
+        const hexPoints = generateHexagon(x, y, elementSize, rotation);
+        const stroke = selectHarmonicStroke(random);
+
+        // More variation in fill vs stroke
+        const styleType = Math.floor(random() * 3);
+        if (styleType === 0) {
+          shapes += `<polygon points="${hexPoints}" fill="${color}"/>`;
+        } else if (styleType === 1) {
+          shapes += `<polygon points="${hexPoints}" fill="none" stroke="${color}" stroke-width="${stroke}"/>`;
+        } else {
+          // Half-stroke effect
+          shapes += `<polygon points="${hexPoints}" fill="${color}" stroke="${color}" stroke-width="${stroke * 0.5}"/>`;
+        }
+      }
+    }
+  }
+
+  return shapes;
+}
+
+function generateTriangularPattern(random: () => number, color: string): string {
+  // Delta/tessellated pattern
+  const rows = 4 + Math.floor(random() * 2);
+  const baseSize = (VIEWBOX_SIZE - SAFE_MARGIN * 2) / rows;
+  const startY = SAFE_MARGIN + baseSize / 2;
+
+  let shapes = '';
+
+  for (let row = 0; row < rows; row++) {
+    const trianglesInRow = row + 2;
+    const rowY = startY + row * baseSize * 0.866;
+
+    for (let i = 0; i < trianglesInRow; i++) {
+      const x = 50 - ((trianglesInRow - 1) * baseSize / 2) + i * baseSize;
+      const rotation = (row + i) % 2 === 0 ? 0 : 180;
+      const size = baseSize * 0.8;
+
+      if (random() > 0.2) {
+        const triPoints = generateTriangle(x, rowY, size, rotation);
+        shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+      }
+    }
+  }
+
+  return shapes;
+}
+
+function generateSpiralPattern(random: () => number, color: string, letter: string): string {
+  // Golden spiral with elements (fewer, bigger)
+  const elementCount = 8 + Math.floor(random() * 6); // Max 13 instead of 16
+  const maxRadius = 35;
+  const elementSize = 8 + random() * 4; // Minimum 8 to ensure visibility
+  const useLetter = random() > 0.5; // 50% chance to include letter
+
+  const spiralPoints = goldenSpiralPoints(elementCount, 50, 50, maxRadius);
+
+  let shapes = '';
+
+  for (let i = 0; i < spiralPoints.length; i++) {
+    const point = spiralPoints[i];
+    const size = elementSize * (1 + i / elementCount); // Growing size
+
+    const elementType = Math.floor(random() * 2);
+
+    switch (elementType) {
+      case 0: // Circle
+        shapes += `<circle cx="${point.x}" cy="${point.y}" r="${size}" fill="${color}"/>`;
+        break;
+
+      case 1: // Triangle pointing outward
+        const triPoints = generateTriangle(point.x, point.y, size * 1.2, point.angle);
+        shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+        break;
+    }
+  }
+
+  // Center element - either letter or shape
+  if (useLetter && letter) {
+    const letterSize = 18 + random() * 12; // 18-30
+    shapes += `<text x="50" y="50" font-family="inherit" font-size="${letterSize}" font-weight="700"
+      fill="${color}" text-anchor="middle" dominant-baseline="central">${letter.charAt(0).toUpperCase()}</text>`;
+  } else {
+    shapes += `<circle cx="50" cy="50" r="${elementSize * 1.5}" fill="${color}"/>`;
+  }
+
+  return shapes;
+}
+
+function generateScatteredPattern(random: () => number, color: string): string {
+  // Organic distribution with some order (fewer, bigger)
+  const elementCount = 8 + Math.floor(random() * 6); // Max 13 instead of 17 (fewer elements)
+  const scales = harmonicScale(12, elementCount, false); // Start at 12 instead of 10
+
+  let shapes = '';
+
+  for (let i = 0; i < elementCount; i++) {
+    const x = SAFE_MARGIN + random() * (VIEWBOX_SIZE - SAFE_MARGIN * 2);
+    const y = SAFE_MARGIN + random() * (VIEWBOX_SIZE - SAFE_MARGIN * 2);
+    const rawSize = scales[Math.floor(random() * scales.length)];
+    const size = Math.max(8, rawSize); // Ensure minimum size of 8
+    const rotation = random() * 360;
+
+    const elementType = Math.floor(random() * 3);
+
+    switch (elementType) {
+      case 0:
+        shapes += `<circle cx="${x}" cy="${y}" r="${size}" fill="${color}"/>`;
+        break;
+      case 1:
+        const triPoints = generateTriangle(x, y, size, rotation);
+        shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+        break;
+      case 2:
+        const halfSize = size;
+        shapes += `<rect x="${x - halfSize}" y="${y - halfSize}" width="${size * 2}" height="${size * 2}"
+          fill="${color}" transform="rotate(${rotation} ${x} ${y})"/>`;
+        break;
+    }
+  }
+
+  return shapes;
+}
+
+function generateWavePattern(random: () => number, color: string): string {
+  // Flowing repetition
+  const waveCount = 3 + Math.floor(random() * 3);
+  const spacing = (VIEWBOX_SIZE - SAFE_MARGIN * 2) / waveCount;
+  const startY = SAFE_MARGIN + spacing / 2;
+  const amplitude = 6 + random() * 6;
+  const frequency = 1 + random() * 2;
+  const stroke = selectHarmonicStroke(random);
+  const rotation = pickFromArray(random, [0, 45, 90]);
+
+  let shapes = '';
+
+  for (let i = 0; i < waveCount; i++) {
+    const y = startY + i * spacing;
+    const wavePath = generateWave(10, y, 90, amplitude, frequency);
+    shapes += `<path d="${wavePath}" fill="none" stroke="${color}" stroke-width="${stroke}"
+      stroke-linecap="round" transform="rotate(${rotation} 50 50)"/>`;
+  }
+
+  return shapes;
+}
+
+function generateConstellationPattern(random: () => number, color: string): string {
+  // Connected nodes (fewer, bigger)
+  const nodeCount = 6 + Math.floor(random() * 5); // Max 10 instead of 12
+  const nodes: Array<{ x: number; y: number }> = [];
+  const nodeSize = 8 + random() * 4; // Minimum 8 to ensure visibility
+  const connectionStroke = selectHarmonicStroke(random); // Thicker connections
+
+  // Generate node positions
+  for (let i = 0; i < nodeCount; i++) {
+    const angle = (i * 360 / nodeCount + random() * 30) * Math.PI / 180;
+    const radius = 20 + random() * 18;
+    const x = 50 + radius * Math.cos(angle);
+    const y = 50 + radius * Math.sin(angle);
+    nodes.push({ x, y });
+  }
+
+  let shapes = '';
+
+  // Draw connections
+  for (let i = 0; i < nodeCount; i++) {
+    const next = (i + 1) % nodeCount;
+    if (random() > 0.3) { // Not all connections
+      shapes += `<line x1="${nodes[i].x}" y1="${nodes[i].y}"
+        x2="${nodes[next].x}" y2="${nodes[next].y}"
+        stroke="${color}" stroke-width="${connectionStroke}"/>`;
+    }
+  }
+
+  // Draw nodes
+  for (const node of nodes) {
+    shapes += `<circle cx="${node.x}" cy="${node.y}" r="${nodeSize}" fill="${color}"/>`;
+  }
+
+  // Center node
+  shapes += `<circle cx="50" cy="50" r="${nodeSize * 1.3}" fill="${color}"/>`;
+
+  return shapes;
+}
+
+function generateMandalaPattern(random: () => number, color: string, letter?: string): string {
+  // Symmetrical complexity (fewer, bigger)
+  const sectors = 6 + Math.floor(random() * 4); // Max 9 instead of 12
+  const layers = 2 + Math.floor(random() * 2);
+  const useLetter = random() > 0.5 && letter; // 50% chance to include letter
+
+  let shapes = '';
+
+  // Generate one sector, then repeat with rotation
+  const sectorAngle = 360 / sectors;
+
+  for (let sector = 0; sector < sectors; sector++) {
+    const rotation = sector * sectorAngle;
+
+    for (let layer = 0; layer < layers; layer++) {
+      const radius = 18 + layer * 12; // Increased from 15
+      const elementSize = 8 + random() * 4; // Minimum 8 to ensure visibility
+      const elementsInLayer = 2 + layer;
+
+      for (let i = 0; i < elementsInLayer; i++) {
+        const angle = (rotation + (i * sectorAngle / elementsInLayer)) * Math.PI / 180;
+        const x = 50 + radius * Math.cos(angle);
+        const y = 50 + radius * Math.sin(angle);
+
+        const elementType = Math.floor(random() * 2);
+
+        switch (elementType) {
+          case 0:
+            shapes += `<circle cx="${x}" cy="${y}" r="${elementSize}" fill="${color}"/>`;
+            break;
+          case 1:
+            const triPoints = generateTriangle(x, y, elementSize, angle * 180 / Math.PI);
+            shapes += `<polygon points="${triPoints}" fill="${color}"/>`;
+            break;
+        }
+      }
+    }
+  }
+
+  // Center element - either letter or circle
+  if (useLetter) {
+    const letterSize = 18 + random() * 10; // 18-28
+    shapes += `<text x="50" y="50" font-family="inherit" font-size="${letterSize}" font-weight="700"
+      fill="${color}" text-anchor="middle" dominant-baseline="central">${letter.charAt(0).toUpperCase()}</text>`;
+  } else {
+    shapes += `<circle cx="50" cy="50" r="12" fill="${color}"/>`;
+  }
+
+  return shapes;
+}
+
+// ============================================================================
+// MAIN EXPORT FUNCTION
+// ============================================================================
 
 /**
  * Main function to generate a symbol based on mode

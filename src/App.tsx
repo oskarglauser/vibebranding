@@ -1981,7 +1981,7 @@ Generated with GoLogotype: https://gologotype.com
                               onClick={handleRegenerateSymbol}
                             >
                               <RefreshCw className="w-4 h-4" />
-                              <span className="hidden sm:inline">Randomize</span>
+                              <span className="hidden sm:inline">Randomize design</span>
                             </Button>
                           </div>
                           <p className="text-xs text-gray-500">Save this seed to recreate the same variation</p>
