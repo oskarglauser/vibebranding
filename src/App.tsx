@@ -1475,7 +1475,9 @@ Size: ${taglineSize}% of logo size
 Distance from Logo: ${taglineDistance}%
 Color: ${taglineColor.toUpperCase()}` : ''}
 
-Primary Color: ${logoColor.toUpperCase()}
+COLOR PALETTE:
+
+Primary Logo Color: ${logoColor.toUpperCase()}
 RGB: rgb(${parseInt(logoColor.slice(1, 3), 16)}, ${parseInt(logoColor.slice(3, 5), 16)}, ${parseInt(logoColor.slice(5, 7), 16)})
 CMYK: ${(() => {
         const r = parseInt(logoColor.slice(1, 3), 16) / 255
@@ -1487,7 +1489,35 @@ CMYK: ${(() => {
         const y = k === 1 ? 0 : (1 - b - k) / (1 - k)
         return `C${Math.round(c * 100)} M${Math.round(m * 100)} Y${Math.round(y * 100)} K${Math.round(k * 100)}`
       })()}
-Pantone: ${formatPantone(hexToPantone(logoColor))}
+Pantone: ${formatPantone(hexToPantone(logoColor))}${hasSymbol && symbolColor.toLowerCase() !== logoColor.toLowerCase() ? `
+
+Symbol Color: ${symbolColor.toUpperCase()}
+RGB: rgb(${parseInt(symbolColor.slice(1, 3), 16)}, ${parseInt(symbolColor.slice(3, 5), 16)}, ${parseInt(symbolColor.slice(5, 7), 16)})
+CMYK: ${(() => {
+        const r = parseInt(symbolColor.slice(1, 3), 16) / 255
+        const g = parseInt(symbolColor.slice(3, 5), 16) / 255
+        const b = parseInt(symbolColor.slice(5, 7), 16) / 255
+        const k = 1 - Math.max(r, g, b)
+        const c = k === 1 ? 0 : (1 - r - k) / (1 - k)
+        const m = k === 1 ? 0 : (1 - g - k) / (1 - k)
+        const y = k === 1 ? 0 : (1 - b - k) / (1 - k)
+        return `C${Math.round(c * 100)} M${Math.round(m * 100)} Y${Math.round(y * 100)} K${Math.round(k * 100)}`
+      })()}
+Pantone: ${formatPantone(hexToPantone(symbolColor))}` : ''}${hasTagline && taglineColor.toLowerCase() !== logoColor.toLowerCase() ? `
+
+Tagline Color: ${taglineColor.toUpperCase()}
+RGB: rgb(${parseInt(taglineColor.slice(1, 3), 16)}, ${parseInt(taglineColor.slice(3, 5), 16)}, ${parseInt(taglineColor.slice(5, 7), 16)})
+CMYK: ${(() => {
+        const r = parseInt(taglineColor.slice(1, 3), 16) / 255
+        const g = parseInt(taglineColor.slice(3, 5), 16) / 255
+        const b = parseInt(taglineColor.slice(5, 7), 16) / 255
+        const k = 1 - Math.max(r, g, b)
+        const c = k === 1 ? 0 : (1 - r - k) / (1 - k)
+        const m = k === 1 ? 0 : (1 - g - k) / (1 - k)
+        const y = k === 1 ? 0 : (1 - b - k) / (1 - k)
+        return `C${Math.round(c * 100)} M${Math.round(m * 100)} Y${Math.round(y * 100)} K${Math.round(k * 100)}`
+      })()}
+Pantone: ${formatPantone(hexToPantone(taglineColor))}` : ''}
 
 USAGE GUIDELINES:
 ✓ Use dark logos on light backgrounds
