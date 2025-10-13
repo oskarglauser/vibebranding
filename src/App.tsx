@@ -51,8 +51,8 @@ function App() {
   const [taglineFontWeight, setTaglineFontWeight] = useState('400')
   const [taglineLetterSpacing, setTaglineLetterSpacing] = useState(0)
   const [taglineTextCase, setTaglineTextCase] = useState<TextCaseType>('normal')
-  const [taglineSize, setTaglineSize] = useState(30) // Percentage of logo size
-  const [taglineDistance, setTaglineDistance] = useState(20) // Distance between logo and tagline as percentage
+  const [taglineSize, setTaglineSize] = useState(50) // Percentage of logo size
+  const [taglineDistance, setTaglineDistance] = useState(10) // Distance between logo and tagline as percentage
   const [taglineColor, setTaglineColor] = useState('#111827') // Default to same as logo
   const [taglineColorInputValue, setTaglineColorInputValue] = useState('111827')
   const [showTaglineSection, setShowTaglineSection] = useState(false)
@@ -60,6 +60,8 @@ function App() {
 
   // Symbol states
   const [showSymbolSection, setShowSymbolSection] = useState(false)
+  const [showLogoAdvanced, setShowLogoAdvanced] = useState(false)
+  const [showTaglineAdvanced, setShowTaglineAdvanced] = useState(false)
   const [symbolMode, setSymbolMode] = useState<SymbolMode>('none')
   const [symbolFont, setSymbolFont] = useState('Inter')
   const [symbolPlacement, setSymbolPlacement] = useState<SymbolPlacement>('above')
@@ -1785,83 +1787,99 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Letter Spacing</Label>
-                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{letterSpacing}</span>
-                        </div>
-                        <div className="px-1">
-                          <Slider
-                            value={[letterSpacing]}
-                            onValueChange={(value) => setLetterSpacing(value[0])}
-                            min={-10}
-                            max={20}
-                            step={1}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Tight</span>
-                            <span>Normal</span>
-                            <span>Wide</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Case</Label>
-                        <RadioGroup value={textCase} onValueChange={setTextCase as (value: string) => void} className="flex gap-4">
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="normal" id="case-normal" className="h-4 w-4" />
-                            <Label htmlFor="case-normal" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Normal (Aa)</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="uppercase" id="uppercase" className="h-4 w-4" />
-                            <Label htmlFor="uppercase" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Upper (AA)</Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                    </div>
-
                     <div className="space-y-2">
-                      <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Logo Color</Label>
-                      <div className="flex gap-2">
-                        <div className="flex-1 relative">
-                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
-                            #
-                          </div>
-                          <Input
-                            value={colorInputValue}
-                            onChange={(e) => handleColorInputChange(e.target.value)}
-                            placeholder="f00 or ff0000"
-                            className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
-                            maxLength={6}
-                          />
-                        </div>
-                        <input
-                          type="color"
-                          value={logoColor}
-                          onChange={(e) => handleColorPickerChange(e.target.value)}
-                          className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
+                      <div className="flex justify-between items-center">
+                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Letter Spacing</Label>
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{letterSpacing}</span>
+                      </div>
+                      <div className="px-1">
+                        <Slider
+                          value={[letterSpacing]}
+                          onValueChange={(value) => setLetterSpacing(value[0])}
+                          min={-10}
+                          max={20}
+                          step={1}
+                          className="w-full"
                         />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>Tight</span>
+                          <span>Normal</span>
+                          <span>Wide</span>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Trademark</Label>
-                      <Select value={trademarkSymbol} onValueChange={setTrademarkSymbol as (value: string) => void}>
-                        <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectItem value="r">® (Registered)</SelectItem>
-                          <SelectItem value="c">© (Copyright)</SelectItem>
-                          <SelectItem value="tm">™ (Trademark)</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    {/* Advanced Settings Toggle */}
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowLogoAdvanced(!showLogoAdvanced)}
+                        className="flex items-center justify-between w-full text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                      >
+                        <span>Advanced Settings</span>
+                        <ChevronDown
+                          className={`w-3 h-3 transition-transform ${showLogoAdvanced ? 'rotate-180' : ''}`}
+                        />
+                      </button>
                     </div>
+
+                    {showLogoAdvanced && (
+                      <div className="space-y-3 pt-2">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Case</Label>
+                          <RadioGroup value={textCase} onValueChange={setTextCase as (value: string) => void} className="flex gap-4">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="normal" id="case-normal" className="h-4 w-4" />
+                              <Label htmlFor="case-normal" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Normal (Aa)</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="uppercase" id="uppercase" className="h-4 w-4" />
+                              <Label htmlFor="uppercase" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Upper (AA)</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Logo Color</Label>
+                          <div className="flex gap-2">
+                            <div className="flex-1 relative">
+                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
+                                #
+                              </div>
+                              <Input
+                                value={colorInputValue}
+                                onChange={(e) => handleColorInputChange(e.target.value)}
+                                placeholder="f00 or ff0000"
+                                className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
+                                maxLength={6}
+                              />
+                            </div>
+                            <input
+                              type="color"
+                              value={logoColor}
+                              onChange={(e) => handleColorPickerChange(e.target.value)}
+                              className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Trademark</Label>
+                          <Select value={trademarkSymbol} onValueChange={setTrademarkSymbol as (value: string) => void}>
+                            <SelectTrigger className="border-gray-300 focus:border-gray-900 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="r">® (Registered)</SelectItem>
+                              <SelectItem value="c">© (Copyright)</SelectItem>
+                              <SelectItem value="tm">™ (Trademark)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -2136,107 +2154,123 @@ Generated with GoLogotype: https://gologotype.com
                       </div>
                     </div>
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Letter Spacing</Label>
-                        <div className="px-1">
-                          <Slider
-                            value={[taglineLetterSpacing]}
-                            onValueChange={(value) => setTaglineLetterSpacing(value[0])}
-                            min={-10}
-                            max={20}
-                            step={1}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Tight</span>
-                            <span>Normal</span>
-                            <span>Wide</span>
-                          </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Letter Spacing</Label>
+                      <div className="px-1">
+                        <Slider
+                          value={[taglineLetterSpacing]}
+                          onValueChange={(value) => setTaglineLetterSpacing(value[0])}
+                          min={-10}
+                          max={20}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>Tight</span>
+                          <span>Normal</span>
+                          <span>Wide</span>
                         </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Case</Label>
-                        <RadioGroup value={taglineTextCase} onValueChange={setTaglineTextCase as (value: string) => void} className="flex gap-4">
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="normal" id="tagline-case-normal" className="h-4 w-4" />
-                            <Label htmlFor="tagline-case-normal" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Normal (Aa)</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="uppercase" id="tagline-uppercase" className="h-4 w-4" />
-                            <Label htmlFor="tagline-uppercase" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Upper (AA)</Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                          Tagline Size ({taglineSize}% of logo)
-                        </Label>
-                        <div className="px-1">
-                          <Slider
-                            value={[taglineSize]}
-                            onValueChange={(value) => setTaglineSize(value[0])}
-                            min={15}
-                            max={80}
-                            step={5}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Small</span>
-                            <span>Medium</span>
-                            <span>Large</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                          Distance from Logo ({taglineDistance}%) {taglineDistance < 0 ? '(Overlapping)' : ''}
-                        </Label>
-                        <div className="px-1">
-                          <Slider
-                            value={[taglineDistance]}
-                            onValueChange={(value) => setTaglineDistance(value[0])}
-                            min={-10}
-                            max={40}
-                            step={2}
-                            className="w-full"
-                          />
-                          <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Overlap</span>
-                            <span>Normal</span>
-                            <span>Far</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Color</Label>
-                        <div className="flex gap-2">
-                          <div className="flex-1 relative">
-                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
-                              #
-                            </div>
-                            <Input
-                              value={taglineColorInputValue}
-                              onChange={(e) => handleTaglineColorInputChange(e.target.value)}
-                              placeholder="f00 or ff0000"
-                              className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
-                              maxLength={6}
-                            />
-                          </div>
-                          <input
-                            type="color"
-                            value={taglineColor}
-                            onChange={(e) => handleTaglineColorPickerChange(e.target.value)}
-                            className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
                       </div>
                     </div>
+
+                    {/* Advanced Settings Toggle */}
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowTaglineAdvanced(!showTaglineAdvanced)}
+                        className="flex items-center justify-between w-full text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                      >
+                        <span>Advanced Settings</span>
+                        <ChevronDown
+                          className={`w-3 h-3 transition-transform ${showTaglineAdvanced ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+                    </div>
+
+                    {showTaglineAdvanced && (
+                      <div className="space-y-3 pt-2">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Case</Label>
+                          <RadioGroup value={taglineTextCase} onValueChange={setTaglineTextCase as (value: string) => void} className="flex gap-4">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="normal" id="tagline-case-normal" className="h-4 w-4" />
+                              <Label htmlFor="tagline-case-normal" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Normal (Aa)</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="uppercase" id="tagline-uppercase" className="h-4 w-4" />
+                              <Label htmlFor="tagline-uppercase" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Upper (AA)</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                            Tagline Size ({taglineSize}% of logo)
+                          </Label>
+                          <div className="px-1">
+                            <Slider
+                              value={[taglineSize]}
+                              onValueChange={(value) => setTaglineSize(value[0])}
+                              min={15}
+                              max={80}
+                              step={5}
+                              className="w-full"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                              <span>Small</span>
+                              <span>Medium</span>
+                              <span>Large</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                            Distance from Logo ({taglineDistance}%) {taglineDistance < 0 ? '(Overlapping)' : ''}
+                          </Label>
+                          <div className="px-1">
+                            <Slider
+                              value={[taglineDistance]}
+                              onValueChange={(value) => setTaglineDistance(value[0])}
+                              min={-10}
+                              max={40}
+                              step={2}
+                              className="w-full"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                              <span>Overlap</span>
+                              <span>Normal</span>
+                              <span>Far</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Tagline Color</Label>
+                          <div className="flex gap-2">
+                            <div className="flex-1 relative">
+                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
+                                #
+                              </div>
+                              <Input
+                                value={taglineColorInputValue}
+                                onChange={(e) => handleTaglineColorInputChange(e.target.value)}
+                                placeholder="f00 or ff0000"
+                                className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
+                                maxLength={6}
+                              />
+                            </div>
+                            <input
+                              type="color"
+                              value={taglineColor}
+                              onChange={(e) => handleTaglineColorPickerChange(e.target.value)}
+                              className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
