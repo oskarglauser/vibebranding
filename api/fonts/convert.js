@@ -272,7 +272,8 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
 
       if (pathData) {
         // Add glyph as a path with transform
-        pathParts.push(`<path transform="translate(${xOffset.toFixed(2)},${yOffset.toFixed(2)}) scale(${scale.toFixed(6)})" d="${pathData}"/>`);
+        // Use negative Y scale to flip coordinate system (fonts have Y going up, SVG has Y going down)
+        pathParts.push(`<path transform="translate(${xOffset.toFixed(2)},${yOffset.toFixed(2)}) scale(${scale.toFixed(6)},${(-scale).toFixed(6)})" d="${pathData}"/>`);
       } else {
         console.warn(`No path data for glyph ${i} (${text[i]})`);
       }
