@@ -154,7 +154,10 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
     console.log('CSS preview:', cssText.substring(0, 200));
 
     // Extract font file URL from CSS
-    const fontMatch = cssText.match(/url\(([^)]+\.(woff2|woff|ttf))\)/);
+    // Match both formats:
+    // 1. Standard: url(https://fonts.gstatic.com/s/inter/v13/...woff2)
+    // 2. With &text param: url(https://fonts.gstatic.com/l/font?kit=...)
+    const fontMatch = cssText.match(/url\(([^)]+(?:\.(?:woff2|woff|ttf)|font\?[^)]+))\)/);
     if (!fontMatch) {
       throw new Error('Font file URL not found in CSS');
     }
