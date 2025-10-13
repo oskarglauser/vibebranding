@@ -62,10 +62,11 @@ function App() {
   const [showSymbolSection, setShowSymbolSection] = useState(false)
   const [showLogoAdvanced, setShowLogoAdvanced] = useState(false)
   const [showTaglineAdvanced, setShowTaglineAdvanced] = useState(false)
+  const [showSymbolAdvanced, setShowSymbolAdvanced] = useState(false)
   const [symbolMode, setSymbolMode] = useState<SymbolMode>('none')
   const [symbolFont, setSymbolFont] = useState('Inter')
   const [symbolPlacement, setSymbolPlacement] = useState<SymbolPlacement>('above')
-  const [symbolSize, setSymbolSize] = useState(100) // Percentage (100% = same size as text)
+  const [symbolSize, setSymbolSize] = useState(150) // Percentage (100% = same size as text)
   const [symbolDistance, setSymbolDistance] = useState(5) // Percentage - closer default for above placement
   const [symbolColor, setSymbolColor] = useState('#111827')
   const [symbolColorInputValue, setSymbolColorInputValue] = useState('111827')
@@ -1963,97 +1964,6 @@ Generated with GoLogotype: https://gologotype.com
                           </div>
                         )}
 
-                        {/* Placement Selector */}
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Placement</Label>
-                          <RadioGroup value={symbolPlacement} onValueChange={setSymbolPlacement as (value: string) => void} className="flex gap-4">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="above" id="placement-above" className="h-4 w-4" />
-                              <Label htmlFor="placement-above" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Above</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="left" id="placement-left" className="h-4 w-4" />
-                              <Label htmlFor="placement-left" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">To the left</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="separate" id="placement-separate" className="h-4 w-4" />
-                              <Label htmlFor="placement-separate" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Separate</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-
-                        {/* Size Slider */}
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                            Symbol Size ({symbolSize}%)
-                          </Label>
-                          <div className="px-1">
-                            <Slider
-                              value={[symbolSize]}
-                              onValueChange={(value) => setSymbolSize(value[0])}
-                              min={80}
-                              max={200}
-                              step={5}
-                              className="w-full"
-                            />
-                            <div className="flex justify-between text-xs text-gray-500 mt-1">
-                              <span>80%</span>
-                              <span>100%</span>
-                              <span>200%</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Distance Slider (only for above/left placement) */}
-                        {(symbolPlacement === 'above' || symbolPlacement === 'left') && (
-                          <div className="space-y-2">
-                            <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                              Distance from Logo ({symbolDistance}%)
-                            </Label>
-                            <div className="px-1">
-                              <Slider
-                                value={[symbolDistance]}
-                                onValueChange={(value) => setSymbolDistance(value[0])}
-                                min={0}
-                                max={50}
-                                step={5}
-                                className="w-full"
-                              />
-                              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                <span>Close</span>
-                                <span>Normal</span>
-                                <span>Far</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Symbol Color */}
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Symbol Color</Label>
-                          <div className="flex gap-2">
-                            <div className="flex-1 relative">
-                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
-                                #
-                              </div>
-                              <Input
-                                value={symbolColorInputValue}
-                                onChange={(e) => handleSymbolColorInputChange(e.target.value)}
-                                placeholder="f00 or ff0000"
-                                className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
-                                maxLength={6}
-                              />
-                            </div>
-                            <input
-                              type="color"
-                              value={symbolColor}
-                              onChange={(e) => handleSymbolColorPickerChange(e.target.value)}
-                              className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
-                            />
-                          </div>
-                          <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
-                        </div>
-
                         {/* Regenerate Button with Seed */}
                         <div className="space-y-2">
                           <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Variation</Label>
@@ -2076,6 +1986,115 @@ Generated with GoLogotype: https://gologotype.com
                           </div>
                           <p className="text-xs text-gray-500">Save this seed to recreate the same variation</p>
                         </div>
+
+                        {/* Advanced Settings Toggle */}
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowSymbolAdvanced(!showSymbolAdvanced)}
+                            className="flex items-center justify-between w-full text-xs font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                          >
+                            <span>Advanced Settings</span>
+                            <ChevronDown
+                              className={`w-3 h-3 transition-transform ${showSymbolAdvanced ? 'rotate-180' : ''}`}
+                            />
+                          </button>
+                        </div>
+
+                        {showSymbolAdvanced && (
+                          <div className="space-y-3 pt-2">
+                            {/* Placement Selector */}
+                            <div className="space-y-2">
+                              <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Placement</Label>
+                              <RadioGroup value={symbolPlacement} onValueChange={setSymbolPlacement as (value: string) => void} className="flex gap-4">
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="above" id="placement-above" className="h-4 w-4" />
+                                  <Label htmlFor="placement-above" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Above</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="left" id="placement-left" className="h-4 w-4" />
+                                  <Label htmlFor="placement-left" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">To the left</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <RadioGroupItem value="separate" id="placement-separate" className="h-4 w-4" />
+                                  <Label htmlFor="placement-separate" className="text-xs cursor-pointer text-gray-600 dark:text-gray-300">Separate</Label>
+                                </div>
+                              </RadioGroup>
+                            </div>
+
+                            {/* Distance Slider (only for above/left placement) */}
+                            {(symbolPlacement === 'above' || symbolPlacement === 'left') && (
+                              <div className="space-y-2">
+                                <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                  Distance from Logo ({symbolDistance}%)
+                                </Label>
+                                <div className="px-1">
+                                  <Slider
+                                    value={[symbolDistance]}
+                                    onValueChange={(value) => setSymbolDistance(value[0])}
+                                    min={0}
+                                    max={50}
+                                    step={5}
+                                    className="w-full"
+                                  />
+                                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>Close</span>
+                                    <span>Normal</span>
+                                    <span>Far</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Size Slider */}
+                            <div className="space-y-2">
+                              <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                Symbol Size ({symbolSize}%)
+                              </Label>
+                              <div className="px-1">
+                                <Slider
+                                  value={[symbolSize]}
+                                  onValueChange={(value) => setSymbolSize(value[0])}
+                                  min={80}
+                                  max={200}
+                                  step={5}
+                                  className="w-full"
+                                />
+                                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                  <span>80%</span>
+                                  <span>100%</span>
+                                  <span>200%</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Symbol Color */}
+                            <div className="space-y-2">
+                              <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">Symbol Color</Label>
+                              <div className="flex gap-2">
+                                <div className="flex-1 relative">
+                                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs font-mono pointer-events-none">
+                                    #
+                                  </div>
+                                  <Input
+                                    value={symbolColorInputValue}
+                                    onChange={(e) => handleSymbolColorInputChange(e.target.value)}
+                                    placeholder="f00 or ff0000"
+                                    className="text-xs border-gray-300 focus:border-gray-900 font-mono h-10 sm:h-8 pl-6"
+                                    maxLength={6}
+                                  />
+                                </div>
+                                <input
+                                  type="color"
+                                  value={symbolColor}
+                                  onChange={(e) => handleSymbolColorPickerChange(e.target.value)}
+                                  className="w-10 h-10 sm:w-8 sm:h-8 border border-gray-300 rounded cursor-pointer"
+                                />
+                              </div>
+                              <p className="text-xs text-gray-500">3 or 6 digit hex color (e.g., f00, ff0000)</p>
+                            </div>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
