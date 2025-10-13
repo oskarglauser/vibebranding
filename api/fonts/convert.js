@@ -235,32 +235,33 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
         const commands = [];
 
         for (const cmd of glyph.path.commands) {
-          switch (cmd.type) {
-            case 'M':
-              if (cmd.x !== undefined && cmd.y !== undefined) {
-                commands.push(`M${cmd.x},${cmd.y}`);
+          // Fontkit uses { command: "moveTo", args: [x, y] } format
+          switch (cmd.command) {
+            case 'moveTo':
+              if (cmd.args && cmd.args.length >= 2) {
+                commands.push(`M${cmd.args[0]},${cmd.args[1]}`);
               }
               break;
-            case 'L':
-              if (cmd.x !== undefined && cmd.y !== undefined) {
-                commands.push(`L${cmd.x},${cmd.y}`);
+            case 'lineTo':
+              if (cmd.args && cmd.args.length >= 2) {
+                commands.push(`L${cmd.args[0]},${cmd.args[1]}`);
               }
               break;
-            case 'C':
-              if (cmd.x1 !== undefined && cmd.y1 !== undefined && cmd.x2 !== undefined && cmd.y2 !== undefined && cmd.x !== undefined && cmd.y !== undefined) {
-                commands.push(`C${cmd.x1},${cmd.y1} ${cmd.x2},${cmd.y2} ${cmd.x},${cmd.y}`);
+            case 'curveTo':
+              if (cmd.args && cmd.args.length >= 6) {
+                commands.push(`C${cmd.args[0]},${cmd.args[1]} ${cmd.args[2]},${cmd.args[3]} ${cmd.args[4]},${cmd.args[5]}`);
               }
               break;
-            case 'Q':
-              if (cmd.x1 !== undefined && cmd.y1 !== undefined && cmd.x !== undefined && cmd.y !== undefined) {
-                commands.push(`Q${cmd.x1},${cmd.y1} ${cmd.x},${cmd.y}`);
+            case 'quadraticCurveTo':
+              if (cmd.args && cmd.args.length >= 4) {
+                commands.push(`Q${cmd.args[0]},${cmd.args[1]} ${cmd.args[2]},${cmd.args[3]}`);
               }
               break;
-            case 'Z':
+            case 'closePath':
               commands.push('Z');
               break;
             default:
-              console.warn(`Unknown command type: ${cmd.type}`);
+              console.warn(`Unknown command: ${cmd.command}`);
           }
         }
         pathData = commands.join(' ');
