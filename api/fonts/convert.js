@@ -279,11 +279,14 @@ async function createVectorSvg({ text, fontFamily, fontWeight, fontSize, letterS
       }
 
       // Update bounding box using glyph bbox
+      // Note: We use negative Y scale in the transform, so Y coordinates are flipped
       if (glyph.bbox) {
         const bboxMinX = xOffset + glyph.bbox.minX * scale;
-        const bboxMinY = yOffset + glyph.bbox.minY * scale;
         const bboxMaxX = xOffset + glyph.bbox.maxX * scale;
-        const bboxMaxY = yOffset + glyph.bbox.maxY * scale;
+
+        // After negative Y scale: maxY becomes minY and minY becomes maxY
+        const bboxMinY = yOffset + glyph.bbox.maxY * -scale;
+        const bboxMaxY = yOffset + glyph.bbox.minY * -scale;
 
         minX = Math.min(minX, bboxMinX);
         minY = Math.min(minY, bboxMinY);
