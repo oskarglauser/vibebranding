@@ -334,6 +334,65 @@ export function generatePentagon(
 }
 
 /**
+ * Generate an octagon (convenience function for 8-sided polygon)
+ */
+export function generateOctagon(
+  centerX: number,
+  centerY: number,
+  radius: number,
+  rotation: number = 0
+): string {
+  return generatePolygon(8, centerX, centerY, radius, rotation);
+}
+
+/**
+ * Generate an oval/ellipse shape
+ */
+export function generateOval(
+  centerX: number,
+  centerY: number,
+  radiusX: number,
+  radiusY: number,
+  rotation: number = 0
+): string {
+  if (rotation !== 0) {
+    return `<ellipse cx="${centerX}" cy="${centerY}" rx="${radiusX}" ry="${radiusY}" transform="rotate(${rotation} ${centerX} ${centerY})"/>`;
+  }
+  return `<ellipse cx="${centerX}" cy="${centerY}" rx="${radiusX}" ry="${radiusY}"/>`;
+}
+
+/**
+ * Generate a line
+ */
+export function generateLine(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  strokeWidth: number = 3
+): string {
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke-width="${strokeWidth}" stroke-linecap="round"/>`;
+}
+
+/**
+ * Generate a rectangular block
+ */
+export function generateBlock(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  rotation: number = 0
+): string {
+  if (rotation !== 0) {
+    const centerX = x + width / 2;
+    const centerY = y + height / 2;
+    return `<rect x="${x}" y="${y}" width="${width}" height="${height}" transform="rotate(${rotation} ${centerX} ${centerY})"/>`;
+  }
+  return `<rect x="${x}" y="${y}" width="${width}" height="${height}"/>`;
+}
+
+/**
  * Constrain radius to fit within viewbox with safe margins
  */
 export function constrainRadius(
