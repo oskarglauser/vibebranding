@@ -1,0 +1,42 @@
+[
+  {
+    "question": "What do I get when I download?",
+    "answer": "A ZIP with your full lockup, the wordmark on its own, the symbol, an app icon and favicons. Each comes as SVG and PNG, in versions for light and dark backgrounds. It also includes a brand guidelines page covering clear space, minimum size, colour values and usage rules, plus a brand.json file that records the exact specification."
+  },
+  {
+    "question": "Are the files really vector?",
+    "answer": "Yes. Every letter is converted to outlines, so the SVG contains paths rather than text. Nobody needs the typeface installed to open, print or edit your logo, and it stays sharp at any size, from a favicon to a building sign."
+  },
+  {
+    "question": "Can I use this commercially?",
+    "answer": "Yes. The typefaces come from Google Fonts under open licences that permit commercial use, and the outlines in your files are part of your artwork. No attribution or account is required."
+  },
+  {
+    "question": "Does the download match what I see on screen?",
+    "answer": "Exactly. The preview is the same SVG that goes into your ZIP, and the PNGs are rasterised from that same file, so spacing, the trademark symbol and the tagline cannot drift between what you approved and what you receive."
+  },
+  {
+    "question": "How are the symbols made?",
+    "answer": "Each one is built from a set of designed archetypes: monograms, concentric rings, arcs, bars and dot grids, rather than shapes assembled at random. Stroke weight is derived from your typeface, so the mark carries the same visual weight as the wordmark, and it is aligned to the cap height of your letters."
+  },
+  {
+    "question": "Can I get back to a logo I made earlier?",
+    "answer": "Your design is stored in the page address, so bookmarking or sharing the link reproduces it exactly. \"Copy link to this design\" puts that link on your clipboard, and brand.json in your download records the same specification, including the symbol seed."
+  },
+  {
+    "question": "What about trademark symbols?",
+    "answer": "Choose the registered, trademark or copyright symbol and it is set at the right size and position automatically. The registered and trademark symbols hang from the cap line at just under half the cap height, while the copyright symbol rests on the baseline, since it is a full-height glyph rather than a superscript one."
+  },
+  {
+    "question": "Which file should I use where?",
+    "answer": "SVG for websites, design tools and print. PNG for slides, documents and email. If a space is too small for the full lockup, use the symbol on its own. The guidelines give you the minimum width in both pixels and millimetres."
+  },
+  {
+    "question": "Can I edit the logo afterwards?",
+    "answer": "Yes. Open the SVG in Figma, Illustrator, Affinity or Inkscape and every shape is editable. Because the letters are outlines, you can adjust them freely without worrying about which font the next person has."
+  },
+  {
+    "question": "What makes a good logotype?",
+    "answer": "Restraint, mostly. One typeface set at a considered weight and tracking, a mark that matches the letterforms in weight, generous clear space, and legibility at small sizes. Test it reversed on dark and at 16 pixels before committing. Both checks are on this page."
+  }
+]

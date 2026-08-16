@@ -1,127 +1,72 @@
-# GoLogotype - Professional Logo Generator
+# GoLogotype
 
-A modern, professional logo generator that creates true vector SVG files with outlined font paths. Perfect for startups, agencies, and creative professionals who need high-quality brand assets quickly and efficiently.
+A logotype designer that produces real vector artwork. Type a brand name, pick a
+style, choose a mark, and download a complete set of brand files.
 
-## Features
+Everything is built from font outlines and laid out on the typeface's cap
+height, so the result is proportioned like a designed logo rather than text in a
+box. What appears on screen is the exact file that lands in the download.
 
-- **True Vector Output**: Export genuine vector SVG files with outlined font paths - not embedded text
-- **Professional Quality**: High-resolution PNG files with transparent backgrounds
-- **Multiple Formats**: PNG and SVG files with various background options
-- **Google Fonts Integration**: Choose from premium Google Fonts
-- **Brand Package Downloads**: Complete brand packages with guidelines
-- **Trademark Support**: Add ™, ®, or © symbols with proper positioning
-- **Real-time Preview**: Live font preview with adjustable spacing and weight
-- **CMYK Color Conversion**: Automatic RGB to CMYK conversion for print specifications
+## What it produces
 
-## Tech Stack
+A ZIP containing:
 
-- **Frontend**: React + TypeScript + Vite
-- **Styling**: Tailwind CSS
-- **UI Components**: Custom shadcn/ui components
-- **Font Processing**: OpenType.js for vector path generation
-- **Deployment**: Vercel
+- `logo/` the primary lockup, the wordmark alone, and the alternate stacking,
+  each for light and dark backgrounds, as SVG and PNG at 1000px and 3000px
+- `symbol/` the mark on its own
+- `app-icon/` the mark on a solid tile
+- `favicon/` 16, 32, 180 and 512px, plus SVG
+- `brand-guidelines.html` variants, clear space, minimum size, colour and type
+  specification, and usage rules
+- `brand.json` the exact specification, including the symbol seed
 
-## Getting Started
+Letters are converted to outlines, so no typeface needs to be installed to open,
+print or edit the files.
 
-### Prerequisites
+## How it works
 
-- Node.js 18+ 
-- npm or yarn
+One rendering engine produces a single SVG string. The preview displays it, the
+export writes it, and every PNG is rasterised from it, so the files cannot
+disagree with each other.
 
-### Installation
+- **Kerning** comes from the font's own GPOS table, including the Extension
+  lookups that opentype.js cannot read.
+- **Geometry** is measured in cap heights, so symbol size, tagline gap and clear
+  space stay proportionally identical across typefaces.
+- **Symbols** are built from designed archetypes with stroke weights derived
+  from the wordmark's stem width, not assembled from random shapes.
+- **Trademark symbols** follow typographic rules: the registered and trademark
+  symbols hang from the cap line, the copyright symbol rests on the baseline.
+
+## Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/oskarglauser/vibebranding.git
-
-# Navigate to project directory
-cd vibebranding
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
-### Build for Production
+The dev server runs the real serverless font handler, so local development
+exercises the code that ships.
 
 ```bash
-# Build the project
-npm run build
-
-# Preview production build
-npm run preview
+npm run check   # lint, typecheck and tests
+npm run build   # production build
 ```
 
-## Project Structure
+Open `/dev/gallery.html` while the dev server is running to see every symbol
+archetype rendered across typefaces and weights.
 
-```
-vibebranding/
-├── src/
-│   ├── components/ui/     # Reusable UI components
-│   ├── lib/              # Utility functions
-│   ├── App.tsx           # Main application component
-│   └── main.tsx          # Application entry point
-├── vector-api/           # Font-to-vector conversion API
-├── server/               # Alternative server implementation
-└── public/               # Static assets
-```
+## Stack
 
-## API Endpoints
+React 19, TypeScript, Vite, Tailwind CSS, opentype.js, JSZip. One Vercel
+serverless function proxies TrueType files from Google Fonts.
 
-The project includes multiple API implementations for font-to-vector conversion:
+## Colour values
 
-- `vector-api/api/convert.js` - Main conversion endpoint
-- `gologotype-api/api/font-to-path.js` - Alternative implementation
-- `server/` - Express.js server option
-
-## Brand Package Contents
-
-When users download a brand package, they receive:
-
-- **PNG Files**: High-resolution raster graphics for presentations and documents
-- **SVG Files**: Scalable vector graphics for web and print
-- **Brand Info**: Simple text file with specifications and usage guidelines
-- **Color Specifications**: RGB and CMYK color values for consistent branding
-
-## Color Conversion
-
-The application automatically converts RGB colors to CMYK for print specifications:
-
-- **RGB**: Used for digital applications (web, mobile, digital displays)
-- **CMYK**: Provided for print applications (business cards, brochures, signage)
-
-Example conversion for a brand color `#3B82F6`:
-- **RGB**: rgb(59, 130, 246)
-- **CMYK**: C76 M47 Y0 K4
-
-## Deployment
-
-The application is deployed on Vercel with automatic deployments from the main branch.
-
-### Environment Setup
-
-1. Connect your GitHub repository to Vercel
-2. Configure custom domain (if applicable)
-3. Set up environment variables if needed
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
+CMYK values in the guidelines are an uncalibrated algebraic conversion: a
+starting point, not a press specification. Confirm colour with your printer
+against a proof.
 
 ## Credits
 
-**Created by [Glauser Creative](https://glauser.com)**
-
-Professional branding and design services for startups and established companies. Visit [glauser.com](https://glauser.com) for custom branding solutions.
+Built by [Glauser Creative](https://glauser.com).

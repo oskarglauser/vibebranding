@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Engine gallery (dev)</title>
+    <style>
+      body { font: 13px/1.4 -apple-system, system-ui, sans-serif; margin: 24px; color: #111827; background: #fff; }
+      h2 { font-size: 14px; margin: 32px 0 8px; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+      .cell { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; text-align: center; }
+      .cell svg { max-width: 100%; height: auto; }
+      .cell .label { margin-top: 8px; font-size: 11px; color: #9ca3af; }
+      .row { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 10px; }
+      .row svg { max-width: 100%; height: auto; }
+      .dark { background: #0b0d12; }
+    </style>
+  </head>
+  <body>
+    <div id="app">Loading fonts…</div>
+    <script type="module" src="/dev/gallery.ts"></script>
+  </body>
+</html>
