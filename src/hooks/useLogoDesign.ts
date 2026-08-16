@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 import { loadFont } from '../engine/fontLoader'
 import { layoutLogo } from '../engine/layout'
 import { renderSvg } from '../engine/render'
-import { buildSymbol } from '../engine/symbols/archetypes'
+import { buildSymbol, initialsFor } from '../engine/symbols/archetypes'
 import type { LoadedFont, LogoSpec } from '../engine/types'
 import {
   DEFAULT_STATE,
@@ -102,9 +102,11 @@ export function useLogoDesign() {
   // --- derived design ------------------------------------------------------
   const symbolArt = useMemo(() => {
     if (!state.symbol || !wordmarkFont) return null
+    const initials = initialsFor(state.brandName)
     return buildSymbol(state.symbol.archetype, {
       font: wordmarkFont,
-      initial: state.brandName.trim().charAt(0) || 'A',
+      initial: initials[0] || 'A',
+      initials,
       seed: state.symbol.seed,
     })
   }, [state.symbol, state.brandName, wordmarkFont])

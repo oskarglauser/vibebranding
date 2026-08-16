@@ -9,7 +9,7 @@
 
 import { useMemo } from 'react'
 import { RefreshCw, X } from 'lucide-react'
-import { buildCandidates } from '../engine/symbols/archetypes'
+import { buildCandidates, initialsFor } from '../engine/symbols/archetypes'
 import { renderSvg } from '../engine/render'
 import { layoutLogo } from '../engine/layout'
 import type { LoadedFont, LogoSpec } from '../engine/types'
@@ -18,7 +18,7 @@ import { cn } from '../lib/utils'
 
 type Props = {
   font: LoadedFont | null
-  initial: string
+  brandName: string
   color: string
   batchSeed: string
   selected: SymbolChoice | null
@@ -30,7 +30,7 @@ const CANDIDATE_COUNT = 12
 
 export function SymbolPicker({
   font,
-  initial,
+  brandName,
   color,
   batchSeed,
   selected,
@@ -39,8 +39,12 @@ export function SymbolPicker({
 }: Props) {
   const candidates = useMemo(() => {
     if (!font) return []
-    return buildCandidates({ font, initial: initial || 'A', seed: batchSeed }, CANDIDATE_COUNT)
-  }, [font, initial, batchSeed])
+    const initials = initialsFor(brandName)
+    return buildCandidates(
+      { font, initial: initials[0] || 'A', initials, seed: batchSeed },
+      CANDIDATE_COUNT,
+    )
+  }, [font, brandName, batchSeed])
 
   const previews = useMemo(() => {
     if (!font) return []

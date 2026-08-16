@@ -62,10 +62,10 @@ async function main() {
   app.innerHTML = ''
 
   // 1. Every archetype, same font.
-  const all = section('All archetypes — Inter 600, initial N')
+  const all = section('All archetypes — Inter 600, Northwind Studio')
   all.className = 'grid'
   for (const { id, label } of ARCHETYPES) {
-    const art = buildSymbol(id, { font: inter600, initial: 'N', seed: 'demo-seed' })
+    const art = buildSymbol(id, { font: inter600, initial: 'N', initials: ['N', 'S'], seed: 'demo-seed' })
     if (!art) continue
     const layout = layoutLogo({
       spec: baseSpec({ brandName: '', symbol: art, symbolPlacement: 'left', symbolSize: 'md' }),
@@ -151,15 +151,33 @@ async function main() {
   }
 
   // 5. Candidate grid, as the picker will show it.
-  const candidates = section('Candidate grid (what the symbol picker offers)')
+  const candidates = section('Candidate grid for "Northwind Studio" (N is diagonal)')
   candidates.className = 'grid'
-  for (const candidate of buildCandidates({ font: inter600, initial: 'N', seed: 'pick-1' }, 12)) {
+  for (const candidate of buildCandidates(
+    { font: inter600, initial: 'N', initials: ['N', 'S'], seed: 'pick-1' },
+    14,
+  )) {
     const layout = layoutLogo({
       spec: baseSpec({ brandName: '', symbol: candidate.art, symbolPlacement: 'left' }),
       wordmarkFont: inter600,
       taglineFont: null,
     })
     candidates.append(cell(renderSvg(layout, { targetWidth: 90 }).svg, candidate.archetype))
+  }
+
+  // 6. The same picker for a round initial, to show suitability ordering.
+  const round = section('Candidate grid for "Orbit Labs" (O is round: no ring offered first)')
+  round.className = 'grid'
+  for (const candidate of buildCandidates(
+    { font: inter600, initial: 'O', initials: ['O', 'L'], seed: 'pick-2' },
+    14,
+  )) {
+    const layout = layoutLogo({
+      spec: baseSpec({ brandName: '', symbol: candidate.art, symbolPlacement: 'left' }),
+      wordmarkFont: inter600,
+      taglineFont: null,
+    })
+    round.append(cell(renderSvg(layout, { targetWidth: 90 }).svg, candidate.archetype))
   }
 }
 

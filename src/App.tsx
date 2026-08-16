@@ -382,7 +382,7 @@ export default function App() {
               >
                 <SymbolPicker
                   font={wordmarkFont}
-                  initial={state.brandName.trim().charAt(0)}
+                  brandName={state.brandName}
                   color={state.symbolColor ?? state.color}
                   batchSeed={batchSeed}
                   selected={state.symbol}
