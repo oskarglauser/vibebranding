@@ -92,12 +92,23 @@ describe('symbol construction', () => {
     expect(buildSymbol('monogram-duo', context({ initials: ['N'] }))).toBeNull()
   })
 
-  it('is deterministic for the same seed and different for another', () => {
+  it('is deterministic for the same seed', () => {
     const first = buildSymbol('monogram-knockout', context())!
     const same = buildSymbol('monogram-knockout', context())!
-    const other = buildSymbol('monogram-knockout', context({ seed: 'different' }))!
     expect(first.content).toBe(same.content)
-    expect(first.content).not.toBe(other.content)
+  })
+
+  it('lets the seed reach the geometry', () => {
+    // Not "any two seeds differ": an archetype has only a handful of authored
+    // variants, so a given pair collides regularly and that is by design. What
+    // must hold is that varying the seed varies the output at all.
+    const outputs = new Set(
+      Array.from(
+        { length: 24 },
+        (_, i) => buildSymbol('monogram-knockout', context({ seed: `seed-${i}` }))?.content,
+      ),
+    )
+    expect(outputs.size).toBeGreaterThan(1)
   })
 
   it('cuts letters out as negative space rather than painting them white', () => {

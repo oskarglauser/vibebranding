@@ -1,39 +1,49 @@
 /**
- * Seed generation and seeded random number utilities
+ * Seeded randomness for mark generation.
+ *
+ * Marks are a deterministic function of the brand name, so the quality of the
+ * hash matters more than it would for a throwaway seed. A weak hash feeding a
+ * weak generator would hand "Acme Co" and "Acme Ltd" near-identical first draws
+ * and therefore near-identical marks — the exact failure the drawn library is
+ * meant to fix. xmur3 avalanches the string, mulberry32 keeps the stream
+ * well-distributed afterwards.
  */
 
-/**
- * Generate a completely random seed string
- */
+/** Generate a fully random seed string, for the cases that want a fresh roll. */
 export function generateSeed(): string {
-  // Generate a fully random seed using multiple random values
-  return Math.random().toString(36).substr(2, 9) +
-         Math.random().toString(36).substr(2, 9);
+  return (
+    Math.random().toString(36).slice(2, 11) + Math.random().toString(36).slice(2, 11)
+  );
 }
 
 /**
- * Convert seed string to a deterministic number
+ * Hash a string to a 32-bit integer, avalanching so that a one-character change
+ * redistributes the whole value rather than shifting it slightly.
  */
 export function seedToNumber(seed: string): number {
-  let hash = 0;
+  let h = 1779033703 ^ seed.length;
   for (let i = 0; i < seed.length; i++) {
-    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-    hash = hash & hash; // Convert to 32bit integer
+    h = Math.imul(h ^ seed.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
   }
-  return Math.abs(hash);
+  h = Math.imul(h ^ (h >>> 16), 2246822507);
+  h = Math.imul(h ^ (h >>> 13), 3266489909);
+  return (h ^= h >>> 16) >>> 0;
 }
 
 /**
- * Create a seeded pseudo-random number generator
- * Returns a function that generates numbers between 0 and 1
+ * Create a seeded pseudo-random number generator.
+ * Returns a function producing numbers in [0, 1).
  */
 export function createSeededRandom(seed: string): () => number {
-  let hash = seedToNumber(seed);
+  let state = seedToNumber(seed);
 
   return () => {
-    // Linear congruential generator
-    hash = (hash * 9301 + 49297) % 233280;
-    return hash / 233280;
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
 

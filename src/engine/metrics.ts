@@ -30,14 +30,18 @@ export type FontMetrics = {
   stemWidth: number
 }
 
-type Segment = { x1: number; y1: number; x2: number; y2: number }
+export type Segment = { x1: number; y1: number; x2: number; y2: number }
 
 const BEZIER_STEPS = 12
 
 /**
  * Flatten a glyph outline (font units, y-up) into straight segments.
+ *
+ * Exported because the letterform measurement builds on the same flattening:
+ * one traversal of the outline serves both the stem width here and the axis,
+ * counters and symmetry read by the mark templates.
  */
-function flattenGlyph(glyph: Glyph, unitsPerEm: number): Segment[] {
+export function flattenGlyph(glyph: Glyph, unitsPerEm: number): Segment[] {
   const path = glyph.getPath(0, 0, unitsPerEm)
   const segments: Segment[] = []
   let startX = 0
@@ -95,7 +99,7 @@ function flattenGlyph(glyph: Glyph, unitsPerEm: number): Segment[] {
  * Widths of the ink runs where a horizontal line at `y` crosses the outline.
  * (`glyph.getPath` is y-down, so `y` for a capital is negative.)
  */
-function inkRunsAt(segments: Segment[], y: number): number[] {
+export function inkRunsAt(segments: Segment[], y: number): number[] {
   const crossings: number[] = []
   for (const s of segments) {
     const { x1, y1, x2, y2 } = s

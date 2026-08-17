@@ -6,7 +6,10 @@
  * renderer picks the final scale.
  */
 
+import { formatNumber, transformPath } from './pathGeometry'
 import type { Box, LoadedFont, TextCase, TrademarkKind } from './types'
+
+export { formatNumber }
 
 export type ShapedText = {
   /** SVG path data for the whole run, in em units. */
@@ -149,16 +152,6 @@ export function shapeWordmark(
   }
 }
 
-export function formatNumber(value: number): string {
-  const rounded = Math.round(value * 10000) / 10000
-  return Object.is(rounded, -0) ? '0' : String(rounded)
-}
-
-/** Argument count per path command, used to know which numbers are x and which are y. */
-const COMMAND_ARITY: Record<string, number> = {
-  m: 2, l: 2, t: 2, h: 1, v: 1, c: 6, s: 4, q: 4, a: 7, z: 0,
-}
-
 /**
  * Scale and translate path data.
  *
@@ -166,63 +159,11 @@ const COMMAND_ARITY: Record<string, number> = {
  * keeps the exported SVG flat: one path per colour, and no nested transforms
  * for design tools to flatten on import.
  *
- * Commands are parsed properly rather than pattern-matched on numbers, because
- * H/V take a single coordinate and A mixes radii, flags and a point — a naive
- * "every other number is a y" pass corrupts all three.
+ * The parsing lives in pathGeometry, which handles the general similarity case
+ * (rotation and mirroring included) that the drawn marks need.
  */
 export function transformPathData(d: string, scale: number, dx: number, dy: number): string {
-  const tokens = d.match(/[astvzqmhlc]|-?\d*\.?\d+(?:e[+-]?\d+)?/gi)
-  if (!tokens) return ''
-
-  const out: string[] = []
-  let index = 0
-  let command = 'M'
-
-  while (index < tokens.length) {
-    const token = tokens[index]
-    if (/[astvzqmhlc]/i.test(token)) {
-      command = token
-      out.push(token)
-      index++
-      if (command.toLowerCase() === 'z') continue
-    }
-
-    const lower = command.toLowerCase()
-    const arity = COMMAND_ARITY[lower] ?? 2
-    const relative = command === lower
-    const args: number[] = []
-    for (let i = 0; i < arity && index < tokens.length; i++) args.push(Number(tokens[index++]))
-    if (args.length < arity) break
-
-    if (lower === 'h') {
-      out.push(formatNumber(relative ? args[0] * scale : args[0] * scale + dx))
-    } else if (lower === 'v') {
-      out.push(formatNumber(relative ? args[0] * scale : args[0] * scale + dy))
-    } else if (lower === 'a') {
-      // rx ry rotation large-arc sweep x y
-      out.push(formatNumber(args[0] * scale), formatNumber(args[1] * scale), formatNumber(args[2]))
-      out.push(formatNumber(args[3]), formatNumber(args[4]))
-      out.push(
-        formatNumber(relative ? args[5] * scale : args[5] * scale + dx),
-        formatNumber(relative ? args[6] * scale : args[6] * scale + dy),
-      )
-    } else {
-      for (let i = 0; i < args.length; i++) {
-        const isX = i % 2 === 0
-        const offset = relative ? 0 : isX ? dx : dy
-        out.push(formatNumber(args[i] * scale + offset))
-      }
-    }
-
-    // An implicit repeat of the last command follows (e.g. "L 1 2 3 4").
-    if (lower === 'm') command = relative ? 'l' : 'L'
-  }
-
-  return out
-    .join(' ')
-    .replace(/ (?=[astvzqmhlc])/gi, '')
-    .replace(/([astvzqmhlc]) /gi, '$1')
-    .trim()
+  return transformPath(d, { scale, dx, dy })
 }
 
 export function translatePathData(d: string, dx: number, dy: number): string {
