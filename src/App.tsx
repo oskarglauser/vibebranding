@@ -38,6 +38,7 @@ import {
   taglineFontsFor,
 } from './constants/fonts'
 import { buildBrandPackage, deriveColors } from './export/package'
+import { batchSeedFor } from './engine/symbols/select'
 import { layoutLogo } from './engine/layout'
 import { renderSvg } from './engine/render'
 import { assessContrast, normalizeHex, reversedVariant } from './utils/colorUtils'
@@ -49,8 +50,9 @@ const LIGHT_BG = '#ffffff'
 
 type PanelId = 'wordmark' | 'symbol' | 'tagline' | 'color'
 
-function randomSeed(): string {
-  return Math.random().toString(36).slice(2, 10)
+/** Marks belong to the name, so their seed comes from it rather than a roll. */
+function markSeed(brandName: string, fontFamily: string, shuffle: number): string {
+  return batchSeedFor(brandName, fontFamily, shuffle)
 }
 
 export default function App() {
@@ -59,7 +61,9 @@ export default function App() {
 
   const [openPanel, setOpenPanel] = useState<PanelId | null>('wordmark')
   const [background, setBackground] = useState<PreviewBackground>('light')
-  const [batchSeed, setBatchSeed] = useState(() => randomSeed())
+  // Derived, not held: the same name and face always offer the same marks, and
+  // a shared link rebuilds the grid the sender saw.
+  const batchSeed = markSeed(state.brandName, state.fontFamily, state.symbolShuffle)
   const [exporting, setExporting] = useState(false)
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [toast, setToast] = useState<{ message: string; tone: 'ok' | 'error' } | null>(null)
@@ -126,6 +130,14 @@ export default function App() {
     [state.color, background],
   )
 
+  // The picker draws its thumbnails straight onto the panel, so in dark mode a
+  // brand colour like ink lands near-black on near-black and the whole grid
+  // disappears. Lift it exactly as the export does for a reversed lockup.
+  const pickerInk = useMemo(() => {
+    const ink = state.symbolColor ?? state.color
+    return isDark ? reversedVariant(ink, DARK_BG) : ink
+  }, [state.symbolColor, state.color, isDark])
+
   const handlePreset = useCallback(
     (presetId: string) => {
       const preset = PRESETS.find((entry) => entry.id === presetId)
@@ -134,7 +146,9 @@ export default function App() {
         type: 'applyPreset',
         preset: {
           ...preset.patch,
-          symbol: state.symbol ? { archetype: preset.symbolArchetype, seed: state.symbol.seed } : null,
+          symbol: state.symbol
+            ? { template: preset.symbolTemplate, seed: state.symbol.seed }
+            : null,
         },
       })
     },
@@ -144,8 +158,12 @@ export default function App() {
   const handleSurprise = useCallback(() => {
     const preset = PRESETS[Math.floor(Math.random() * PRESETS.length)]
     const color = BRAND_COLORS[Math.floor(Math.random() * BRAND_COLORS.length)]
-    const seed = randomSeed()
-    setBatchSeed(seed)
+    // Step the shuffle rather than rolling a loose seed, so the mark stays
+    // reachable from the name and the grid keeps agreeing with the choice.
+    const shuffle = state.symbolShuffle + 1
+    const family = (preset.patch.fontFamily as string) ?? state.fontFamily
+    const seed = `${markSeed(state.brandName, family, shuffle)}-${preset.symbolTemplate}`
+
     dispatch({
       type: 'applyPreset',
       preset: {
@@ -153,12 +171,13 @@ export default function App() {
         color: color.hex,
         symbolColor: null,
         taglineColor: null,
-        symbol: { archetype: preset.symbolArchetype, seed },
+        symbol: { template: preset.symbolTemplate, seed },
         symbolPlacement: Math.random() > 0.35 ? 'left' : 'above',
+        symbolShuffle: shuffle,
       },
     })
     notify(`Applied "${preset.name}" in ${color.name}`)
-  }, [dispatch, notify])
+  }, [dispatch, notify, state.brandName, state.fontFamily, state.symbolShuffle])
 
   const handleShare = useCallback(async () => {
     try {
@@ -383,11 +402,11 @@ export default function App() {
                 <SymbolPicker
                   font={wordmarkFont}
                   brandName={state.brandName}
-                  color={state.symbolColor ?? state.color}
+                  color={pickerInk}
                   batchSeed={batchSeed}
                   selected={state.symbol}
                   onSelect={(symbol) => set({ symbol })}
-                  onShuffle={() => setBatchSeed(randomSeed())}
+                  onShuffle={() => set({ symbolShuffle: state.symbolShuffle + 1 })}
                 />
                 {state.symbol && (
                   <div className="grid grid-cols-2 gap-4 pt-1">

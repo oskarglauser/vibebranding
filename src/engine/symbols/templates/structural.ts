@@ -153,6 +153,24 @@ export const stack: MarkTemplate = {
 
     return fitParts(parts, 3)
   },
+  drawSimple({ fit }) {
+    // The inner arch and the tinted plinth both vanish at 16px; the span and
+    // its legs are the part that carries the idea.
+    const stroke = Math.max(11, fit.stroke * 1.25)
+    const springing = 54
+    return fitParts(
+      [
+        {
+          outlines: [
+            rect(16, springing, stroke, 90 - springing),
+            rect(84 - stroke, springing, stroke, 90 - springing),
+            arcBand(50, springing, 34, stroke, 270, 450),
+          ],
+        },
+      ],
+      3,
+    )
+  },
 }
 
 export const link: MarkTemplate = {

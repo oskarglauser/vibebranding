@@ -1,7 +1,7 @@
 /**
  * Dev-only visual harness for the rendering engine.
  *
- * Not part of the app bundle — it exists so symbol archetypes and lockups can
+ * Not part of the app bundle — it exists so mark templates and lockups can
  * be judged by eye across fonts, weights and brand names, which is the only way
  * to tell whether a mark reads as designed.
  */
@@ -9,9 +9,9 @@
 import { loadFont } from '../src/engine/fontLoader'
 import { layoutLogo } from '../src/engine/layout'
 import { renderSvg } from '../src/engine/render'
-import { ARCHETYPES, buildCandidates, buildSymbol } from '../src/engine/symbols/archetypes'
 import { buildMark } from '../src/engine/symbols/compose'
-import { TEMPLATES } from '../src/engine/symbols/templates'
+import { buildCandidates } from '../src/engine/symbols/select'
+import { TEMPLATES, templateById } from '../src/engine/symbols/templates'
 import type { LoadedFont, LogoSpec } from '../src/engine/types'
 
 const app = document.getElementById('app')!
@@ -146,22 +146,8 @@ async function main() {
     reversed.append(cell(renderSvg(layout, { targetWidth: 96 }).svg, template.id, true))
   }
 
-  // 1. Every archetype, same font.
-  const all = section('All archetypes — Inter 600, Northwind Studio')
-  all.className = 'grid'
-  for (const { id, label } of ARCHETYPES) {
-    const art = buildSymbol(id, { font: inter600, initial: 'N', initials: ['N', 'S'], seed: 'demo-seed' })
-    if (!art) continue
-    const layout = layoutLogo({
-      spec: baseSpec({ brandName: '', symbol: art, symbolPlacement: 'left', symbolSize: 'md' }),
-      wordmarkFont: inter600,
-      taglineFont: null,
-    })
-    all.append(cell(renderSvg(layout, { targetWidth: 110 }).svg, label))
-  }
-
-  // 2. Stroke weight must track the wordmark weight.
-  const weights = section('Stroke weight follows font weight (concentric + arc + chevron)')
+  // Stroke weight must track the wordmark weight.
+  const weights = section('Stroke weight follows font weight')
   weights.className = 'grid'
   for (const [name, font] of [
     ['Inter 300', inter300],
@@ -170,8 +156,10 @@ async function main() {
     ['Playfair 700', playfair],
     ['Archivo Black', archivo],
   ] as Array<[string, LoadedFont]>) {
-    for (const id of ['concentric', 'arc', 'chevron'] as const) {
-      const art = buildSymbol(id, { font, initial: 'N', seed: 'weights' })
+    for (const id of ['quadrant', 'aperture', 'blade'] as const) {
+      const template = templateById(id)
+      if (!template) continue
+      const art = buildMark(template, { font, initial: 'N', seed: 'weights' })
       if (!art) continue
       const layout = layoutLogo({
         spec: baseSpec({ brandName: '', symbol: art, symbolPlacement: 'left' }),
@@ -191,7 +179,7 @@ async function main() {
     ['Bebas Neue', bebas, 'Northwind'],
     ['Archivo Black', archivo, 'Acme'],
   ] as Array<[string, LoadedFont, string]>) {
-    const art = buildSymbol('monogram-knockout', {
+    const art = buildMark(templateById('tile-knockout')!, {
       font,
       initial: brand[0],
       seed: `lockup-${brand}`,
@@ -215,7 +203,7 @@ async function main() {
   // 4. Stacked lockup + trademark + uppercase.
   const variants = section('Variants — stacked, trademark, uppercase')
   variants.className = 'grid'
-  const art = buildSymbol('concentric', { font: inter600, initial: 'N', seed: 'variants' })
+  const art = buildMark(templateById('quadrant')!, { font: inter600, initial: 'N', seed: 'variants' })
   const cases: Array<[string, Partial<LogoSpec>]> = [
     ['stacked', { symbol: art, symbolPlacement: 'above', tagline: 'Studio' }],
     ['registered', { trademark: 'r' }],
@@ -236,7 +224,7 @@ async function main() {
   }
 
   // 5. Candidate grid, as the picker will show it.
-  const candidates = section('Candidate grid for "Northwind Studio" (N is diagonal)')
+  const candidates = section('Candidate grid for "Northwind Studio" — one template per family, in turn')
   candidates.className = 'grid'
   for (const candidate of buildCandidates(
     { font: inter600, initial: 'N', initials: ['N', 'S'], seed: 'pick-1' },
@@ -247,7 +235,7 @@ async function main() {
       wordmarkFont: inter600,
       taglineFont: null,
     })
-    candidates.append(cell(renderSvg(layout, { targetWidth: 90 }).svg, candidate.archetype))
+    candidates.append(cell(renderSvg(layout, { targetWidth: 90 }).svg, candidate.template))
   }
 
   // 6. The same picker for a round initial, to show suitability ordering.
@@ -262,7 +250,7 @@ async function main() {
       wordmarkFont: inter600,
       taglineFont: null,
     })
-    round.append(cell(renderSvg(layout, { targetWidth: 90 }).svg, candidate.archetype))
+    round.append(cell(renderSvg(layout, { targetWidth: 90 }).svg, candidate.template))
   }
 }
 

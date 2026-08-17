@@ -12,7 +12,7 @@ export type PackageInput = {
   spec: LogoSpec
   wordmarkFont: LoadedFont
   taglineFont: LoadedFont | null
-  symbolRecipe: { archetype: string; seed: string } | null
+  symbolRecipe: { template: string; seed: string } | null
   lightBackground?: string
   darkBackground?: string
 }
@@ -54,6 +54,7 @@ export async function buildBrandPackage(
     wordmarkFont: input.wordmarkFont,
     taglineFont: input.taglineFont,
     colors,
+    symbolRecipe: input.symbolRecipe,
   }
 
   const plans = planAssets(context)

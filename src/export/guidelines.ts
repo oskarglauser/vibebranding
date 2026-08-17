@@ -21,8 +21,8 @@ export type GuidelinesInput = {
   wordmarkFont: LoadedFont
   taglineFont: LoadedFont | null
   colors: ExportColors
-  /** Seed and archetype, so a mark can be reproduced exactly. */
-  symbolRecipe: { archetype: string; seed: string } | null
+  /** Template and seed, so a mark can be reproduced exactly. */
+  symbolRecipe: { template: string; seed: string } | null
 }
 
 const escape = escapeXml
@@ -258,7 +258,7 @@ export function buildGuidelinesHtml(input: GuidelinesInput): string {
       ${spec.textCase === 'uppercase' ? '<tr><th>Case</th><td>Uppercase</td></tr>' : ''}
       ${
         symbolRecipe
-          ? `<tr><th>Symbol recipe</th><td>${escape(symbolRecipe.archetype)} · seed <code>${escape(symbolRecipe.seed)}</code></td></tr>`
+          ? `<tr><th>Symbol recipe</th><td>${escape(symbolRecipe.template)} · seed <code>${escape(symbolRecipe.seed)}</code></td></tr>`
           : ''
       }
     </table>

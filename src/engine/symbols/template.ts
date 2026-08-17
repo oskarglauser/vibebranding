@@ -124,6 +124,12 @@ export type MarkTemplate = {
   score(form: LetterForm): number
   /** Pure. Returns null when it cannot serve this letter. */
   draw(fit: FitContext): MarkPart[] | null
+  /**
+   * A reduced drawing for very small sizes, where detail turns to mud.
+   * Only needed by templates that carry more than a favicon can hold; the
+   * export asks for it when writing the 16px icon.
+   */
+  drawSimple?(fit: FitContext): MarkPart[] | null
 }
 
 export const JITTER_COUNT = 8

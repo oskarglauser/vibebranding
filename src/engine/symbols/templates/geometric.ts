@@ -206,6 +206,12 @@ export const quadrant: MarkTemplate = {
       3,
     )
   },
+  drawSimple({ fit }) {
+    // Three stepped arcs become a smudge at 16px. One open ring at full weight
+    // keeps the gesture and stays legible.
+    const stroke = Math.max(10, fit.stroke * 1.2)
+    return fitParts([{ outlines: [arcBand(C, C, 46, stroke, 20, 320)] }], 3)
+  },
 }
 
 export const helix: MarkTemplate = {

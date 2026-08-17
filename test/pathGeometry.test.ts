@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
 
 import { pathBounds, transformPath } from '../src/engine/pathGeometry'
-import { circle, lens, roundedRect } from '../src/engine/symbols/primitives'
+
+/** Arc-bearing path data, kept literal so the tests do not depend on a helper. */
+const CIRCLE = (cx: number, cy: number, r: number) =>
+  `M${cx - r} ${cy}A${r} ${r} 0 1 0 ${cx + r} ${cy}A${r} ${r} 0 1 0 ${cx - r} ${cy}Z`
+const LENS = (cx: number, cy: number, hw: number, hh: number) => {
+  const r = (hh * hh + hw * hw) / (2 * hw)
+  return `M${cx} ${cy - hh}A${r} ${r} 0 0 1 ${cx} ${cy + hh}A${r} ${r} 0 0 1 ${cx} ${cy - hh}Z`
+}
+
 
 /** Bounds compared loosely: curves are flattened, so exactness is not the claim. */
 function expectBox(
@@ -48,19 +56,12 @@ describe('pathBounds', () => {
   })
 
   it('measures a full circle built from two arcs', () => {
-    expectBox(pathBounds(circle(50, 50, 20).d), [30, 30, 70, 70], 1)
+    expectBox(pathBounds(CIRCLE(50, 50, 20)), [30, 30, 70, 70], 1)
   })
 
-  it('agrees with the analytic box of the drawing primitives', () => {
-    for (const shape of [circle(0.5, 0.5, 0.3), roundedRect(0.1, 0.2, 0.6, 0.5, 0.1), lens(0.5, 0.5, 0.2, 0.35)]) {
-      const measured = pathBounds(shape.d)
-      expect(measured).not.toBeNull()
-      if (!measured) continue
-      expect(measured.x1).toBeCloseTo(shape.box.x1, 2)
-      expect(measured.y1).toBeCloseTo(shape.box.y1, 2)
-      expect(measured.x2).toBeCloseTo(shape.box.x2, 2)
-      expect(measured.y2).toBeCloseTo(shape.box.y2, 2)
-    }
+  it('agrees with the analytic box of an arc-built shape', () => {
+    expectBox(pathBounds(CIRCLE(0.5, 0.5, 0.3)), [0.2, 0.2, 0.8, 0.8], 2)
+    expectBox(pathBounds(LENS(0.5, 0.5, 0.2, 0.35)), [0.3, 0.15, 0.7, 0.85], 2)
   })
 
   it('returns null for empty or unparseable data', () => {
@@ -91,14 +92,13 @@ describe('transformPath', () => {
   })
 
   it('preserves a circle through rotation, since a turned circle is itself', () => {
-    const turned = transformPath(circle(0, 0, 10).d, { rotate: 37 })
+    const turned = transformPath(CIRCLE(0, 0, 10), { rotate: 37 })
     expectBox(pathBounds(turned), [-10, -10, 10, 10], 1)
   })
 
   it('rotates arc geometry rather than just its endpoints', () => {
     // A wide flat lens turned 90 degrees must become a tall narrow one.
-    const upright = lens(0, 0, 10, 30)
-    const turned = transformPath(upright.d, { rotate: 90 })
+    const turned = transformPath(LENS(0, 0, 10, 30), { rotate: 90 })
     const box = pathBounds(turned)
     expect(box).not.toBeNull()
     if (!box) return

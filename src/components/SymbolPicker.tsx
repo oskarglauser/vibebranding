@@ -9,7 +9,8 @@
 
 import { useMemo } from 'react'
 import { RefreshCw, X } from 'lucide-react'
-import { buildCandidates, initialsFor } from '../engine/symbols/archetypes'
+import { buildCandidates, initialsFor } from '../engine/symbols/select'
+import { templateById } from '../engine/symbols/templates'
 import { renderSvg } from '../engine/render'
 import { layoutLogo } from '../engine/layout'
 import type { LoadedFont, LogoSpec } from '../engine/types'
@@ -104,15 +105,15 @@ export function SymbolPicker({
       <div role="radiogroup" aria-label="Symbol" className="grid grid-cols-4 gap-2 sm:grid-cols-6">
         {previews.map(({ candidate, svg }) => {
           const isSelected =
-            selected?.archetype === candidate.archetype && selected?.seed === candidate.seed
+            selected?.template === candidate.template && selected?.seed === candidate.seed
           return (
             <button
-              key={`${candidate.archetype}-${candidate.seed}`}
+              key={`${candidate.template}-${candidate.seed}`}
               type="button"
               role="radio"
               aria-checked={isSelected}
-              aria-label={candidate.archetype.replace(/-/g, ' ')}
-              onClick={() => onSelect({ archetype: candidate.archetype, seed: candidate.seed })}
+              aria-label={templateById(candidate.template)?.label ?? candidate.template}
+              onClick={() => onSelect({ template: candidate.template, seed: candidate.seed })}
               className={cn(
                 'flex aspect-square items-center justify-center rounded-lg border p-2 transition',
                 isSelected

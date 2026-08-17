@@ -9,12 +9,13 @@
  */
 
 import type { SizeStep, SymbolPlacement, TextCase, TrademarkKind } from '../engine/types'
-import type { ArchetypeId } from '../engine/symbols/archetypes'
+import { isTemplateId } from '../engine/symbols/templates'
 import { DEFAULT_FONT, defaultTaglineFont, getFont, nearestWeight } from '../constants/fonts'
 import { normalizeHex } from '../utils/colorUtils'
 
 export type SymbolChoice = {
-  archetype: ArchetypeId
+  /** Id of a mark template. */
+  template: string
   seed: string
 }
 
@@ -36,6 +37,8 @@ export type DesignState = {
   symbol: SymbolChoice | null
   symbolPlacement: Exclude<SymbolPlacement, 'none'>
   symbolSize: SizeStep
+  /** How many times the user has asked for a different set of marks. */
+  symbolShuffle: number
 
   color: string
   /** When set, the symbol departs from the single brand colour. */
@@ -61,6 +64,7 @@ export const DEFAULT_STATE: DesignState = {
   symbol: null,
   symbolPlacement: 'left',
   symbolSize: 'md',
+  symbolShuffle: 0,
 
   color: '#111827',
   symbolColor: null,
@@ -141,6 +145,7 @@ const KEY_MAP: Record<keyof DesignState, string> = {
   symbol: 'y',
   symbolPlacement: 'p',
   symbolSize: 'z',
+  symbolShuffle: 'ys',
   color: 'k',
   symbolColor: 'ks',
   taglineColor: 'kg',
@@ -155,7 +160,7 @@ export function encodeState(state: DesignState): string {
 
     if (key === 'symbol') {
       const symbol = value as SymbolChoice
-      params.set(short, `${symbol.archetype}~${symbol.seed}`)
+      params.set(short, `${symbol.template}~${symbol.seed}`)
     } else {
       params.set(short, String(value))
     }
@@ -195,10 +200,14 @@ export function decodeState(search: string): DesignState | null {
   let symbol: SymbolChoice | null = null
   const symbolRaw = get('symbol')
   if (symbolRaw) {
-    const [archetype, ...rest] = symbolRaw.split('~')
+    const [template, ...rest] = symbolRaw.split('~')
     const seed = rest.join('~')
-    if (archetype && seed && /^[\w-]{1,64}$/.test(seed)) {
-      symbol = { archetype: archetype as ArchetypeId, seed }
+    // The template id is checked against the registry rather than cast. A link
+    // from before the library changed would otherwise decode into a mark that
+    // cannot be built: the preview would quietly drop it while the exported
+    // guidelines still described a symbol the package never contained.
+    if (template && seed && isTemplateId(template) && /^[\w|-]{1,80}$/.test(seed)) {
+      symbol = { template, seed }
     }
   }
 
@@ -220,6 +229,7 @@ export function decodeState(search: string): DesignState | null {
     symbol,
     symbolPlacement: pick(get('symbolPlacement'), ['left', 'above'] as const, DEFAULT_STATE.symbolPlacement),
     symbolSize: pick(get('symbolSize'), SIZES, DEFAULT_STATE.symbolSize),
+    symbolShuffle: Math.round(pickNumber(get('symbolShuffle'), 0, 0, 9999)),
 
     color: normalizeHex(get('color') ?? DEFAULT_STATE.color, DEFAULT_STATE.color),
     symbolColor: get('symbolColor') ? normalizeHex(get('symbolColor')!, DEFAULT_STATE.color) : null,

@@ -9,14 +9,13 @@
  */
 
 import type { DesignState } from './logoSpec'
-import type { ArchetypeId } from '../engine/symbols/archetypes'
 
 export type Preset = {
   id: string
   name: string
   description: string
-  /** Archetype the mark defaults to when this preset is applied. */
-  symbolArchetype: ArchetypeId
+  /** Template the mark defaults to when this preset is applied. */
+  symbolTemplate: string
   patch: Partial<DesignState>
 }
 
@@ -25,7 +24,7 @@ export const PRESETS: Preset[] = [
     id: 'modern',
     name: 'Modern',
     description: 'Tight geometric sans for software and studios',
-    symbolArchetype: 'monogram-knockout',
+    symbolTemplate: 'tile-knockout',
     patch: {
       fontFamily: 'Geist',
       fontWeight: 600,
@@ -41,7 +40,7 @@ export const PRESETS: Preset[] = [
     id: 'bold',
     name: 'Bold',
     description: 'Heavy caps with air for sport and retail',
-    symbolArchetype: 'chevron',
+    symbolTemplate: 'blade',
     patch: {
       fontFamily: 'Archivo Black',
       fontWeight: 400,
@@ -58,7 +57,7 @@ export const PRESETS: Preset[] = [
     id: 'elegant',
     name: 'Elegant',
     description: 'High-contrast serif for beauty and hospitality',
-    symbolArchetype: 'monogram-circle',
+    symbolTemplate: 'ring-monogram',
     patch: {
       fontFamily: 'Playfair Display',
       fontWeight: 500,
@@ -75,7 +74,7 @@ export const PRESETS: Preset[] = [
     id: 'technical',
     name: 'Technical',
     description: 'Monospaced and precise for dev tools and data',
-    symbolArchetype: 'dot-grid',
+    symbolTemplate: 'facet',
     patch: {
       fontFamily: 'JetBrains Mono',
       fontWeight: 700,
@@ -91,7 +90,7 @@ export const PRESETS: Preset[] = [
     id: 'friendly',
     name: 'Friendly',
     description: 'Rounded and warm for consumer and wellness',
-    symbolArchetype: 'petals',
+    symbolTemplate: 'bloom',
     patch: {
       fontFamily: 'Quicksand',
       fontWeight: 700,
@@ -107,7 +106,7 @@ export const PRESETS: Preset[] = [
     id: 'editorial',
     name: 'Editorial',
     description: 'Bookish serif for media and publishing',
-    symbolArchetype: 'monogram-square',
+    symbolTemplate: 'squircle-monogram',
     patch: {
       fontFamily: 'Fraunces',
       fontWeight: 600,
@@ -123,7 +122,7 @@ export const PRESETS: Preset[] = [
     id: 'minimal',
     name: 'Minimal',
     description: 'Light, wide and understated for architecture and art',
-    symbolArchetype: 'concentric',
+    symbolTemplate: 'quadrant',
     patch: {
       fontFamily: 'Inter',
       fontWeight: 300,
@@ -140,7 +139,7 @@ export const PRESETS: Preset[] = [
     id: 'grounded',
     name: 'Grounded',
     description: 'Sturdy humanist for trades and logistics',
-    symbolArchetype: 'bars',
+    symbolTemplate: 'stack',
     patch: {
       fontFamily: 'Work Sans',
       fontWeight: 700,

@@ -9,6 +9,9 @@
 
 import { layoutLogo } from '../engine/layout'
 import { renderSvg, rasterize } from '../engine/render'
+import { buildMark } from '../engine/symbols/compose'
+import { initialsFor } from '../engine/symbols/select'
+import { templateById } from '../engine/symbols/templates'
 import type { LoadedFont, LogoSpec } from '../engine/types'
 
 export type AssetPlan = {
@@ -45,6 +48,8 @@ type BuildContext = {
   wordmarkFont: LoadedFont
   taglineFont: LoadedFont | null
   colors: ExportColors
+  /** How the mark was made, so a reduced form can be built for the favicon. */
+  symbolRecipe?: { template: string; seed: string } | null
 }
 
 function render(
@@ -65,6 +70,27 @@ function render(
     // Icons are cropped tighter: a favicon with a full cap height of margin
     // wastes most of its pixels.
     paddingCaps: options.square ? 0.45 : 1,
+  })
+}
+
+/**
+ * The mark redrawn for very small sizes, when its template offers one.
+ * Returns null when the template holds up as it is, or when the mark did not
+ * come from a template we can rebuild.
+ */
+function buildReducedMark(context: BuildContext): LogoSpec['symbol'] {
+  const recipe = context.symbolRecipe
+  if (!recipe) return null
+  const template = templateById(recipe.template)
+  if (!template?.drawSimple) return null
+
+  const initials = initialsFor(context.spec.brandName)
+  return buildMark(template, {
+    font: context.wordmarkFont,
+    initial: initials[0] || 'A',
+    initials,
+    seed: recipe.seed,
+    reduced: true,
   })
 }
 
@@ -147,11 +173,15 @@ export function planAssets(context: BuildContext): AssetPlan[] {
     const icon = render(iconSpec, context, { targetWidth: 1024, square: true, background: 'dark' })
     plans.push({ path: `app-icon/${slug}-app-icon.svg`, svg: icon.svg, pngWidths: [512, 1024], square: true })
 
-    // Favicons: same geometry, sizes browsers ask for.
-    const favicon = render({ ...symbolOnly, colors: colors.primary }, context, {
-      targetWidth: 512,
-      square: true,
-    })
+    // Favicons: the sizes browsers ask for, down to 16px. A template that
+    // carries detail it cannot hold that small offers a reduced drawing, and
+    // this is the one place that asks for it.
+    const reducedArt = buildReducedMark(context)
+    const favicon = render(
+      { ...symbolOnly, symbol: reducedArt ?? symbolOnly.symbol, colors: colors.primary },
+      context,
+      { targetWidth: 512, square: true },
+    )
     plans.push({
       path: `favicon/${slug}-favicon.svg`,
       svg: favicon.svg,

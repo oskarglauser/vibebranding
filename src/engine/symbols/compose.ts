@@ -140,7 +140,11 @@ export function buildMark(template: MarkTemplate, context: ComposeContext): Symb
   }
 
   try {
-    const parts = template.draw(fitContext)
+    const draw =
+      fitContext.reduced && template.drawSimple
+        ? template.drawSimple.bind(template)
+        : template.draw.bind(template)
+    const parts = draw(fitContext)
     if (!parts || parts.length === 0) return null
     return compileParts(parts)
   } catch {
