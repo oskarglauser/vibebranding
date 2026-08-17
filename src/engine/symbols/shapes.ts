@@ -99,6 +99,87 @@ export function squircle(cx: number, cy: number, radius: number, n = 0.62): Outl
   )
 }
 
+/** Degrees clockwise from twelve o'clock, to a point on a circle. */
+function onCircle(cx: number, cy: number, r: number, degrees: number): [number, number] {
+  const radians = ((degrees - 90) * Math.PI) / 180
+  return [cx + r * Math.cos(radians), cy + r * Math.sin(radians)]
+}
+
+/**
+ * Cubic segments along a circular arc.
+ *
+ * Split into sweeps of at most 90 degrees — the Bézier approximation of a
+ * circle degrades quickly past that — with the classic (4/3)·tan(Δ/4) control
+ * arm. Returns the segment strings without a leading move, so an arc can be
+ * stitched into a larger closed shape.
+ */
+function arcSegments(
+  cx: number,
+  cy: number,
+  r: number,
+  startDegrees: number,
+  endDegrees: number,
+): string {
+  const sweep = endDegrees - startDegrees
+  const steps = Math.max(1, Math.ceil(Math.abs(sweep) / 90))
+  const step = sweep / steps
+  const k = (4 / 3) * Math.tan((((step / 2) * Math.PI) / 180) / 2)
+
+  let out = ''
+  for (let i = 0; i < steps; i++) {
+    const a0 = startDegrees + step * i
+    const a1 = a0 + step
+    const [x0, y0] = onCircle(cx, cy, r, a0)
+    const [x1, y1] = onCircle(cx, cy, r, a1)
+    // Tangents, which for a circle are perpendicular to the radius.
+    const t0 = ((a0 - 90) * Math.PI) / 180
+    const t1 = ((a1 - 90) * Math.PI) / 180
+    const c1x = x0 - k * r * Math.sin(t0)
+    const c1y = y0 + k * r * Math.cos(t0)
+    const c2x = x1 + k * r * Math.sin(t1)
+    const c2y = y1 - k * r * Math.cos(t1)
+    out += `C${c1x} ${c1y} ${c2x} ${c2y} ${x1} ${y1}`
+  }
+  return out
+}
+
+/** A closed band of constant thickness following an arc. */
+export function arcBand(
+  cx: number,
+  cy: number,
+  outer: number,
+  thickness: number,
+  startDegrees: number,
+  endDegrees: number,
+): Outline {
+  const inner = Math.max(0.5, outer - thickness)
+  const [sx, sy] = onCircle(cx, cy, outer, startDegrees)
+  const [ex, ey] = onCircle(cx, cy, inner, endDegrees)
+  return pen(
+    `M${sx} ${sy}` +
+      arcSegments(cx, cy, outer, startDegrees, endDegrees) +
+      `L${ex} ${ey}` +
+      arcSegments(cx, cy, inner, endDegrees, startDegrees) +
+      'Z',
+  )
+}
+
+/** A wedge from the centre out, like a slice. */
+export function wedge(
+  cx: number,
+  cy: number,
+  r: number,
+  startDegrees: number,
+  endDegrees: number,
+): Outline {
+  const [sx, sy] = onCircle(cx, cy, r, startDegrees)
+  return pen(
+    `M${cx} ${cy}L${sx} ${sy}` + arcSegments(cx, cy, r, startDegrees, endDegrees) + 'Z',
+  )
+}
+
+export { onCircle }
+
 /** A lens: the shape two overlapping circles share. Drawn, not intersected. */
 export function lens(cx: number, cy: number, halfWidth: number, halfHeight: number): Outline {
   const k = halfWidth * 1.34

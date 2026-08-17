@@ -7,7 +7,7 @@
  * stays right across faces.
  */
 
-import { circle, rect, roundedRect, ring, squircle, bar } from '../shapes'
+import { circle, rect, roundedRect, ring, squircle } from '../shapes'
 import { fitParts, GRID, type MarkPart, type MarkTemplate } from '../template'
 import { mat, transform, type Outline } from '../pen'
 
@@ -184,11 +184,19 @@ export const accentInitial: MarkTemplate = {
     // Positions are fixed on the grid rather than derived from the letter, so
     // the mark keeps the same proportions whichever initial it is given.
     if (variant === 1) {
-      const letter = letterAt(76, 40, CENTRE, 58, 92)
+      const letter = letterAt(74, 42, CENTRE, 60, 92)
       if (!letter) return null
-      const at = 86 - thickness / 2
+      // A point set at the shoulder, not a full-height bar: run the accent the
+      // whole height of the letter and it reads as a second character rather
+      // than as a mark on the first.
+      const at = 84 - thickness / 2
       return [
-        { outlines: [letter.outline, bar(at, letter.box.y2, at, letter.box.y1, thickness)] },
+        {
+          outlines: [
+            letter.outline,
+            circle(at, letter.box.y1 + thickness * 0.7, thickness * 0.7),
+          ],
+        },
       ]
     }
 
