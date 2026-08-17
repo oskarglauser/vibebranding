@@ -213,6 +213,29 @@ describe('template library', () => {
     }
   })
 
+  it('does not punch holes where its own pieces overlap', () => {
+    // Two overlapping shapes of opposite winding cancel under the nonzero rule,
+    // so a mark whose pieces are wound inconsistently develops a white notch
+    // exactly where two elements meet. Comparing the filled area against the
+    // union of the pieces catches that: cancellation makes the whole smaller
+    // than its parts.
+    for (const { label, art, template } of cases) {
+      if (template.letterRole === 'carved' || art.content.includes('evenodd')) continue
+      const solid = gridFor(art, 48)
+      if (!solid) continue
+
+      const covered = inkCoverage(solid)
+      // Rasterise the same geometry under even-odd; where windings agree the
+      // two rules give the same picture, and where they fight they do not.
+      const asEvenOdd = gridFor(
+        { ...art, content: art.content.replace(/<path /g, '<path fill-rule="evenodd" ') },
+        48,
+      )
+      if (!asEvenOdd) continue
+      expect(covered, `${label} winding`).toBeGreaterThanOrEqual(inkCoverage(asEvenOdd) - 0.001)
+    }
+  })
+
   it('never ships live text', () => {
     // An SVG loaded through an <img> cannot see page webfonts, so a <text>
     // element rasterises in Times New Roman.

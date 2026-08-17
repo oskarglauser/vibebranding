@@ -8,7 +8,7 @@
  */
 
 import { mat, pen, transform, type Outline } from '../pen'
-import { circle } from '../shapes'
+import { circle, polyline } from '../shapes'
 import { fitParts, GRID, type MarkPart, type MarkTemplate } from '../template'
 
 const C = GRID / 2
@@ -120,31 +120,31 @@ export const pulse: MarkTemplate = {
     const stroke = Math.max(8, fit.stroke)
     const parts: MarkPart[] = []
 
-    // A peak drawn as a band, the right flank longer than the left so it
-    // climbs rather than sitting symmetrically.
-    const peak = pen(
-      `M8 80` +
-        `L${8 + stroke} 80` +
-        `L40 34` +
-        `L60 62` +
-        `L92 16` +
-        `L92 ${16 + stroke * 1.2}` +
-        `L60 ${62 + stroke * 0.9}` +
-        `L40 ${34 + stroke * 0.9}` +
-        `L${8 + stroke} ${80 + stroke * 0.9}` +
-        `L8 ${80 + stroke * 0.9}Z`,
-    )
+    // A climb that steps back before its final rise, so the line has a story
+    // rather than being a plain zigzag. The last leg is the longest.
+    const climb = [
+      [12, 82],
+      [36, 46],
+      [54, 64],
+      [88, 18],
+    ] as const
 
     if (variant === 0) {
-      parts.push({ outlines: [peak] })
+      parts.push({ outlines: [polyline([...climb], stroke)] })
     } else if (variant === 1) {
-      // The peak with its summit marked.
-      parts.push({ outlines: [peak] })
-      parts.push({ outlines: [circle(92, 16 + stroke * 0.6, stroke * 0.85)] })
+      // The climb with its summit held, which gives the eye somewhere to land.
+      parts.push({ outlines: [polyline([...climb], stroke)] })
+      parts.push({ outlines: [circle(88, 18, stroke * 0.95)] })
     } else {
-      // Two ranges, the far one lighter: depth without perspective.
-      parts.push({ outlines: [transform(peak, mat.mul(mat.scaleAbout(0.8, 0.7, 50, 80), mat.translate(6, -18)))], tone: 'tint' })
-      parts.push({ outlines: [peak] })
+      // A second, shallower run set behind: depth without perspective.
+      const behind = [
+        [12, 92],
+        [40, 66],
+        [60, 78],
+        [88, 46],
+      ] as const
+      parts.push({ outlines: [polyline([...behind], stroke * 0.85)], tone: 'tint' })
+      parts.push({ outlines: [polyline([...climb], stroke)] })
     }
 
     return fitParts(parts, 4)

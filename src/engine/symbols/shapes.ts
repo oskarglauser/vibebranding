@@ -216,6 +216,55 @@ export function bar(
   return quad([x1 + nx, y1 + ny], [x2 + nx, y2 + ny], [x2 - nx, y2 - ny], [x1 - nx, y1 - ny])
 }
 
+/**
+ * A constant-width line through a run of points, with mitred joins.
+ *
+ * Offsetting a polyline by shifting its vertices vertically is the obvious
+ * shortcut and it does not work: the band comes out thin on the steep segments
+ * and thick on the shallow ones, which reads as a mistake rather than a stroke.
+ * Offsetting along the angle bisector holds the width constant however the line
+ * turns.
+ */
+export function polyline(points: Array<readonly [number, number]>, thickness: number): Outline {
+  if (points.length < 2) throw new Error('polyline: needs at least two points')
+  const half = thickness / 2
+
+  /** Left-hand normal of each segment. */
+  const normals = points.slice(0, -1).map((p, i) => {
+    const [x1, y1] = p
+    const [x2, y2] = points[i + 1]
+    const length = Math.hypot(x2 - x1, y2 - y1) || 1
+    return [-(y2 - y1) / length, (x2 - x1) / length] as const
+  })
+
+  const offsets = (side: 1 | -1) =>
+    points.map((point, i) => {
+      const before = normals[i - 1]
+      const after = normals[i]
+      if (!before) return [point[0] + after[0] * half * side, point[1] + after[1] * half * side]
+      if (!after) return [point[0] + before[0] * half * side, point[1] + before[1] * half * side]
+
+      const mx = before[0] + after[0]
+      const my = before[1] + after[1]
+      const length = Math.hypot(mx, my)
+      // A doubled-back segment has no bisector; fall back to a butt end.
+      if (length < 1e-6) return [point[0] + after[0] * half * side, point[1] + after[1] * half * side]
+
+      const hx = mx / length
+      const hy = my / length
+      // Cap the mitre so a sharp turn does not throw a spike across the box.
+      const cos = Math.max(0.35, hx * before[0] + hy * before[1])
+      return [point[0] + (hx * half * side) / cos, point[1] + (hy * half * side) / cos]
+    })
+
+  // Wound clockwise to match every other shape here. Winding matters: two
+  // overlapping shapes of opposite winding cancel under the nonzero rule, so a
+  // counter-clockwise line would punch a hole wherever a dot or another mark
+  // element sat on it.
+  const all = [...offsets(-1), ...offsets(1).reverse()]
+  return pen(`M${all.map(([x, y]) => `${x} ${y}`).join('L')}Z`)
+}
+
 export function rotate(outline: Outline, degrees: number, cx: number, cy: number): Outline {
   return transform(outline, mat.rotate(degrees, cx, cy))
 }

@@ -7,7 +7,7 @@
  * stays right across faces.
  */
 
-import { circle, rect, roundedRect, ring, squircle } from '../shapes'
+import { circle, quad, rect, roundedRect, ring, squircle } from '../shapes'
 import { fitParts, GRID, type MarkPart, type MarkTemplate } from '../template'
 import { mat, transform, type Outline } from '../pen'
 
@@ -104,31 +104,70 @@ export const squircleMonogram: MarkTemplate = {
   },
 }
 
-export const slicedInitial: MarkTemplate = {
-  id: 'sliced-initial',
-  label: 'Sliced initial',
+/**
+ * The initial reversed out of a faceted plate.
+ *
+ * This replaces a device that cut a band straight through the letter. That one
+ * could not work: with only even-odd to hand, a band drawn across a letter
+ * paints solid everywhere it is *not* over ink — including inside the counter
+ * of an A — and subtracts only where the two overlap. The result read as a
+ * glitch rather than a cut. Subtracting properly needs a real boolean
+ * intersection, which the drawing system deliberately does not have.
+ *
+ * A second plane set behind the plate gives the same sense of a letter that has
+ * been built rather than typed, and it composes cleanly: the tint never touches
+ * the knockout, so there is nothing for the fill rule to get wrong.
+ */
+export const facetedInitial: MarkTemplate = {
+  id: 'faceted-initial',
+  label: 'Faceted initial',
   family: 'monogram',
   letterRole: 'carved',
   variants: 3,
-  minSize: 32,
-  // The cut needs something to cut across. A narrow letter gives a sliver.
-  score: (form) => (form.widthRatio < 0.45 ? -0.3 : 0.7),
-  draw({ variant, letterAt, fit }) {
-    // Leave room either side for the cut to overhang the letter, and room
-    // below for a descending tail.
-    const letter = letterAt(92, CENTRE, CENTRE, 88, 96)
-    if (!letter) return null
+  minSize: 24,
+  score: () => 0.8,
+  draw({ variant, letterAt, fit, form }) {
+    const radius = Math.max(4, fit.radius)
 
-    const { box } = letter
-    const height = box.y2 - box.y1
-    const thickness = Math.max(4, fit.stroke * 0.55)
-    // Never halfway: an off-centre cut reads as deliberate, a centred one as
-    // an accident of construction.
-    const at = variant === 0 ? 0.62 : variant === 1 ? 0.38 : 0.72
-    const y = box.y1 + height * at
+    if (variant === 0) {
+      // Plate with a second plane behind it, offset on the diagonal.
+      const plate = squircle(42, 42, 40)
+      const behind = squircle(58, 58, 40)
+      const letter = letterAt(capForLetter(form.widthRatio, 42), 42, 42, 58)
+      return fitParts(
+        [
+          { outlines: [behind], tone: 'tint' },
+          ...carve(plate, letter?.outline ?? null),
+        ],
+        2,
+      )
+    }
 
-    const cut = rect(box.x1 - 6, y - thickness / 2, box.x2 - box.x1 + 12, thickness)
-    return [{ outlines: [letter.outline, cut], evenodd: true }]
+    if (variant === 1) {
+      // Card with a facet turned away from the light along its right edge.
+      const plate = roundedRect(6, 14, 62, 72, radius)
+      const facet = quad([62, 22], [92, 8], [92, 78], [62, 92])
+      const letter = letterAt(capForLetter(form.widthRatio, 44), 37, 50, 48)
+      return fitParts(
+        [
+          { outlines: [facet], tone: 'tint' },
+          ...carve(plate, letter?.outline ?? null),
+        ],
+        2,
+      )
+    }
+
+    // Angled plate: a rhombus rather than a square, with the lower facet held.
+    const plate = quad([50, 4], [94, 50], [50, 96], [6, 50])
+    const under = quad([50, 30], [88, 62], [50, 98], [12, 62])
+    const letter = letterAt(capForLetter(form.widthRatio, 40), 50, 48, 52, 52)
+    return fitParts(
+      [
+        { outlines: [under], tone: 'tint' },
+        ...carve(plate, letter?.outline ?? null),
+      ],
+      2,
+    )
   },
 }
 
@@ -221,7 +260,7 @@ export const accentInitial: MarkTemplate = {
 export const MONOGRAM_TEMPLATES: MarkTemplate[] = [
   tileKnockout,
   squircleMonogram,
-  slicedInitial,
+  facetedInitial,
   duoLigature,
   ringMonogram,
   accentInitial,
