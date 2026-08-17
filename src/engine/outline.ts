@@ -23,7 +23,9 @@ export type Span = { x1: number; x2: number }
  * report a phantom gap between them. Real glyphs do this — several faces draw a
  * letter as overlapping strokes rather than one merged contour.
  */
-export function spansAt(segments: Segment[], y: number): Span[] {
+export type FillRule = 'nonzero' | 'evenodd'
+
+export function spansAt(segments: Segment[], y: number, rule: FillRule = 'nonzero'): Span[] {
   const crossings: Array<{ x: number; direction: number }> = []
 
   for (const s of segments) {
@@ -39,15 +41,19 @@ export function spansAt(segments: Segment[], y: number): Span[] {
   crossings.sort((a, b) => a.x - b.x)
 
   const spans: Span[] = []
-  let winding = 0
+  // Winding count under nonzero; a plain crossing tally under even-odd.
+  let count = 0
+  let inside = false
   let start = 0
+
   for (const crossing of crossings) {
-    const previous = winding
-    winding += crossing.direction
-    if (previous === 0 && winding !== 0) start = crossing.x
-    else if (previous !== 0 && winding === 0 && crossing.x > start) {
+    count += rule === 'evenodd' ? 1 : crossing.direction
+    const nowInside = rule === 'evenodd' ? count % 2 !== 0 : count !== 0
+    if (!inside && nowInside) start = crossing.x
+    else if (inside && !nowInside && crossing.x > start) {
       spans.push({ x1: start, x2: crossing.x })
     }
+    inside = nowInside
   }
   return spans
 }
@@ -75,7 +81,13 @@ export type Grid = { cells: Uint8Array; size: number }
  * direction, so a grid built from a y-up glyph reads the same way as one built
  * from y-down mark geometry.
  */
-export function occupancy(segments: Segment[], bounds: Box, size: number, yUp = false): Grid {
+export function occupancy(
+  segments: Segment[],
+  bounds: Box,
+  size: number,
+  yUp = false,
+  rule: FillRule = 'nonzero',
+): Grid {
   const cells = new Uint8Array(size * size)
   const width = bounds.x2 - bounds.x1
   const height = bounds.y2 - bounds.y1
@@ -84,7 +96,7 @@ export function occupancy(segments: Segment[], bounds: Box, size: number, yUp = 
   for (let row = 0; row < size; row++) {
     const fraction = (row + 0.5) / size
     const y = yUp ? bounds.y2 - height * fraction : bounds.y1 + height * fraction
-    const spans = spansAt(segments, y)
+    const spans = spansAt(segments, y, rule)
     if (spans.length === 0) continue
 
     for (let column = 0; column < size; column++) {

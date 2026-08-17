@@ -10,6 +10,8 @@ import { loadFont } from '../src/engine/fontLoader'
 import { layoutLogo } from '../src/engine/layout'
 import { renderSvg } from '../src/engine/render'
 import { ARCHETYPES, buildCandidates, buildSymbol } from '../src/engine/symbols/archetypes'
+import { buildMark } from '../src/engine/symbols/compose'
+import { TEMPLATES } from '../src/engine/symbols/templates'
 import type { LoadedFont, LogoSpec } from '../src/engine/types'
 
 const app = document.getElementById('app')!
@@ -60,6 +62,89 @@ async function main() {
     loadFont('Archivo Black', 400),
   ])
   app.innerHTML = ''
+
+  // 0. The drawn template library. This is the section that decides whether the
+  // marks read as designed, so it comes first and is the one to iterate on.
+  const drawSymbol = (art: ReturnType<typeof buildMark>, font: LoadedFont, width: number) => {
+    if (!art) return null
+    const layout = layoutLogo({
+      spec: baseSpec({ brandName: '', symbol: art, symbolPlacement: 'left', symbolSize: 'md' }),
+      wordmarkFont: font,
+      taglineFont: null,
+    })
+    return renderSvg(layout, { targetWidth: width }).svg
+  }
+
+  for (const [fontName, font, letters] of [
+    ['Inter 600', inter600, ['N', 'O', 'A', 'S']],
+    ['Playfair 700', playfair, ['N', 'O']],
+    ['Bebas Neue', bebas, ['N', 'O']],
+  ] as Array<[string, LoadedFont, string[]]>) {
+    const grid = section(`Templates — ${fontName}`)
+    grid.className = 'grid'
+    for (const template of TEMPLATES) {
+      for (const letter of letters) {
+        for (let variant = 0; variant < template.variants; variant++) {
+          const svg = drawSymbol(
+            buildMark(template, {
+              font,
+              initial: letter,
+              initials: [letter, 'S'],
+              seed: `gallery-${letter}`,
+              variant,
+            }),
+            font,
+            104,
+          )
+          if (svg) grid.append(cell(svg, `${template.id} v${variant} · ${letter}`))
+        }
+      }
+    }
+  }
+
+  // Small sizes are where marks fall apart, so look at them deliberately.
+  const small = section('Templates at favicon size — 32px and 16px')
+  small.className = 'grid'
+  for (const template of TEMPLATES) {
+    for (const size of [32, 16]) {
+      const svg = drawSymbol(
+        buildMark(template, {
+          font: inter600,
+          initial: 'N',
+          initials: ['N', 'S'],
+          seed: 'small',
+          reduced: size <= 16,
+        }),
+        inter600,
+        size,
+      )
+      if (svg) small.append(cell(svg, `${template.id} ${size}px`))
+    }
+  }
+
+  // And reversed, since half the exported package is on a dark ground.
+  const reversed = section('Templates reversed')
+  reversed.className = 'grid'
+  for (const template of TEMPLATES) {
+    const art = buildMark(template, {
+      font: inter600,
+      initial: 'N',
+      initials: ['N', 'S'],
+      seed: 'reversed',
+    })
+    if (!art) continue
+    const layout = layoutLogo({
+      spec: baseSpec({
+        brandName: '',
+        symbol: art,
+        symbolPlacement: 'left',
+        colors: { wordmark: '#ffffff', tagline: '#ffffff', symbol: '#ffffff' },
+      }),
+      wordmarkFont: inter600,
+      taglineFont: null,
+    })
+    reversed.append(cell(renderSvg(layout, { targetWidth: 96 }).svg, template.id, true))
+  }
 
   // 1. Every archetype, same font.
   const all = section('All archetypes — Inter 600, Northwind Studio')
