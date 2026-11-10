@@ -116,16 +116,20 @@ export const pulse: MarkTemplate = {
   variants: 3,
   minSize: 32,
   score: (form) => 0.45 + form.diagonalStrength * 0.3,
-  draw({ variant, fit }) {
+  draw({ variant, fit, jitter }) {
     const stroke = Math.max(8, fit.stroke)
     const parts: MarkPart[] = []
 
     // A climb that steps back before its final rise, so the line has a story
-    // rather than being a plain zigzag. The last leg is the longest.
+    // rather than being a plain zigzag. The last leg is the longest. The seed
+    // moves the two inner points a little, within bounds that keep that
+    // shape, so two brands in one typeface do not get the identical line.
+    const peakY = 46 + (jitter[1] - 0.5) * 14
+    const dipY = Math.max(peakY + 12, 64 + (jitter[2] - 0.5) * 10)
     const climb = [
       [12, 82],
-      [36, 46],
-      [54, 64],
+      [34 + (jitter[3] - 0.5) * 8, peakY],
+      [54, dipY],
       [88, 18],
     ] as const
 
@@ -139,15 +143,23 @@ export const pulse: MarkTemplate = {
       // A second, shallower run set behind: depth without perspective.
       const behind = [
         [12, 92],
-        [40, 66],
-        [60, 78],
+        [40, peakY + 20],
+        [60, dipY + 14],
         [88, 46],
       ] as const
       parts.push({ outlines: [polyline([...behind], stroke * 0.85)], tone: 'tint' })
       parts.push({ outlines: [polyline([...climb], stroke)] })
     }
 
-    return fitParts(parts, 4)
+    // Leans with the letter, like the rest of the motion family.
+    const lean = fit.lean * 0.4
+    return fitParts(
+      parts.map((part) => ({
+        ...part,
+        outlines: part.outlines.map((o) => transform(o, mat.rotate(lean, C, C))),
+      })),
+      4,
+    )
   },
 }
 

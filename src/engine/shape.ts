@@ -82,7 +82,10 @@ export function shapeText(
 
   for (const char of chars) {
     const glyph = font.charToGlyph(char)
-    if (!glyph) continue
+    // charToGlyph never returns null for a missing character: it returns
+    // .notdef (index 0), whose outline is a box. Shipping that in a logo is
+    // worse than leaving the character out.
+    if (!glyph || glyph.index === 0) continue
 
     if (previousGlyphIndex !== null) {
       pen += kerning.get(previousGlyphIndex, glyph.index) * scale

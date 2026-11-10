@@ -139,10 +139,15 @@ export function layoutLogo({ spec, wordmarkFont, taglineFont }: LayoutInput): Lo
     symbolY = -cap - RULES.symbolGapAbove * cap - symbolHeight
   }
 
-  // Centre the wordmark within the text block when a stacked symbol or a wider
-  // tagline makes the block wider than the name itself.
+  // Beside a symbol the text block is left-aligned to the gap: centring it
+  // there let a tagline wider than the name push both lines away from the mark
+  // by several cap heights. Otherwise the wordmark is centred in the block when
+  // a stacked symbol or a wider tagline makes it wider than the name.
   const wordmarkWidth = wordmarkBox.x2 - wordmarkBox.x1
-  const wordmarkX = textX + (textBlockWidth - wordmarkWidth) / 2 - wordmarkBox.x1
+  const wordmarkX =
+    hasSymbol && spec.symbolPlacement === 'left'
+      ? textX - wordmarkBox.x1
+      : textX + (textBlockWidth - wordmarkWidth) / 2 - wordmarkBox.x1
 
   let inkBox: Box | null = null
 

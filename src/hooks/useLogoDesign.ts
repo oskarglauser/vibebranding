@@ -20,6 +20,7 @@ import {
   resolveColors,
   type DesignAction,
   type DesignState,
+  OWN_KEYS,
 } from '../state/logoSpec'
 
 const STORAGE_KEY = 'gologotype:design'
@@ -89,16 +90,31 @@ export function useLogoDesign() {
 
   // --- persistence ---------------------------------------------------------
   useEffect(() => {
-    const encoded = encodeState(state)
-    try {
-      window.localStorage.setItem(STORAGE_KEY, encoded)
-    } catch {
-      /* ignore */
-    }
-    // replaceState keeps the address bar shareable without adding history noise
-    // on every keystroke.
-    const url = encoded ? `${window.location.pathname}?${encoded}` : window.location.pathname
-    window.history.replaceState(null, '', url)
+    // Debounced: Safari and Firefox throw a SecurityError once replaceState is
+    // called more than ~100 times in 10 seconds, which a dragged slider or
+    // colour picker reaches easily — and an uncaught throw blanks the page.
+    const timer = window.setTimeout(() => {
+      const encoded = encodeState(state)
+      try {
+        window.localStorage.setItem(STORAGE_KEY, encoded)
+      } catch {
+        /* storage blocked or full: the URL still carries the design */
+      }
+      try {
+        // Keep parameters that are not ours (utm_*, ref) rather than stripping
+        // them from the address bar.
+        const params = new URLSearchParams(encoded)
+        const ours = new Set(params.keys())
+        new URLSearchParams(window.location.search).forEach((value, key) => {
+          if (!ours.has(key) && !OWN_KEYS.has(key)) params.append(key, value)
+        })
+        const query = params.toString()
+        window.history.replaceState(null, '', query ? `${window.location.pathname}?${query}` : window.location.pathname)
+      } catch {
+        /* rate-limited by the browser: the next change will write it */
+      }
+    }, 300)
+    return () => window.clearTimeout(timer)
   }, [state])
 
   // --- derived design ------------------------------------------------------

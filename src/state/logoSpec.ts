@@ -91,12 +91,16 @@ export function designReducer(state: DesignState, action: DesignAction): DesignS
       // has already chosen one deliberately.
       const entry = getFont(action.family)
       const taglineWasDefault = state.taglineFontFamily === defaultTaglineFont(state.fontFamily)
+      const taglineFontFamily = taglineWasDefault ? defaultTaglineFont(entry.family) : state.taglineFontFamily
       return {
         ...state,
         fontFamily: entry.family,
         fontWeight: entry.defaultWeight,
         tracking: entry.defaultTracking,
-        taglineFontFamily: taglineWasDefault ? defaultTaglineFont(entry.family) : state.taglineFontFamily,
+        taglineFontFamily,
+        // The tagline face may have changed under the chosen weight; a weight it
+        // does not serve fails to load and the tagline silently disappears.
+        taglineFontWeight: nearestWeight(taglineFontFamily, state.taglineFontWeight),
       }
     }
 
@@ -151,6 +155,9 @@ const KEY_MAP: Record<keyof DesignState, string> = {
   taglineColor: 'kg',
 }
 
+/** The query keys a design uses; anything else in a URL is someone else's. */
+export const OWN_KEYS: ReadonlySet<string> = new Set(Object.values(KEY_MAP))
+
 export function encodeState(state: DesignState): string {
   const params = new URLSearchParams()
   for (const [key, short] of Object.entries(KEY_MAP) as Array<[keyof DesignState, string]>) {
@@ -188,7 +195,10 @@ function pickNumber(value: string | null, fallback: number, min: number, max: nu
  */
 export function decodeState(search: string): DesignState | null {
   const params = new URLSearchParams(search)
-  if ([...params.keys()].length === 0) return null
+  // Only our own keys make a design. A campaign link (?utm_source=, ?ref=)
+  // used to decode as an all-default design, which then overwrote whatever
+  // the visitor had saved in this browser.
+  if (![...params.keys()].some((key) => OWN_KEYS.has(key))) return null
 
   const get = (key: keyof DesignState) => params.get(KEY_MAP[key])
 

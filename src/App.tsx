@@ -39,6 +39,7 @@ import {
 } from './constants/fonts'
 import { buildBrandPackage, deriveColors } from './export/package'
 import { batchSeedFor } from './engine/symbols/select'
+import { analytics } from './analytics'
 import { layoutLogo } from './engine/layout'
 import { renderSvg } from './engine/render'
 import { assessContrast, normalizeHex, reversedVariant } from './utils/colorUtils'
@@ -69,15 +70,24 @@ export default function App() {
   const [toast, setToast] = useState<{ message: string; tone: 'ok' | 'error' } | null>(null)
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === 'undefined') return false
-    const stored = window.localStorage.getItem('gologotype:theme')
-    if (stored) return stored === 'dark'
+    // Storage throws when site data is blocked; that must not stop the app.
+    try {
+      const stored = window.localStorage.getItem('gologotype:theme')
+      if (stored) return stored === 'dark'
+    } catch {
+      /* fall through to the system preference */
+    }
     return window.matchMedia('(prefers-color-scheme: dark)').matches
   })
   const toastTimer = useRef<number | null>(null)
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark)
-    window.localStorage.setItem('gologotype:theme', isDark ? 'dark' : 'light')
+    try {
+      window.localStorage.setItem('gologotype:theme', isDark ? 'dark' : 'light')
+    } catch {
+      /* storage blocked: the choice lasts for this visit */
+    }
   }, [isDark])
 
   const notify = useCallback((message: string, tone: 'ok' | 'error' = 'ok') => {
@@ -142,6 +152,7 @@ export default function App() {
     (presetId: string) => {
       const preset = PRESETS.find((entry) => entry.id === presetId)
       if (!preset) return
+      analytics.presetApplied(preset.id)
       dispatch({
         type: 'applyPreset',
         preset: {
@@ -176,12 +187,14 @@ export default function App() {
         symbolShuffle: shuffle,
       },
     })
+    analytics.surpriseUsed()
     notify(`Applied "${preset.name}" in ${color.name}`)
   }, [dispatch, notify, state.brandName, state.fontFamily, state.symbolShuffle])
 
   const handleShare = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(shareUrl)
+      analytics.linkCopied()
       notify('Link copied. It opens this exact design')
     } catch {
       notify('Could not copy the link', 'error')
@@ -189,7 +202,9 @@ export default function App() {
   }, [shareUrl, notify])
 
   const handleExport = useCallback(async () => {
-    if (!spec || !wordmarkFont || exporting) return
+    // Same guard as the button: ⌘/Ctrl+Enter during a font load would
+    // otherwise ship the previous face's outlines under the new face's name.
+    if (!spec || !wordmarkFont || exporting || status !== 'ready') return
     if (!state.brandName.trim()) {
       notify('Enter a brand name first', 'error')
       return
@@ -203,7 +218,10 @@ export default function App() {
           spec: { ...spec, brandName: state.brandName.trim() },
           wordmarkFont,
           taglineFont,
-          symbolRecipe: state.symbol,
+          // Only when a mark was actually built: a template can decline a
+          // letter, and the guidelines must not describe a symbol the
+          // package does not contain.
+          symbolRecipe: spec.symbol ? state.symbol : null,
           lightBackground: LIGHT_BG,
           darkBackground: DARK_BG,
         },
@@ -219,6 +237,11 @@ export default function App() {
       link.remove()
       // Give the browser a moment to start the download before revoking.
       window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      analytics.packageDownloaded({
+        font: spec.fontFamily,
+        symbol: spec.symbol && state.symbol ? state.symbol.template : 'none',
+        tagline: spec.tagline.trim().length > 0,
+      })
       notify('Brand package downloaded')
     } catch (error) {
       console.error(error)
@@ -227,7 +250,7 @@ export default function App() {
       setExporting(false)
       setProgress(null)
     }
-  }, [spec, wordmarkFont, taglineFont, state.brandName, state.symbol, exporting, notify])
+  }, [spec, wordmarkFont, taglineFont, state.brandName, state.symbol, exporting, status, notify])
 
   // ⌘/Ctrl + Enter downloads, the way a save shortcut would.
   useEffect(() => {
@@ -405,7 +428,10 @@ export default function App() {
                   color={pickerInk}
                   batchSeed={batchSeed}
                   selected={state.symbol}
-                  onSelect={(symbol) => set({ symbol })}
+                  onSelect={(symbol) => {
+                    if (symbol) analytics.symbolSelected(symbol.template)
+                    set({ symbol })
+                  }}
                   onShuffle={() => set({ symbolShuffle: state.symbolShuffle + 1 })}
                 />
                 {state.symbol && (

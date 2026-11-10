@@ -10,7 +10,7 @@
  * ranking, and every slot is a different template.
  */
 
-import { createSeededRandom } from '../../utils/seedUtils'
+import { createSeededRandom, seedToNumber } from '../../utils/seedUtils'
 import { buildMark, type ComposeContext } from './compose'
 import { measureLetterForm } from './letterform'
 import { TEMPLATES } from './templates'
@@ -28,9 +28,12 @@ export function initialsFor(brandName: string): string[] {
   return brandName
     .trim()
     .split(/[\s&/-]+/)
-    .filter((word) => /[a-z0-9]/i.test(word))
+    // The first letter or digit of each word, not its first character:
+    // "(RED) Studio" used to give "(" as the initial.
+    .map((word) => word.match(/[\p{L}\p{N}]/u)?.[0] ?? '')
+    .filter(Boolean)
     .slice(0, 2)
-    .map((word) => word.charAt(0).toLocaleUpperCase())
+    .map((initial) => initial.toLocaleUpperCase())
 }
 
 /**
@@ -42,7 +45,11 @@ export function initialsFor(brandName: string): string[] {
  */
 export function batchSeedFor(brandName: string, fontFamily: string, shuffle: number): string {
   const normalised = brandName.trim().toLocaleLowerCase().replace(/\s+/g, ' ')
-  return `${normalised}|${fontFamily}|${shuffle}`
+  // Hashed rather than embedded: the seed travels in shared links, and a raw
+  // brand name carries spaces, ampersands and accents that a link must not.
+  // Embedding it made every multi-word name lose its mark on reload.
+  const hash = seedToNumber(`${normalised}|${fontFamily}`).toString(36)
+  return `${hash}-${shuffle}`
 }
 
 const FAMILY_ORDER: TemplateFamily[] = ['monogram', 'geometric', 'structural', 'organic', 'motion']

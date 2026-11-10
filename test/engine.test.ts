@@ -105,6 +105,14 @@ describe('shapeText', () => {
   })
 })
 
+describe('missing glyphs', () => {
+  it('leaves out characters the font cannot draw instead of drawing tofu boxes', () => {
+    const plain = shapeText(inter, 'Go')
+    const withMissing = shapeText(inter, 'G中o')
+    expect(withMissing.d).toBe(plain.d)
+  })
+})
+
 describe('trademark placement', () => {
   const cap = inter.metrics.capHeight
 
@@ -163,6 +171,24 @@ describe('transformPathData', () => {
 })
 
 describe('layout', () => {
+  it('keeps the text beside a symbol at the gap, however long the tagline', () => {
+    // A tagline wider than the name used to centre the wordmark in the wider
+    // block, sliding both lines several cap heights away from the mark.
+    const build = (tagline: string) =>
+      layoutLogo({
+        spec: makeSpec({ brandName: 'Go', symbol: squareSymbol, symbolPlacement: 'left', tagline, taglineSize: 'lg' }),
+        wordmarkFont: inter,
+        taglineFont: inter,
+      })
+    const textLeft = (layout: ReturnType<typeof build>) => {
+      const path = layout.pieces.find((piece) => piece.kind === 'path')!
+      return Number((path as { d: string }).d.match(/^M(-?[\d.]+)/)![1])
+    }
+    const short = build('')
+    const long = build('A considerably longer line than the name above it')
+    expect(textLeft(long)).toBeCloseTo(textLeft(short), 3)
+  })
+
   it('places a left symbol centred on the cap band, ignoring descenders', () => {
     const withDescender = layoutLogo({
       spec: makeSpec({ brandName: 'Agency', symbol: squareSymbol, symbolPlacement: 'left' }),

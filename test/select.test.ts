@@ -27,6 +27,9 @@ describe('initials', () => {
     expect(initialsFor('Black & White Co')).toEqual(['B', 'W'])
     expect(initialsFor('Acme')).toEqual(['A'])
     expect(initialsFor('   ')).toEqual([])
+    expect(initialsFor('(RED) Studio')).toEqual(['R', 'S'])
+    expect(initialsFor('.io labs')).toEqual(['I', 'L'])
+    expect(initialsFor('Café Ölund')).toEqual(['C', 'Ö'])
   })
 })
 
@@ -99,6 +102,25 @@ describe('shared links', () => {
     const decoded = decodeState(encodeState(state))
     expect(decoded?.symbol).toEqual({ template: 'tile-knockout', seed: 'abc-123' })
     expect(decoded?.symbolShuffle).toBe(2)
+  })
+
+  it('round-trips the seeds the picker actually produces', () => {
+    // A seed is only useful if a shared link can carry it back. Names with
+    // spaces, ampersands and accents used to produce seeds the decoder
+    // rejected, so the mark silently vanished on reload.
+    for (const name of ['Northwind Studio', 'Black & White Co', 'Café Lumière', 'A']) {
+      for (const candidate of candidates(name, 12)) {
+        const state = { ...DEFAULT_STATE, brandName: name, symbol: { template: candidate.template, seed: candidate.seed } }
+        expect(decodeState(encodeState(state))?.symbol, `${name} ${candidate.template}`).toEqual(state.symbol)
+      }
+    }
+  })
+
+  it('ignores links that carry no design, like campaign parameters', () => {
+    // Otherwise ?utm_source= decodes as an all-default design and overwrites
+    // whatever the visitor had saved in this browser.
+    expect(decodeState('utm_source=producthunt&ref=x')).toBeNull()
+    expect(decodeState('n=Acme&utm_source=x')?.brandName).toBe('Acme')
   })
 
   it('drops a template that no longer exists', () => {
