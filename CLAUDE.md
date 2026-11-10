@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+@~/Sites/infra/INFRA.md
+
 Guidance for Claude Code (claude.ai/code) when working in this repository.
 
 ## What this is
@@ -22,7 +24,10 @@ reintroduce a second one.
 ## Architecture
 
 ```
-api/font.js            Google Fonts TTF proxy (the only backend)
+worker/                Cloudflare Worker in front of the static build
+  index.ts             Routing: /api/font, /health, www -> apex, AI agents
+  font.ts              Google Fonts TTF proxy, catalogue-allowlisted; also used by the dev server
+wrangler.jsonc         Worker config (assets from dist/, rate limit, APP_URL)
 src/engine/            Rendering engine
   kerning.ts           GPOS pair kerning, including Extension lookups
   metrics.ts           Cap height, x-height, stem width from the font file
@@ -30,7 +35,7 @@ src/engine/            Rendering engine
   shape.ts             Text to outlines, tracking, trademark placement
   layout.ts            Lockup geometry (the only place with design constants)
   render.ts            SVG serialisation and rasterisation
-  symbols/             Symbol archetypes and geometry primitives
+  symbols/             Mark templates (templates/), letterform measurement, selection
 src/export/            Brand package: asset plan, guidelines document, ZIP
 src/state/             Design state, URL encoding, presets
 src/components/        Preview, symbol picker, controls, FAQ
@@ -46,7 +51,7 @@ between typefaces. See `LAYOUT_RULES` in `src/engine/layout.ts`.
 
 ### Fonts
 
-`api/font.js` requests `fonts.googleapis.com/css2` with no User-Agent, which
+`worker/font.ts` requests `fonts.googleapis.com/css2` with no User-Agent, which
 makes Google serve TrueType rather than woff2 (opentype.js cannot decode woff2).
 The same bytes are parsed for outlines and registered as a `FontFace`, so the
 preview can never show a different weight from the export.
@@ -65,11 +70,13 @@ Inter, Montserrat and others. `src/engine/kerning.ts` parses the table directly.
 ## Commands
 
 ```bash
-npm run dev        # Vite, with api/font.js served by dev middleware
+npm run dev        # Vite on :3012, /api/font served by worker/font.ts
+npm run dev:worker # the real Worker (workerd) against a production build
 npm run build      # tsc -b && vite build
 npm run lint       # ESLint
 npm run test       # Vitest
-npm run check      # lint + typecheck + test
+npm run check      # lint + typecheck (app and worker) + test
+npm run deploy     # build + wrangler deploy (Workers Builds does this on push)
 ```
 
 The dev server runs the real serverless handler, so local development exercises
@@ -82,7 +89,7 @@ engine is testable offline. Add a case there when changing metrics, shaping,
 layout or colour maths.
 
 Visual checks that tests cannot make: run `npm run dev` and open
-`/dev/gallery.html` to see every archetype across weights and typefaces.
+`/dev/gallery.html` to see every mark template across weights and typefaces.
 
 ## Conventions
 

@@ -41,9 +41,10 @@ function faqStructuredData(): Plugin {
 }
 
 /**
- * Runs the real serverless handler (api/font.js) inside the dev server, so local
- * development exercises the same code that ships to Vercel instead of proxying
- * to production.
+ * Serves /api/font in the dev server with the same module the Worker uses
+ * (worker/font.ts), so local development exercises the code that ships
+ * instead of proxying to production. Edge caching and rate limiting are the
+ * Worker's job and are skipped here; `npm run dev:worker` runs the real thing.
  */
 function apiDevServer(): Plugin {
   return {
@@ -51,36 +52,14 @@ function apiDevServer(): Plugin {
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use('/api/font', async (req, res) => {
-        const url = new URL(req.url ?? '/', 'http://localhost')
-        const query: Record<string, string> = {}
-        url.searchParams.forEach((value, key) => {
-          query[key] = value
-        })
-
-        // Minimal Vercel-compatible response shim.
-        const shim = {
-          status(code: number) {
-            res.statusCode = code
-            return shim
-          },
-          setHeader(name: string, value: string) {
-            res.setHeader(name, value)
-            return shim
-          },
-          json(body: unknown) {
-            res.setHeader('Content-Type', 'application/json')
-            res.end(JSON.stringify(body))
-            return shim
-          },
-          send(body: Uint8Array | string) {
-            res.end(body)
-            return shim
-          },
-        }
-
         try {
-          const { default: handler } = await server.ssrLoadModule('/api/font.js')
-          await handler({ method: req.method, query }, shim)
+          const { parseFontRequest, fetchFont } = await server.ssrLoadModule('/worker/font.ts')
+          const url = new URL(req.url ?? '/', 'http://localhost')
+          const parsed = parseFontRequest(url.searchParams)
+          const response: Response = parsed instanceof Response ? parsed : await fetchFont(parsed)
+          res.statusCode = response.status
+          response.headers.forEach((value, name) => res.setHeader(name, value))
+          res.end(Buffer.from(await response.arrayBuffer()))
         } catch (error) {
           res.statusCode = 500
           res.setHeader('Content-Type', 'application/json')

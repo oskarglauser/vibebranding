@@ -33,8 +33,9 @@ disagree with each other.
   lookups that opentype.js cannot read.
 - **Geometry** is measured in cap heights, so symbol size, tagline gap and clear
   space stay proportionally identical across typefaces.
-- **Symbols** are built from designed archetypes with stroke weights derived
-  from the wordmark's stem width, not assembled from random shapes.
+- **Symbols** come from a library of hand-drawn mark templates, fitted to the
+  brand's own initial as measured in the chosen typeface: they lean with its
+  strokes and take their weight from the wordmark's stem.
 - **Trademark symbols** follow typographic rules: the registered and trademark
   symbols hang from the cap line, the copyright symbol rests on the baseline.
 
@@ -42,24 +43,48 @@ disagree with each other.
 
 ```bash
 npm install
-npm run dev
+npm run dev          # Vite on :3012, /api/font served by the same module the Worker uses
+npm run dev:worker   # the real Worker in workerd, against a production build
 ```
-
-The dev server runs the real serverless font handler, so local development
-exercises the code that ships.
 
 ```bash
-npm run check   # lint, typecheck and tests
-npm run build   # production build
+npm run check   # lint, typecheck (app and Worker) and tests
+npm run build   # production build to dist/
 ```
 
-Open `/dev/gallery.html` while the dev server is running to see every symbol
-archetype rendered across typefaces and weights.
+Open `/dev/gallery.html` while the dev server is running to see every mark
+template rendered across typefaces, at favicon size and reversed.
 
 ## Stack
 
-React 19, TypeScript, Vite, Tailwind CSS, opentype.js, JSZip. One Vercel
-serverless function proxies TrueType files from Google Fonts.
+React 19, TypeScript, Vite, Tailwind CSS, opentype.js, JSZip.
+
+Hosted as a **Worker app** on Cloudflare (see `~/Sites/infra/INFRA.md`,
+"Project types"): no database and no login, so it does not need the VPS. The
+built SPA is served from Workers static assets, and a small Worker
+(`worker/index.ts`) sits in front of it for:
+
+- `/api/font`: proxies TrueType files from Google Fonts, limited to the
+  families and weights in `src/constants/fonts.ts`, cached at the edge for a
+  year, rate limited per IP on cache misses.
+- `/health`: `{"ok":true}` for uptime checks.
+- `www.gologotype.com` 301s to the apex, path and query intact.
+- AI agents are reported to Appscope after the response.
+
+### Deploy
+
+Workers Builds deploys every push to `main` (build `npm run build`, deploy
+`npx wrangler deploy`). By hand: `npm run deploy`.
+
+The Worker is attached to `gologotype.com/*` and `www.gologotype.com/*` with
+**Worker routes** rather than custom domains, so the cutover from Vercel never
+touched DNS: removing the routes sends traffic back to whatever the DNS records
+point at. Secrets: `npx wrangler secret put APPSCOPE_SECRET_KEY`.
+
+### Analytics
+
+Appscope (`appscope.glauser.com`): the tracking script in `index.html`, product
+events from `src/analytics.ts`, AI agents from the Worker.
 
 ## Colour values
 

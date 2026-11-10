@@ -1,0 +1,12 @@
+# GoLogotype
+
+> A free logotype designer that runs in the browser. Type a brand name, pick a typeface, an optional symbol and a tagline, and download a brand package: SVG and PNG lockups with the letters converted to outlines, a symbol, an app icon, favicons and HTML brand guidelines. No account needed.
+
+- Letterforms are outlined vectors, so the files need no font installed.
+- Symbols come from a library of hand-drawn mark templates fitted to the brand's own initial and typeface.
+- Every file in the package is rendered from the same SVG as the on-screen preview.
+- Designs are encoded in the URL, so a link reopens the exact design.
+
+## Pages
+
+- [GoLogotype](https://gologotype.com/): the designer, with an FAQ on formats, licensing and how the symbols are made.

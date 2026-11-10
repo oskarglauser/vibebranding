@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // GoLogotype: a static single-page app on Workers static assets, with a small
+  // Worker in front for the font proxy, /health, www -> apex and AI agent
+  // reporting. Workers Builds deploys every push to main; other branches get a
+  // Preview URL (workers.dev, noindex).
+  "name": "gologotype",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash",
+    // Every request runs the Worker so it can report AI agents to Appscope.
+    // Page views then count toward the free plan's daily Worker requests.
+    "run_worker_first": true
+  },
+  "vars": {
+    "APP_URL": "https://gologotype.com"
+  },
+  // Per IP, per Cloudflare location, applied only to font cache misses.
+  "ratelimits": [{ "name": "FONT_LIMITER", "namespace_id": "4301", "simple": { "limit": 120, "period": 60 } }],
+  "observability": { "enabled": true },
+  // Served on gologotype.com and www.gologotype.com: custom domains attached to
+  // this Worker in Cloudflare (not declared here, so builds don't need
+  // permission to manage domains).
+  "workers_dev": false,
+  "preview_urls": true
+}

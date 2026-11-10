@@ -17,7 +17,7 @@
     />
     <meta name="author" content="Glauser Creative" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
-    <link rel="canonical" href="https://gologotype.com" />
+    <link rel="canonical" href="https://gologotype.com/" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 
     <meta property="og:type" content="website" />
@@ -26,7 +26,7 @@
       property="og:description"
       content="Design a logotype and download real vector files, plus brand guidelines. What you see on screen is exactly what you download."
     />
-    <meta property="og:url" content="https://gologotype.com" />
+    <meta property="og:url" content="https://gologotype.com/" />
     <meta property="og:site_name" content="GoLogotype" />
     <meta property="og:image" content="https://gologotype.com/gologotype_facebook_share.png" />
     <meta property="og:image:type" content="image/png" />
@@ -49,24 +49,18 @@
     <meta name="format-detection" content="telephone=no" />
 
     <!--
-      Only the interface font is loaded up front. Logo typefaces are fetched on
-      demand as TrueType through /api/font, which is the same file the renderer
-      turns into outlines — so the preview can never show a weight the export
-      does not use.
+      The interface font is self-hosted (bundled from @fontsource). Logo
+      typefaces are fetched on demand as TrueType through /api/font, which is
+      the same file the renderer turns into outlines, so the preview can never
+      show a weight the export does not use.
     -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
 
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
         "name": "GoLogotype",
-        "url": "https://gologotype.com",
+        "url": "https://gologotype.com/",
         "applicationCategory": "DesignApplication",
         "operatingSystem": "Any",
         "description": "Free logotype generator that outputs true vector SVG and PNG brand assets with outlined letterforms, plus brand guidelines.",

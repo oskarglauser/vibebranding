@@ -22,7 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.vercel
+.wrangler
+.dev.vars
+.dev.vars.*
 
-# Local agent settings
-.claude/
+# Environment: never committed, except the list of names
+.env
+.env.*
+!.env.example
+
+# Local agent settings; the shared settings.json is committed
+.claude/*
+!.claude/settings.json
